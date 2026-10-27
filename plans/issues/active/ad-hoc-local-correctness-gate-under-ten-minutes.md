@@ -18964,3 +18964,75 @@ with no more than5% CPU increase, before accepting a category speedup. Required
 producer reconstruction and profile/dependency invalidation costs must remain in
 their gate scenarios; never hide a slower mandatory build as bootstrap. Final
 correctness-only gates, all coverage and repeated V5 remain OPEN.
+
+
+### V1cm concluded — smaller Wasm does not materially reduce compilation
+
+The external SQLite thin-LTO producer succeeds in61.722s/120.033CPU seconds,
+plus0.077s virtualization; the complete guard is90.239s. This new-target
+construction includes dependency bootstrap and is not comparable to the retained
+canonical producer. Component size falls2,327,976 to2,025,845bytes (12.98%).
+Across24 alternating fresh-process successful observations, aggregate median
+compilation-plus-execution ratio is0.990609 (0.94% faster), far below25%.
+Small/large/changed/invalid ratios are0.993697/0.970400/0.983967/1.014865.
+All exact response comparisons pass; do not adopt or expand this profile change.
+
+Preserve the first100-table baseline failure: it exhausted the unchanged fuel
+budget. As in the prior qualified probe, use10tables for the larger semantic
+case. Reuse only its six already completed small-input observations after exact
+binary/component/request checks, then execute18 remaining observations. The
+failed stress record remains separate. These direct guest probes use identical
+request identity to compare exact guest results; they are not host-level
+candidate registration/hash qualification. No repository product/profile/
+component bytes or lockfile changed. Native instrumented binaries still require
+ordinary preparation before qualified reuse after V1cl source restoration.
+
+Clarification to V1cl: its command uses libtest's default concurrency, whereas
+V1ci's163.715s focused command explicitly selected four test threads. Cargo/Rayon
+allocation was four in both. This is another reason those runtimes are contextual,
+not a paired comparison. Component interval/count attribution remains valid.
+
+### V1cn prospective feasibility — compiler-owned immutable component bundle
+
+Existing SQL compiler workers are deliberately scoped to one admitted project and
+input lifetime. Reusing them across unrelated CLI projects is not a simple cache
+fix; it requires a new multi-project service protocol. Do not add that service now.
+
+A distinct ownership model can test the measured cross-process duplication:
+precompile the maintained, authenticated Wasm components once during trusted
+compiler construction and embed their exact native images in the compiler
+executable. This changes the trust boundary from mutable cache files to ordinary
+compiler build inputs. Keep unknown/custom components on the existing safe Wasm
+compiler path. Source bytes and all current registrations/requests remain
+validated before selecting any corresponding embedded artifact.
+
+First use an isolated external producer and consumer, pinned Wasmtime48.0.1
+and unchanged Engine policy. Produce images exclusively through
+Engine::precompile_component, record the exact Wasm hash, producer source/binary,
+toolchain/target and Engine compatibility identity, then compile those exact
+owned outputs into the consumer using include_bytes. Runtime native-image loading
+must accept only these immutable compile-time constants; no runtime path,
+environment value, RPC or caller buffer may supply serialized native code.
+Upstream Module::deserialize documentation explicitly permits exact unmodified
+outputs of its serializer/precompiler; arbitrary bytes remain unsafe. Review
+this provenance obligation explicitly before any production adoption.
+
+Account for producer construction and image generation separately; compare
+alternating fresh-process normal Wasm compilation versus embedded-image loading
+for all three representative providers with fresh Stores and exact positive,
+changed and invalid responses. Bind current Wasm bytes and compatible Engine
+policy to selection; changed Wasm or policy is a cache miss and follows the
+existing safe compiler, never deserializes an unmatched image. Known embedded
+image loading errors are failures, not silently hidden by recompilation.
+Record artifact/executable growth and resource bounds. Prove the runtime does
+not read the original serialized output files. No generic unsafe public loader,
+persistent native cache, weakened capability checks or daemon is introduced.
+
+Good enough to attempt actual CLI integration: at least50% lower complete
+fresh-process component preparation/execution with equal results and valid
+origin/compatibility/isolation controls. Then register a concrete generic-host/
+bundled-provider ownership boundary and full source/invalidation, size, capacity,
+installation and portability behavior before product edits. Actual29-test CLI
+qualification must improve at least25% and30s (CPU increase at most5%), including
+amortized producer cost in the relevant scenarios. Keep all runtime assertions
+and independent native builds. Full gates and repeated V5 remain OPEN.
