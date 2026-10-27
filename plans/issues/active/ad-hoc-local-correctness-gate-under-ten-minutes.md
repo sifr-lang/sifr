@@ -19692,3 +19692,56 @@ After closure, inspect one exact-profile clean SQL build with Cargo unit timings
 to identify its dominant generation/native/Rust/link work. Keep both independent
 clean builds and all version/runtime properties in the eventual solution;
 profiling is attribution evidence, not ordinary acceptance timing.
+
+### V1cr repair delivered — PR4510
+
+PR4510 https://github.com/sifr-lang/sifr/pull/4510 merged normally as
+4cc28fed710bafd0351ad857090b0aa190166914. Its tree equals reviewed and validated
+cc5b9a6b1efc2df96abb15f73143743a29b3b76b. All108 manifest-crate tests pass with
+zero failures/ignored; the3673-site filesystem guard and mutation self-test,
+formatting, size and diff checks pass. Focused guard84.241s; no source drift,
+capacity stop or surviving owned processes. The24-file locally verified archive
+is v1cr-repair-evidence.tar.gz, SHA256
+c3d11f4b2a73b59b10b91f582a01fbefdd6115c29c1aad1e5367db34944382ec.
+
+Independent Claude review:SATISFIED, no blocking findings. Response/disposition
+are outside Git, keyed by cc5b9a6b1. The reviewer created an external plan note
+but no repository changes. Its prose miscounts output operations as four;
+the exact accepted inventory has five output effects plus three identity reads.
+The optional output-directory classification suggestion changes no acceptance
+rule. Direct Cargo checks used the pinned prepared environment; final integrated
+validation retains the canonical facade. No broad rerun is justified by this
+record-only closure.
+
+At merge, local-first-create-pr fails before setup because
+SIFR_PERFORMANCE_REFERENCE is unset, confirmed in job122535232707 of run40602917106.
+This is the previously recorded performance-reference/CI admission owner, with
+unchanged workflow inputs. Lint/format, toolchain invariant and WASI build checks
+passed; other jobs were still running. Do not claim green CI. No admin bypass
+was used. Desktop PR attachment was attempted but refused at100 attachments;
+existing attachments were preserved. R3 remains failed and final phase gates/
+repeated V5 remain OPEN. This correction claims no performance improvement.
+
+### V1cs prospective diagnostic — exact-profile SQL clean-build attribution
+
+The current SQL category928.407s is dominated by its512.702s independent clean
+build protocol. Before changing code, execute one exact-current clean A build
+with Cargo's unit timing report. Keep all three linked native tools, locked/
+offline dependencies, explicit host target, current dev/package/build profiles,
+incremental setting and both constant path maps. Use an empty owned target on
+the same storage class as the R3 explicit-host protocol, four Cargo/Rayon jobs,
+20GiB disk/2GiB memory reserves and1750s cap. Retain artifacts, commands, hashes,
+Cargo messages/timing data and CPU/wall evidence. Do not mix this attribution
+run into ordinary acceptance timing or call one A build full reproducibility
+qualification; eventual qualification still requires clean A/reused A/clean B.
+
+Good enough for this diagnostic: identify the dominant actual Cargo units,
+their compilation/build-script roles and dependency critical path, separating
+overlapping unit wall times from total child CPU and complete build elapsed.
+Compare the measured constraints with already investigated/rejected hypotheses.
+Register a bounded architectural proposal and whole-protocol benefit threshold
+before production edits. Preserve runtime assertions, individual version
+coverage, optimized behavior where required, independent construction and
+source/input invalidation. No lowered profile, dependency version change,
+retained cold-build output reuse or coverage exemption is authorized by this
+diagnostic. The complete600s objective and every required V5 scenario stay OPEN.
