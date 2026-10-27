@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from component_build_paths import validate_build_paths
 from component_provenance import ROOT, WORDS, guest_environment, provenance, rust_identity, target_directory
 from wasi_sdk_inputs import sha256
 
@@ -34,6 +35,7 @@ def main() -> int:
         stage = Path(raw_stage)
         output = stage / "words_component.wasm"
         subprocess.run([str(encoder), str(core), str(output)], cwd=ROOT, check=True)
+        validate_build_paths(output, ROOT, environment)
         record = {
             "schema_version": 1, "target": "wasm32-unknown-unknown",
             "artifact": "words_component.wasm", "sha256": sha256(output),

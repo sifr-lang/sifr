@@ -18690,3 +18690,864 @@ This changes no facade/category/native timing or pass/fail result. Do not infer
 duplicate whole-suite executions from nested libtest summaries. The complete
 original archive has4539 verified files, SHA256
 91cd564846bc9b00cb7fad55d5a58132240409dcb75259988098f38050ccd4bb.
+
+
+### V1ci closed — canonical SQL component provenance repair merged
+
+PR #4508 (https://github.com/sifr-lang/sifr/pull/4508) is merged as
+31a202f3190e5c59d044122c610e019a14496d44. Its tree equals the reviewed candidate
+4bf8fdf7ca1d92d8611a76314e0cb702f673ec45. Production ran at parent be6a802f2;
+the only parent-to-candidate changes are three produced receipts and the phase
+record. All13 recorded after-hashes (10 components plus3 receipts) match the
+candidate. All source/tool identities and actual build logs are retained.
+
+All16 focused commands pass on the exact candidate: formatting, publication and
+SDK controls, canonical native preparation, PostgreSQL/MySQL/SQLite qualification
+and mutation controls, component qualification/mutations,30 component-host tests,
+29 SQL application tests, size and diff checks. Guarded elapsed207.428s, empty
+owned session, no reserve stop or unexpected tracked change. Independent review
+is SATISFIED with no blockers, stored externally under reviews/4bf8fdf7ca1d92d8611a76314e0cb702f673ec45;
+response SHA256 ce5a6a2d87328db2fe4e9bbcbfa0642c64c4109dd06868542dc4c1f2b0eef378.
+The75-file production/qualification archive verifies as SHA256
+53331e2a614c9d7bb6e5e0f9ea24ce058dbb818a0d3ef192a454cd8a42b8ca27.
+
+Two remote review requests failed OAuth authentication. A successful local CLI
+request lost its response when the external watchdog treated normal cleanup as
+timeout; no approval was claimed from it. Correct the wrapper's TERM cleanup and
+recapture the same unchanged candidate under the user's pragmatic continuation
+instruction. The complete resulting review, prompt and identity are preserved.
+These infrastructure failures are not code/validation passes.
+
+CI local-first-create-pr (run40501138751, job122178814943) fails before preparation:
+SIFR_PERFORMANCE_REFERENCE is unset. Workflow/admission inputs are unchanged.
+Record this with performance-reference/CI admission ownership, outside the local
+correctness item; no CI or performance-qualification pass is claimed. Merge uses
+the approved intermediate focused-check/review policy. V1ch remains failed and
+complete final gates plus repeated V5 remain OPEN. No speed gain is claimed.
+
+### V1cj prospective feasibility — SQL protocol test ownership
+
+Root-cause hypothesis: sifr_sql_tool unconditionally dev-depends on
+sifr_semantic_services solely for tests/migration_source.rs. Its two tests require
+the canonical compiler, but protocol/session/fixture tests do not. V1ch's fixture
+preparation takes96.651s and standalone migration-artifact preparation9.605s;
+the full SQL preparation takes394.218s. These historical durations identify a
+candidate boundary, not a promised saving.
+
+Move the existing migration_source.rs byte-for-byte to the existing sifr CLI
+integration-test owner as tests/sql_migration_source.rs. Remove the SQL tool's
+semantic-services dev dependency, add the CLI's already-workspace-pinned semver
+test dependency, and record the intentional Cargo.lock edge changes without
+version changes. Keep both assertions, fixture contents and include paths.
+Explicitly enroll the relocated test in the selected schema-tools area; retain
+all existing compiler-adapter feature coverage. Update only affected method-site
+and direct-filesystem-effect path records. Add negative boundary/enrollment checks
+so compiler capabilities cannot silently return to protocol-only test graphs or
+the moved assertions disappear from area coverage.
+
+First measure a current, fully primed baseline. Then use a real lowering diagnostic
+wording edit, observed through the rebuilt CLI, to force compiler invalidation.
+Measure the complete selected SQL preparation sequence with canonical resource
+allocation and retained targets. Prototype the ownership move; separately charge
+its transition preparation, then repeat the same diagnostic edit and complete
+preparation, including the new test owner's preparation. Preserve exact command
+graphs, elapsed/CPU, compiler/source identities, capacities and outcome evidence.
+Keep all1800s category caps; no tracing in ordinary timing runs. The temporary
+diagnostic wording is only an experimental witness and must be restored.
+
+Good enough to expand: at least25% and30s less complete affected incremental SQL
+preparation, no more than5% CPU increase, and both diagnostic witnesses succeed.
+A faster protocol subcommand alone does not qualify. If rejected, restore all
+owned production changes and keep the candidate/evidence; do not tune isolated
+seconds. If promising, repeat matched measurements, verify unchanged byte content
+of moved tests, all affected protocol/migration/compiler-adapter assertions and
+negative controls, profile/plan enrollment, method/filesystem policies, format and
+size checks. Regenerate any component provenance invalidated by intentional lock
+changes using actual producers; do not stamp hashes. Obtain exact-candidate
+review before intermediate merge.
+
+This tests one required compiler-edit boundary, not all invalidation scenarios.
+No complete-gate or ten-minute claim follows from it. Final full gates and all
+repeated V5 scenarios remain mandatory. If the ownership move cannot materially
+reduce total work, return to the next measured structural cost.
+
+
+### V1cj concluded — ownership move shifts cost, screen rejected
+
+Baseline0394d81d91d8540f1b58709303f232585f1bdaba takes358.711s and918.458CPU
+seconds for all34 selected SQL preparation commands after the real lowering
+diagnostic edit. Prototype13925d80869fcdada6622955991723b3d9651dcb takes
+360.723s and918.135CPU seconds for all35 commands, including relocated-test
+preparation. Both rebuilt CLI witnesses observe the same unbound-variable edit
+and accept the positive source. Complete preparation is0.56% slower, CPU nearly
+unchanged; the25%/30-second adoption threshold fails. Do not expand or adopt it.
+
+The isolated protocol command improves28.066s to1.167s, but the later SQLite
+compiler command increases6.243s to29.722s. The grouped schema-tool command
+improves68.758s to58.057s; the relocated test adds3.928s, with remaining graph
+timing differences recorded separately. Eight commands compile sifr_lowering
+in BOTH runs: its compilation moves from the protocol fixture command to the
+SQLite compiler command rather than disappearing. This supports work shifting
+between consumers, not a demonstrated reduction of total work. It does not yet
+prove every remaining compiler configuration is necessary or equivalent.
+
+Prototype-only functional evidence: both relocated tests (byte-identical source),
+6 session tests,4 native compiler tests and3 migration-artifact tests pass;
+40 boundary mutation controls pass, and the original compiler-dependent graph
+is correctly rejected. Formatting passes; package versions are unchanged, with
+only2 intentional lock dependency edges altered. These checks do not constitute
+implementation acceptance. Preserve the complete rejected candidate on its own
+branch, then restore all production files and the temporary diagnostic wording
+to the pre-experiment plan revision. Restored component provenance must match;
+do not run canonical regeneration for an abandoned lockfile.
+
+Preparation of the new layout takes502.839s/1235.176CPU seconds separately;
+its guard takes519.141s. Baseline edit guard377.018s, prototype edit guard
+379.045s; no capacity stop, source drift or leftover sessions. External helper
+identity checks are included in the measured preparation totals: baseline
+commands sum349.153s versus358.711s complete preparation; transition commands
+sum492.171s versus502.839s complete preparation. No tracing was used.
+
+Preserve investigative failures: original baseline priming completes all34
+commands but its diagnostic witness is correctly rejected for running an external
+file from the repository package directory. Repair only the probe's cwd and run
+both witnesses; do not repeat preparation. A preliminary graph assertion wrongly
+expected sifr_codegen in the semantic-only dependency graph; raw evidence shows
+semantic services, frontend, lowering, Wasmtime and Cranelift, but not codegen.
+The prototype edit run survives a transient connection failure and completes
+with a clean guard and matching source. None of these records is relabeled.
+
+No independent implementation review or PR is required for this rejected screen.
+The retained compiler targets may contain the experimental diagnostic wording;
+rebuild/check the ordinary compiler before further qualified use. Final complete
+gates and repeated V5 remain OPEN. Stop tuning this isolated ownership move.
+The next measured question is why one compiler edit rebuilds lowering eight
+times across SQL consumers.
+
+### V1ck prospective diagnostic — identify repeated compiler configurations
+
+At the restored production source, collect exact Cargo compiler-artifact records
+for the eight SQL consumer selections that rebuilt lowering in V1cj, using the
+same retained target and canonical resource allocation. Include library features,
+profiles, output identities and associated fingerprint dependency records; retain
+build-script data where it distinguishes configurations. Prepare the ordinary
+compiler first and verify its original diagnostic wording. Keep30-minute caps
+and reserves, and account for all selections or explicit failures.
+
+Good enough for this diagnostic: explain the actual distinguishing inputs for
+the repeated lowering/frontend/semantic library builds, distinguish unique
+configurations from rebuilding the same configuration, and identify the first
+dependency/profile/build-script differences responsible. Do not conclude that
+equal top-level feature lists imply interchangeable artifacts. Do not normalize
+features, combine profiles, remove configuration coverage, add a daemon/cache,
+or edit compiler behavior under this diagnostic alone.
+
+Use these results to propose one structural reduction across compatible compiler
+consumers, with explicit coverage and invalidation tests, before changing
+production. The required independent native graphs and compiler-adapter
+feature qualifications remain intact. These artifact-recording runs are diagnostic
+preparation, not ordinary full-gate performance acceptance or V5.
+
+
+### V1ck concluded — eight valid compiler configurations, not cache failure
+
+At72f06b36a7549140dde51bb764bc4a3c66265a4e all eight selected consumer
+preparations pass, producing eight distinct lowering rlibs. All28 pairwise
+comparisons have concrete transitive feature differences. Lowering's own features,
+optimization, debug/overflow settings and rustflags match. Differences include
+parser AST/text serialization, derive-macro features, numerical serialization/
+math/default aliases, collection capabilities and digest MAC support. They
+propagate through diagnostics, IR, type system, parser and standard-library
+owners. This corroborates V4bj; changing the test owner merely moved the work.
+
+The guarded diagnostic takes423.095s; eight Cargo consumer commands sum367.587s,
+and the native prerequisite takes27.103s. These are instrumented artifact-capture
+durations, not a matched speed comparison or full-gate acceptance. The ordinary
+compiler witness observes the restored "undefined variable" diagnostic. No source
+drift, reserve stop or leftover session is reported.
+
+Retain v1ck-graphs and v1ck-reconciled.json. The original capture helper's escaped
+regex omitted library fingerprints; preserve it and its raw per-command Cargo
+records. A separately labeled postrun snapshot captures840 fingerprint files;
+all eight lowering rlib hashes still match their per-command records. Resolve
+duplicate build-script fingerprints only when their JSON is byte-equivalent.
+All28 recorded distinguishing feature traces resolve without ambiguous edges.
+Do not call those postrun files historical per-command snapshots.
+
+No configuration widening, cache-key change or test removal follows. A compiler
+foundation/diagnostic dependency split is a possible architectural follow-up,
+but source inspection alone does not predict a material full-gate saving. Keep
+all current independent native and compiler-adapter configurations.
+
+### V1cl prospective diagnostic — category-scale component compilation ownership
+
+Before revisiting any component reuse design, attribute actual compilation in
+the complete29-test SQL native-application target. V1ci's uninstrumented exact
+candidate passes all29 in163.715s command time (163.02s test body). Those tests
+launch real CLI subprocesses; a process-local owner shared only by the libtest
+harness cannot remove compilation inside those subprocesses. Do not substitute
+an in-process semantic call for these CLI assertions.
+
+Temporarily instrument Engine creation, compiled-component cache hits/misses,
+Component::new, guest execution and host analysis with PID/owner/component hash,
+timestamps and elapsed time. Write diagnostic events only to an owned external
+directory. Preserve all existing runtime/diagnostic/sandbox assertions and normal
+component policy. Build instrumentation separately, then run the complete target
+with canonical allocation and1800s caps. Instrumented time is attribution only,
+not an acceptance speedup. Preserve failures and disclose any missing trace
+events, especially where sandbox/environment isolation prevents event capture.
+
+Good enough: reconcile all29 outcomes and parent/child observations; measure
+unique component hashes, compilations by process/owner and overlapping component
+work against category elapsed time. Only propose reuse if the category opportunity
+is material (at least50% observed category time or another explicitly measured
+macro contribution), with a concrete ownership/safety/invalidation contract.
+The previous persistent native-image cache remains unaccepted; no deserialization,
+daemon, cache or production behavior change is authorized by this diagnostic.
+Restore instrumentation after archiving it, preserve its candidate, and verify
+ordinary behavior before qualified reuse. Full gates and repeated V5 remain OPEN.
+
+
+### V1cl concluded — repeated component compilation is category-scale work
+
+All29 application tests pass at instrumented candidate
+7dbb944b9c967063fc735bc114c43cb773e6f834. Native prerequisite25.241s and
+instrumented build33.561s are separate from test command180.204s/
+1077.462CPU seconds. Guard244.507s completes empty without source/capacity
+failure. Compare with the ordinary163.715s only as attribution context, not a
+speed regression or acceptance measurement.
+
+The811 recorded events cover71 observed processes:83 Engine constructions,
+83 component compilations,182 host analyses/executions and99 owner-cache hits.
+SQLite compiles45 times across39 processes; MySQL18 across16; PostgreSQL20
+across18. One process recompiles SQLite7 times and the other families3 times
+each; all other observed process/hash pairs compile once. Engine construction
+totals0.014s; guest execution0.433s; compilation288.266s summed overlapping
+child wall time. The union of compilation intervals is147.192s within180.204s
+category wall time. This union is NOT removable critical-path time or CPU time;
+do not promise that entire amount as a saving.
+
+Preserve exact per-process events and v1cl-reconciled.json. The instrumentation
+records observed component calls, not every CLI process (early rejects may never
+compile). Pointer-based owner labels may repeat across lifetimes. All test
+outcomes are independently reconciled from the terminal29-pass libtest result.
+The unchanged compiled-owner cache works; sharing only the parent test harness's
+owner cannot remove the dominant fresh CLI-process work. No persistent cache or
+service is adopted. Archive then restore the two diagnostic source files.
+
+### V1cm prospective feasibility — separate guest production optimization
+
+The canonical SQL component producer uses the workspace release profile.
+That profile's LTO-off choice was accepted to reduce native compiler rebuilds;
+it also currently governs Wasm guest construction. This is a measured ownership
+boundary to test, not proof that changing guest optimization will improve speed.
+
+First build an external SQLite component using the same pinned source, Rust1.98.1,
+WASI SDK34, virtualizer, feature selection and codegen-units16, changing only
+guest LTO to thin. Keep the ordinary compiler profile, Wasmtime Engine policy,
+sandbox, fuel/stack/memory/import limits, component protocol and every runtime
+assertion unchanged. Use an owned external target and external artifacts; do not
+publish speculative component bytes or stamp checked-in provenance. Charge actual
+producer build time separately and preserve exact rustc flags/source/tool/output
+identities. No native-image serialization/cache or new daemon is involved.
+
+Run alternating fresh-process baseline/candidate component probes with identical
+requests and compare full output bytes. Good enough to expand: at least25% lower
+median SQLite compilation-plus-execution time with exact positive/changed/negative
+outputs and no omitted invocation, recording size and producer cost. If rejected,
+stop this profile hypothesis. If promising, expand to all three families and
+register the actual producer/profile/provenance implementation, all supported
+versions, component-host/runtime/CLI/corpus and mutation controls before adoption.
+
+A complete29-test application comparison must then improve at least25% and30s,
+with no more than5% CPU increase, before accepting a category speedup. Required
+producer reconstruction and profile/dependency invalidation costs must remain in
+their gate scenarios; never hide a slower mandatory build as bootstrap. Final
+correctness-only gates, all coverage and repeated V5 remain OPEN.
+
+
+### V1cm concluded — smaller Wasm does not materially reduce compilation
+
+The external SQLite thin-LTO producer succeeds in61.722s/120.033CPU seconds,
+plus0.077s virtualization; the complete guard is90.239s. This new-target
+construction includes dependency bootstrap and is not comparable to the retained
+canonical producer. Component size falls2,327,976 to2,025,845bytes (12.98%).
+Across24 alternating fresh-process successful observations, aggregate median
+compilation-plus-execution ratio is0.990609 (0.94% faster), far below25%.
+Small/large/changed/invalid ratios are0.993697/0.970400/0.983967/1.014865.
+All exact response comparisons pass; do not adopt or expand this profile change.
+
+Preserve the first100-table baseline failure: it exhausted the unchanged fuel
+budget. As in the prior qualified probe, use10tables for the larger semantic
+case. Reuse only its six already completed small-input observations after exact
+binary/component/request checks, then execute18 remaining observations. The
+failed stress record remains separate. These direct guest probes use identical
+request identity to compare exact guest results; they are not host-level
+candidate registration/hash qualification. No repository product/profile/
+component bytes or lockfile changed. Native instrumented binaries still require
+ordinary preparation before qualified reuse after V1cl source restoration.
+
+Clarification to V1cl: its command uses libtest's default concurrency, whereas
+V1ci's163.715s focused command explicitly selected four test threads. Cargo/Rayon
+allocation was four in both. This is another reason those runtimes are contextual,
+not a paired comparison. Component interval/count attribution remains valid.
+
+### V1cn prospective feasibility — compiler-owned immutable component bundle
+
+Existing SQL compiler workers are deliberately scoped to one admitted project and
+input lifetime. Reusing them across unrelated CLI projects is not a simple cache
+fix; it requires a new multi-project service protocol. Do not add that service now.
+
+A distinct ownership model can test the measured cross-process duplication:
+precompile the maintained, authenticated Wasm components once during trusted
+compiler construction and embed their exact native images in the compiler
+executable. This changes the trust boundary from mutable cache files to ordinary
+compiler build inputs. Keep unknown/custom components on the existing safe Wasm
+compiler path. Source bytes and all current registrations/requests remain
+validated before selecting any corresponding embedded artifact.
+
+First use an isolated external producer and consumer, pinned Wasmtime48.0.1
+and unchanged Engine policy. Produce images exclusively through
+Engine::precompile_component, record the exact Wasm hash, producer source/binary,
+toolchain/target and Engine compatibility identity, then compile those exact
+owned outputs into the consumer using include_bytes. Runtime native-image loading
+must accept only these immutable compile-time constants; no runtime path,
+environment value, RPC or caller buffer may supply serialized native code.
+Upstream Module::deserialize documentation explicitly permits exact unmodified
+outputs of its serializer/precompiler; arbitrary bytes remain unsafe. Review
+this provenance obligation explicitly before any production adoption.
+
+Account for producer construction and image generation separately; compare
+alternating fresh-process normal Wasm compilation versus embedded-image loading
+for all three representative providers with fresh Stores and exact positive,
+changed and invalid responses. Bind current Wasm bytes and compatible Engine
+policy to selection; changed Wasm or policy is a cache miss and follows the
+existing safe compiler, never deserializes an unmatched image. Known embedded
+image loading errors are failures, not silently hidden by recompilation.
+Record artifact/executable growth and resource bounds. Prove the runtime does
+not read the original serialized output files. No generic unsafe public loader,
+persistent native cache, weakened capability checks or daemon is introduced.
+
+Good enough to attempt actual CLI integration: at least50% lower complete
+fresh-process component preparation/execution with equal results and valid
+origin/compatibility/isolation controls. Then register a concrete generic-host/
+bundled-provider ownership boundary and full source/invalidation, size, capacity,
+installation and portability behavior before product edits. Actual29-test CLI
+qualification must improve at least25% and30s (CPU increase at most5%), including
+amortized producer cost in the relevant scenarios. Keep all runtime assertions
+and independent native builds. Full gates and repeated V5 remain OPEN.
+
+
+### V1cn concluded — immutable image feasibility passes
+
+All72 semantic executions and9 selection/rejection controls pass at29634786c.
+The aggregate complete-process ratio is0.019253 (98.07% reduction). Averages of
+the four scenario medians are MySQL0.833517 to0.017301s, PostgreSQL1.885370 to
+0.035538s, SQLite1.140247 to0.021460s. Exact positive/changed/invalid responses
+match; fresh processes and Stores execute every invocation. Different valid
+stack policy and inert source-Wasm changes select safe ordinary compilation;
+native-image bytes supplied as Wasm are rejected. Original compiled image paths
+were unavailable during execution; only executable-embedded constants load.
+
+Producer build81.753s, three image commands3.999889s and consumer build2.851s
+are separately recorded. Native images total21,487,032bytes; consumer executable
+120,273,864bytes. This proves isolated feasibility, not actual CLI performance,
+full host qualification, installation safety or ten-minute gate acceptance.
+
+Preserve the original4MiB stack-control failure: Wasmtime rejected it before
+component loading because it exceeds the configured async stack. The corrected
+1MiB policy is valid and intentionally differs from the2MiB producer. Reuse the
+24 completed MySQL semantic observations only after exact binary, source,
+request and response checks; then execute48 remaining semantic observations and
+all9 controls. The failed control is not included among the81 completed checks.
+
+### V1co prospective — actual SQL category immutable-bundle diagnostic
+
+Test the complete29-test category before committing to a new build architecture.
+First reconstruct ordinary canonical native tools and the CLI after diagnostic
+instrumentation removal. Use four libtest threads, four compiler/Rayon workers,
+the existing retained targets, same source/Wasm/request/native semantics and
+normal uninstrumented elapsed/CPU measurements. All29 outcomes must pass.
+
+For this bounded diagnostic only, a private component-host module can embed the
+three already produced, hash-verified immutable images from V1cn. This is a
+temporary integration, explicitly not distributable product code. Preserve its
+candidate and patch; absolute external include paths and manually supplied images
+must never reach a production PR. The module accepts only compiler-authenticated
+source hashes and matching Engine policy/compatibility identity; it has no public
+native-buffer loader, runtime path lookup or disk cache. Its one private unsafe
+call accepts only the recorded immutable include_bytes constants. Known-image
+load errors fail. Unknown source/policy follows the original safe Wasm compiler.
+
+All host registration, source-byte hash, request, response, imports, fuel/memory,
+fresh Store, owner lifetime and bounded-retention checks remain in their existing
+order. Add focused selection controls for all bundled families, a valid changed
+stack policy and unknown source hash. Run all existing component-host regressions
+and every actual SQL application test. No runtime assertion or independent native
+build is removed. Stop if compatibility differs rather than changing the host
+policy to force a hit. Verify all retained image hashes before and after builds.
+
+Good enough: actual application category improves at least25% and30s, with CPU
+increase at most5%. Record preparation, test execution and producer costs
+separately; a manually prepared prototype is not final build-cost acceptance.
+Full correctness-only gates and repeated V5 remain OPEN.
+
+If this passes, the production design must place trusted image generation in a
+dedicated compiler-bundle owner, separate from provider Rust/native-tool graphs.
+A single Engine-policy authority must serve build and runtime. Cargo inputs must
+cover exact Wasm bytes, producer/Wasmtime version, target/CPU/Engine policy and
+generator source; output embeds immutable constants and a source/policy identity.
+Ordinary compiler edits must reuse that producer boundary; edits to any declared
+producer input must invalidate it. No compiler dependency may enter native SQL
+tools through this change. Target compatibility, installed relocation, build cost,
+artifact growth, bounds, source tampering and all versioned provider components
+must be qualified before adoption. Do not assume the experimental producer's
+build cost is amortized away in a mandatory invalidation scenario.
+
+### V1co concluded — actual SQL category saves89.242seconds
+
+All29 tests pass both at ordinary baseline29634786c and temporary integration
+b568ae14fe6ab4fb975c5928ee0693b3186657b3, with four libtest threads and identical
+ordinary allocation. Category time falls160.106597 to70.864338s (55.74% reduction).
+CPU falls1057.807280 to303.869915s (71.27% reduction). All33 component-host tests
+(including3 selection controls) pass; formatting and file guardrails pass.
+Preparation is separately recorded: baseline native24.380s + CLI29.111s;
+prototype native22.831s + CLI18.074s plus7.347s focused controls/build. Those
+preparation sequences differ, so do not claim their difference as a speedup.
+
+The temporary integration clears its25%/30s and CPU thresholds. It does not
+qualify final generation/invalidation costs: V1cn separately spent81.753s
+building its producer and4.000s creating images. Preserve exact evidence,
+source patch and diagnostic branch; restore production source before any new
+architecture. Existing target binaries still contain the experimental loader
+until ordinary preparation rebuilds them. Full gates and repeated V5 stay OPEN.
+
+Preserve two harness setup failures separately: the initial baseline output
+directory collided with its guard directory before tests ran; the first
+prototype guard was launched before its helper existed after a docs whitespace
+check stopped setup. Neither failure executed or passed a category. A transient
+SSH interruption during the successful prototype did not stop its owned guard;
+its final receipt confirms normal exit, no source drift and an empty session.
+
+### V1cp prospective — build-owned immutable bundle boundary
+
+Before adopting the runtime optimization, exercise the actual generation model
+in an external crate: one Engine policy source used by its build script and
+runtime; pinned Wasmtime48.0.1; exact maintained Wasm inputs hashed/deduplicated;
+build-script-produced native images embedded from OUT_DIR. Never accept supplied
+native files, stale external producer outputs or runtime native paths. A private
+unsafe deserialize operation accepts only those generated immutable constants.
+
+Measure initial construction separately, then unchanged reconstruction and
+invalidation of Wasm/policy/generator inputs. Unknown or incompatible source/
+Engine identity stays on the existing safe Wasm path. Preserve all limits and
+authentication ordering. A build failure must not silently select older images.
+Artifact/source identities and the generated native-byte hashes are recorded.
+
+The production boundary should remain compiler-owned and independent of provider
+Rust/native-tool compilation. Share the policy source inside that dedicated
+crate, avoiding new runtime dependencies on SQL implementation crates. Native
+builds can precompile for their build host; cross-target construction outside this
+local timing goal must preserve existing safe compilation and never execute or
+assume host-native images on a different target. CPU/config changes must reject
+incompatible embedded code before execution. Do not alter Engine policy merely
+to force compatibility.
+
+Good enough: demonstrate ordinary reuse without rerunning image generation, and
+correct image regeneration for every declared producer input while retaining the
+actual category's material improvement after counting generation in affected
+scenarios. Track build-script dependency optimization cost explicitly: a fast
+standalone producer is not evidence that a Cargo build-script producer is fast.
+Qualify all maintained versions, native-input rejection, relocation without build
+files, source/policy misses and precise invalidation before production adoption.
+Final complete correctness-only gates and repeated V5 remain OPEN.
+
+### V1cp first build — reuse passes; unoptimized producer is too costly
+
+External construction completes232.674s/1118.967CPU seconds. All10 component
+versions load and reject changed stack/unknown hashes. Eight immutable images
+are generated in167.078s. Unchanged reconstruction0.343s and ordinary consumer
+edit0.773s preserve the exact generation file timestamp; the boundary correctly
+avoids regenerating images for consumer-only source changes.
+
+Cargo artifact records show the cause of expensive generation: build-script
+Wasmtime/Cranelift dependencies use opt0/no-debug while their runtime copies use
+opt1/line-tables. Both configurations are built. The167s mandatory producer cost
+would erase the89s category saving when these inputs invalidate; this is not
+good enough to adopt unchanged.
+
+Prospectively test profile alignment only in the isolated external prototype:
+dev build-override opt1/line-tables, matching its existing runtime dependency
+profile. Preserve Engine policy, optimization of generated guest programs,
+source Wasm, all assertions and toolchain. Compare image generation time and all
+eight exact native-image hashes; require at least50% generation reduction and
+byte-identical output, plus unchanged and consumer-edit reuse. Record initial
+construction separately because the retained artifact inventory differs.
+A workspace-wide build-profile change is NOT adopted by this experiment; any
+production choice needs measured build-plus-execution invalidation acceptance.
+
+### V1cp concluded — generation ownership and invalidation screen passes
+
+Aligned build-dependency optimization generates the same eight images in19.333s
+during initial construction, versus167.078s previously (ratio0.115712).
+All eight native hashes are identical. Initial external construction241.739s/
+988.189CPU seconds is recorded separately; artifact availability and concurrent
+dependency compilation differ, so it is not a matched cold-build comparison.
+Unchanged build0.286s and consumer edit0.773s preserve generation timestamps.
+
+The75.735s invalidation guard passes. Only the declared Wasm input changes first;
+generation reruns14.393s and handles nine unique images (one changed MySQL alias).
+A subsequent policy-only edit reruns14.173s; a generator-only edit reruns14.100s.
+A source/manifest hash disagreement fails before replacing prior successful
+generation. Restoring real inputs reruns13.735s and yields the original eight
+byte-identical native images. The generator now uses a bounded owned image-slot
+directory; obsolete owned slots are removed when the inventory shrinks.
+
+All10 maintained versions load from a relocated executable while both original
+build output and source-input directories are hidden. Unknown source/changed
+policy controls pass; supplied native-image bytes are rejected through the safe
+Wasm compiler path. Source and output directories are restored after these
+checks. This is external architecture feasibility, not product adoption.
+
+Preserve670 evidence files, including failures, sources, producer/consumer
+executables and final generated images. Archive SHA256:
+c09be1e10eb2f41839bfc26f95bc07a01cce8bbff4f6c8fc3e44bdc6e8a1c2da.
+No compiler-target cleanup or production image cache was used.
+
+### V1cq prospective implementation — compiler-owned embedded component engine
+
+Implement one native-only compiler-owned Engine/bundle crate. Keep its trusted
+build producer, shared Engine policy, immutable generated loader and compiled
+input identity in that owner. It consumes maintained component artifacts and
+their manifest hashes directly, not provider Rust implementations. The generic
+component host selects it only through the existing native host capability;
+protocol-only/Wasm and native SQL tools must not acquire the compiler bundle.
+
+The build script generates images through pinned Wasmtime only; runtime loading
+accepts only immutable generated constants, never native paths or buffers.
+Authenticate current source bytes and request/registration before selection.
+Match source hash, stack policy and Engine compatibility; retain ordinary safe
+Wasm compilation for unknown/incompatible components. A selected image load
+failure propagates. Keep fresh Stores, all sandbox/response checks, existing
+8-entry/128MiB owner retention and lifetime semantics. Bound embedded image bytes
+and generated file inventory separately. Preserve cross-target correctness via
+the existing Wasm compilation path without assuming host-native artifacts apply
+to a different target. Cross-platform timing remains outside the local goal.
+
+Use one policy source for build and runtime. The producer's declared inputs
+include Wasm/manifests, Engine policy, generator source, dependency/toolchain/
+target/build configuration and its own compiled identity. Ordinary compiler
+consumer edits must reuse generation. A change to a declared producer input
+must invalidate it; failed construction must not qualify an older artifact.
+Installed/relocated executables must work without build files.
+
+Prospectively align compiler-workspace dev build dependencies with its existing
+opt1/line-table runtime dependency profile, as screened in V1cp. This does not
+qualify global build cost by itself. Record initial transition separately and
+measure retained producer invalidation and actual category build/execution.
+Retain every generated-program optimization/independence assertion. If required
+invalidation costs erase the material gain, correct that boundary before adoption.
+
+Required focused qualification:
+- engine/bundle selection, all maintained version identities, changed valid policy,
+  unknown source, native-input rejection, bounded outputs, source/hash mismatch,
+  relocation and declared producer-input invalidation/reuse;
+- all component-host regressions, all29 SQL application tests, relevant provider
+  runtime/component tests and compiler/editor mutation contracts;
+- update source-policy/mutation checks to the actual single policy authority,
+  preserving every existing negative control and adding native-origin boundaries;
+- native SQL tool dependency-boundary checks, compiled-input identity and dependency
+  audit/profile/self-tests affected by the new package and build profile;
+- genuine component-producer reconstruction for changed provenance, never manually
+  stamp receipts; compare all component/core bytes and retain actual build costs;
+- formatting, file guardrails, exact-candidate independent review and scoped PR.
+
+The actual29-test category must retain its25%/30s and CPU<=5% criterion against
+the160.106597s/1057.807280CPU ordinary baseline. Charge image generation in the
+required producer-invalidation case, retain bootstrap/profile-change costs and
+keep full-gate timing claims separate. Complete correctness-only create-PR/merge
+gates and all repeated V5 scenarios remain required at final phase integration.
+
+### V1cq first focused build — retained dependency preparation, digest API repair
+
+Candidate1052c09a7 passes6 bundle-origin/policy and13 feature-boundary mutations,
+all profile validation, four emitted-plan comparisons, formatting and file
+guardrails. The emitted plans preserve every prior selection and add exactly the
+new engine crate suite. Registry package versions remain unchanged; the lock
+adds only the local engine package and its host dependency edge.
+
+The first Rust build stops after176.414s/702.237CPU seconds: workspace sha2 is
+0.11.0, whose digest array does not implement the LowerHex shortcut used by the
+external0.10.9 prototype. No component image or unit-test pass is claimed.
+Keep the workspace pin; use explicit byte-to-hex encoding with error propagation.
+Retain prepared dependencies and retry affected formatting/guardrails, boundaries
+and engine/host build/tests. Profile/plan evidence remains input-identical because
+only the producer's formatting implementation and this record change.
+
+### V1cq focused pass and guest provenance ownership correction
+
+Repaired candidatef3d528986 passes4 engine tests and all30 existing host tests,
+plus19 boundary mutations, formatting and guardrails. Build27.348s and tests
+1.392s are separate from the preserved176.414s failed initial preparation.
+Its eight images total71,183,136bytes, generate in13.146s and exactly match the
+external producer hashes. Earlier unchanged profile/plan evidence is retained.
+
+Cargo metadata filtered for the actual wasm32-wasip2 guest target proves the
+native engine is absent from each provider's non-dev dependency closure. The
+current source-inventory walker nevertheless claims all five engine source files.
+That would create a false guest-artifact dependency on its native consumer and
+force unnecessary guest regeneration after native policy/loader edits.
+
+Correct only the proven target boundary: omit the exact native-only normal
+dependency table while walking guest code. Track host versus guest traversal;
+build dependencies and their transitive normal dependencies retain host inputs.
+Keep unknown conditions conservative and retain the declaring manifest itself.
+Tests must show ordinary guest inventories omit the engine, changing its edge to
+unconditional includes it, and reaching the same component through a host build
+dependency includes its native engine. All existing grammar/shared-source/SDK
+checks remain. Reconstruct authoritative artifacts after this inventory change;
+do not restamp receipts or waive their declared build contracts.
+
+### V1cq native encoder coverage and policy inventory
+
+Nine component build-input checks pass, including an explicit native encoder
+dependency control for the dual-target words producer. SQL guest walks continue
+to omit only the proven native-only edge; words conservatively walks both roles.
+Optional and unknown conditions remain included. This avoids false omissions
+without introducing a second feature resolver.
+
+The new producer's three lexical comparisons select artifact extension,
+host/target construction and the owned output filename namespace. They do not
+dispatch source-language methods. Register their exact operations under the
+existing compiler-owner policy contract. The full authority inventory passes
+6,455 sites /235 nodes; all17 policy self-tests pass. Existing entries are unchanged.
+Proceed with genuine four-family reconstruction under capacity/session guards;
+preserve the previous receipts and compare produced artifact bytes.
+
+### V1cq canonical reconstruction completed
+
+All four canonical producers pass from4502262a5: PostgreSQL250.979s,
+MySQL8.790s, SQLite19.295s and words1.823s. All11 component files and complete
+artifact records (including core identities) are identical; only their four
+source-provenance receipts change. No manually restamped receipt is used.
+Each guard ends with an empty owned session and no unexpected source changes.
+
+The first comparison helper assumed the words receipt has the SQL artifacts
+array and stopped before adding tests or this record. Its corrected comparison
+uses the words single-artifact/core fields. Production results are unaffected.
+The preceding commit6116ce938 contains only the four genuine receipts.
+
+Add persistent negative runtime controls for a changed Engine configuration
+at the same requested stack and native image bytes supplied to the safe Wasm
+compiler. Next qualify the actual production application category, provider
+runtime tests and immutable loading from a relocated executable in an isolated
+filesystem with no repository/build output mounted. Use controlled producer
+input edits to verify actual Cargo invalidation; restore exact sources before
+final candidate validation and review. Full-gate qualification remains open.
+
+### V1cq production category clears the material-gain criterion
+
+Candidate2dfb3d936 passes all29 actual SQL application tests at four test threads
+in78.163s/329.313CPU seconds, against160.107s/1057.807CPU at the ordinary baseline.
+Elapsed improves51.18% (81.944s); CPU improves68.87%. All prior assertions execute.
+The production category clears its25%/30s and CPU<=5% thresholds.
+
+The initial build-profile/source transition is expensive and remains separate:
+native tool preparation242.992s/897.499CPU, CLI/test construction746.081s/
+2978.634CPU. The complete guard takes1072.013s and ends with an empty session.
+This is NOT a complete under-ten-minute gate, a cold-build improvement, or proof
+of ordinary retained edit cost. Qualify reuse and producer invalidation next.
+
+Add two source-bound unsafe policy records for the immutable image loader's
+function allowance and single deserialization block. Bind static-byte lifetime,
+Engine/thread borrowing, immutable aliasing and build-owned origin explicitly
+to producer/selection code and the local SAFETY explanation. No runtime source
+changes accompany these records; the observed application candidate remains
+2dfb3d936, reusable only after checking unchanged implementation inputs.
+
+### V1cq focused, reuse and actual producer-edit qualification
+
+All27 focused commands pass in451.545s. Six Engine and30 host tests pass;
+provider tests pass64 assertions in331.746s including initial graph construction.
+Their one pre-existing live MySQL comparison requires SIFR_MYSQL_TEST_URL and
+remains unexecuted, not counted as a pass. Local provenance/publication mutations,
+408-site unsafe inventory and self-tests, dependency direction, editor/host-tool
+contracts, strict coverage readiness and pinned dependency audit all pass.
+
+Actual native/protocol dependency graphs exclude both Wasmtime and the bundle.
+Unchanged native preparation0.678s and CLI/test construction0.883s pass. The first
+reuse preflight stopped before commands because it inherited a fresh12GiB
+working allocation. The retained retry uses6GiB and preserves20GiB reserve;
+the failed first record remains.
+
+The26-command production invalidation exercise passes in335.668s. The relocated
+test executable passes all6 tests in an isolated filesystem with no repository or
+build output mounted. Consumer-only edit2.771s and restoration1.228s preserve the
+generation file. Wasm, policy, generator, lock, toolchain and Cargo configuration
+edits each regenerate images; construction takes roughly17–21s and generation
+13.8–15.1s. Restored images match original bytes. Source/hash disagreement,
+unknown output paths and a deliberately exceeded byte budget reject construction.
+Only stale owned slots are pruned. Exact source restoration and final36 tests pass.
+
+A separate real product lifecycle changes only an owned producer-source comment,
+then rebuilds native tools, the CLI and executes all29 application assertions.
+That stage passes in152.081s: preparation23.639s, CLI51.276s, tests77.167s.
+Exact restored candidate passes the same lifecycle in119.123s: native11.992s,
+CLI32.126s and tests75.004s. This charges downstream reconstruction rather than
+adding only image generation to test time. It is not a matched pre-optimization
+producer-edit baseline. Source remainsad345af157; no runtime changes follow it.
+
+### V1cq remaining release-compiler consumer qualification
+
+The local correctness gate also prepares a release-mode compiler through
+verification/areas/common/release_compiler.py for installed-package/distribution
+checks. The dev build override does not configure that producer. Cargo's documented
+release build-dependency default is opt0:
+https://doc.rust-lang.org/cargo/reference/profiles.html#build-dependencies
+The canonical packaging command supplies no release build optimization override.
+Do not assume the passing development producer's timing applies to this consumer.
+
+Run canonical local release-compiler preparation with retained targets and the
+30-minute category cap, recording initial construction and actual image-generation
+time separately. Good enough for this bounded producer: all8 images constructed
+with the same policy/source identities, ordinary reuse without regeneration,
+and generation below30s (versus the previously rejected167s unoptimized producer).
+If this profile retains the unoptimized construction problem, correct the same
+build-producer optimization boundary and genuinely reconstruct affected provenance.
+Preserve runtime/codegen optimization and all installed-package correctness
+contracts; cross-platform timing and actual publication remain outside this item.
+Complete final gates and repeated V5 remain OPEN.
+
+### V1cq release producer rejected; apply the same optimization boundary
+
+Canonical release preparation succeeds396.813s/2024.967CPU seconds and unchanged
+reuse1.776s, but its eight-image generation costs175.115s. All native image hashes
+match the development producer. The build is valid, while the generation-time
+criterion fails; preserve that rejected result separately from correctness.
+
+Set only release build-dependency opt-level to1, matching the production tools'
+successful development optimization level. Keep normal release opt3, LTO-off,
+codegen units and every development setting unchanged. This addresses the same
+producer cost for the local installed-package consumer, not a new test exclusion.
+Rebuild the three affected SQL producers from exact changed root-manifest inputs;
+the independent words workspace has unchanged declared inputs.
+
+Capacity: preserve the inactive opt0 release host-build directory on the data
+volume, verifying every file before reclaiming its original location if required
+for the next allocation. Keep target release runtime products, all development
+targets, failures and evidence. No active consumers or build leases may exist
+during this operation. Record movement as capacity preparation, not a speedup.
+Require release generation below30s, unchanged reuse, current provenance and
+affected development/installed-compiler execution after this profile correction.
+
+### V1cq release correction reconstruction
+
+The three canonical producers pass from797729ec8: PostgreSQL336.498s,
+MySQL48.349s, SQLite29.301s, including the changed host build-tool configuration.
+All10 SQL Wasm files change slightly (roughly-1.9KiB to+123bytes per file), so
+the previous artifact hashes and runtime observations are historical, not current
+qualification. Their genuine receipts include new core/component hashes.
+The independent words artifact/receipt remains unchanged.
+
+Requalify all maintained provider components and application assertions on these
+new artifacts, repeat the bounded producer invalidation/relocation controls,
+and measure release construction/reuse under the corrected profile. Preserve
+all earlier measurements and the rejected175.115s generation result.
+
+### V1cq current qualification and installed-path regression
+
+Candidate c3af999c4e passes27 focused commands157.274s; all29 SQL application
+assertions78.665s/321.697CPU after restoration versus160.107s/1057.807CPU baseline.
+Actual producer-edit cycle125.141s, restored cycle117.658s. All28 invalidation and
+isolated relocation controls pass391.834s. Release generation18.725s meets30s;
+initial release preparation572.633s and unchanged1.040s are charged separately.
+
+The first installed attempt stops at the20GiB reserve after757.472s preparation;
+it is incomplete, not passing. Four inactive passed installation workspaces
+are preserved byte-for-byte (287964files,9.101GB) before reclaiming originals.
+The retry passes installed corpus250.137s and boundary equivalence169.355s.
+Installed smoke and heavy checks FAIL on a real checkout-path leak in bin/sifr.
+
+All122 checkout occurrences originate in six PostgreSQL guest components'
+C __FILE__ assertion strings. All SQL families also embed Cargo/Rustup paths.
+Outer compiler remapping cannot rewrite already embedded Wasm/native bytes.
+Correct canonical guest production: stable Rust and C path remapping for
+repository, tool homes, target and SDK; preserve assertions and reject outputs
+with producer paths before publication. Genuinely rebuild all four affected
+families and qualify current runtime/installed behavior. Do not patch artifacts,
+restamp receipts, weaken installed scanners, or claim this candidate approved.
+Previous passing measurements remain observations of c3af, not new-artifact
+qualification. Full gates and repeated under600s V5 remain OPEN.
+
+### V1cq producer path repair reconstruction
+
+Eleven producer-input controls and a real pinned-SDK C __FILE__ positive/negative
+control pass, including paths containing spaces. Canonical reconstruction passes:
+postgresql 255.467s, mysql 14.357s, sqlite 27.805s, words 8.434s.
+All11 current components pass producer-path scanning and genuine provenance
+validation. Retain changed hashes and rebuild the compiler consumers next;
+installed-package correctness and current performance qualification remain pending.
+
+### V1cq current candidate qualification complete; review pending
+
+Observed implementation candidate538c0b8caf22bdb7e5cee4e260395251bcb485da:
+- All27 focused commands pass158.776s, including six Engine,30 host and64 provider
+  assertions. The existing external-URL MySQL comparison remains ignored,
+  unexecuted and not a pass. Eleven producer-input controls also pass.
+- All29 SQL application tests pass76.754s after a producer edit and78.327s/
+  319.077CPU after exact restoration; baseline160.107s/1057.807CPU.
+  The restored category is51.08% faster and uses69.84% less child CPU.
+  Full native+CLI+test cycles are116.261s edited and123.112s restored.
+  Initial candidate preparation60.727s remains separately charged.
+- All28 actual Cargo invalidation/relocation controls pass; guard395.955s.
+  Consumer changes reuse images; Wasm, policy, generator, root manifest, lock,
+  toolchain and configuration changes regenerate them. Hash mismatch, unknown
+  output and byte-budget controls reject; source bytes are exactly restored.
+- Release preparation120.527s, unchanged1.182s; eight-image generation11.406s
+  meets the30s budget. Total embedded image bytes71177056. This is not an
+  isolated timing attribution to path remapping or a cold-build comparison.
+- Corpus preparation258.312s follows deliberate global-input invalidations.
+  Installed corpus passes252.611s; boundary/smoke/heavy all pass222.527s.
+  The previous checkout-path leakage failure is repaired without weakening
+  the installed scanner. Source/release corpus equivalence and installed
+  metadata/native assertions remain complete.
+- Complete native E2E passes151.782s/201.901CPU: all732 fixtures execute,
+  zero failures, and the expected report signature is emitted.
+- The real packaged CLI passes20 valid/invalid SQL checks across all10 maintained
+  versions in19.454s, with the source checkout and development target hidden.
+  Guard/setup time28.702s is separately recorded.
+
+Native E2E first stopped at its24GiB working-allocation preflight before any test
+ran. Five oldest passed, inactive installation workspaces were archived, fsynced,
+hashed and compared against originals (content/metadata) before reclamation.
+All failure evidence, current consumers and compiler targets remain retained.
+This capacity work takes375.204s and is not a test speedup. Archive SHA256:
+a2964b4532ef77780151d3e0efad692c0d669bd414d58d44dd99e3cdde553eb5.
+It restores36.685GB free, including the next sweep's12GiB working allowance
+above the20GiB reserve. The subsequent E2E and packaged-SQL checks pass.
+
+Complete scoped evidence: continuation-evidence/local-gate-implementation-20261020/
+v1cq-evidence.tar.gz;8436 files,1002792767 expanded bytes,350286578 compressed.
+Archive SHA256:
+0b7294e62f16a47b90e58c4aad37bc099d4ca62a6794b342997121cb6ea054f5.
+Verified old artifact mirrors and the separate11.663GB capacity archive remain
+retained separately; their manifests/hashes are included instead of duplicate
+payloads. The original incomplete qualification aggregate remains incomplete;
+the remaining checks have separate passing evidence.
+
+CI triage at c3af: missing SIFR_PERFORMANCE_REFERENCE and46 Windows PostgreSQL
+C-header failures also occur on the prior base's identical tree. Ownership is
+workflow/performance configuration and native Windows SQL portability respectively.
+Both runs also lack the deterministic report signature; their redirected inner
+logs were unavailable, so no shared inner cause is asserted. Current complete
+local E2E does emit the signature; this is not a claim that current CI is green.
+Retain those records, do not absorb their unrelated repairs into V1cq.
+
+Independent exact-candidate review and normal PR4509 merge remain pending.
+This record changes documentation only; preserve538c0b8caf as the observed
+implementation identity and prove all implementation inputs unchanged.
+Complete final correctness-only create-PR/merge gates and repeated V5 remain OPEN.
+After this item, obtain a current integrated cost map before choosing the next
+macro change. Two Cranelift units have identical direct feature/profile settings
+but differ through transitive Serde, SmallVec and rustc-hash features; that is
+an investigated candidate, not yet proof of safely removable compilation.

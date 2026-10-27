@@ -6,8 +6,8 @@
 use crate::{ComponentError, ComponentErrorKind, ComponentHostLimits};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
+use wasmtime::Engine;
 use wasmtime::component::Component;
-use wasmtime::{Config, Engine};
 
 const MAX_ENTRIES: usize = 8;
 const MAX_IMAGE_BYTES: usize = 128 * 1024 * 1024;
@@ -48,16 +48,8 @@ impl std::fmt::Debug for ComponentCompilation {
 
 impl ComponentCompilation {
     pub fn new(limits: &ComponentHostLimits) -> Result<Self, ComponentError> {
-        let mut config = Config::new();
-        config.consume_fuel(true);
-        config.wasm_component_model(true);
-        config.wasm_exceptions(true);
-        config.wasm_memory64(false);
-        config.wasm_multi_memory(true);
-        config.wasm_relaxed_simd(false);
-        config.max_wasm_stack(limits.max_wasm_stack_bytes);
-        config.cranelift_nan_canonicalization(true);
-        let engine = Engine::new(&config).map_err(crate::host::engine_error)?;
+        let engine = sifr_compiler_component_engine::engine(limits.max_wasm_stack_bytes)
+            .map_err(crate::host::engine_error)?;
         Ok(Self(Arc::new(CompilationInner {
             engine,
             max_wasm_stack_bytes: limits.max_wasm_stack_bytes,
@@ -116,8 +108,16 @@ impl ComponentCompilation {
         {
             cache.compilations += 1;
         }
-        let component =
-            Component::new(self.engine(), bytes).map_err(crate::host::component_error)?;
+        let component = match sifr_compiler_component_engine::load_embedded(
+            self.engine(),
+            hash,
+            self.0.max_wasm_stack_bytes,
+        )
+        .map_err(crate::host::engine_error)?
+        {
+            Some(component) => component,
+            None => Component::new(self.engine(), bytes).map_err(crate::host::component_error)?,
+        };
         let imports = component
             .component_type()
             .imports(self.engine())

@@ -11,6 +11,7 @@ import tomllib
 from pathlib import Path
 
 from component_artifact_validation import self_test as artifact_self_test, validate_manifest
+from component_bundle_boundary import validate_bundle_boundary
 from component_feature_boundary import (
     FeatureBoundaryError, self_test as feature_boundary_self_test, validate_feature_boundary,
 )
@@ -62,10 +63,13 @@ def validate(
     *,
     host_source_override: str | None = None,
     compilation_source_override: str | None = None,
+    policy_source_override: str | None = None,
+    loader_source_override: str | None = None,
 ) -> None:
     try:
         validate_feature_boundary(REPO_ROOT)
-    except FeatureBoundaryError as error:
+        validate_bundle_boundary(REPO_ROOT, policy_source=policy_source_override, loader_source=loader_source_override)
+    except (FeatureBoundaryError, ValueError) as error:
         raise QualificationError(str(error)) from error
     if not isinstance(payload, dict) or payload.get("schema_version") != 1:
         raise QualificationError("qualification schema_version must be 1")
@@ -132,14 +136,10 @@ def validate(
         "verify_component_hash(&registration.identity.sha256, component_bytes)?",
     }
     required_compilation_controls = {
-        "config.consume_fuel(true)",
-        "config.wasm_component_model(true)",
-        "config.cranelift_nan_canonicalization(true)",
-        "config.wasm_exceptions(true)",
-        "config.wasm_relaxed_simd(false)",
-        "config.wasm_memory64(false)",
-        "config.wasm_multi_memory(true)",
-        "config.max_wasm_stack(limits.max_wasm_stack_bytes)",
+        "sifr_compiler_component_engine::engine(limits.max_wasm_stack_bytes)",
+        "sifr_compiler_component_engine::load_embedded(",
+        "self.engine(), hash, self.0.max_wasm_stack_bytes",
+        "None => Component::new(self.engine(), bytes)",
         "Component::new(self.engine(), bytes)",
         "if !imports.is_empty()",
         "limits.max_wasm_stack_bytes != self.0.max_wasm_stack_bytes",
@@ -323,9 +323,10 @@ def run_self_test(payload: dict[str, object]) -> None:
     compilation_source = (
         REPO_ROOT / "crates/sifr_compiler_component/src/compilation.rs"
     ).read_text(encoding="utf-8")
+    policy_source = (REPO_ROOT / "crates/sifr_compiler_component_engine/src/policy.rs").read_text(encoding="utf-8")
     source_mutations = [
-        ("relaxed-simd", "compilation", "config.wasm_relaxed_simd(false)", "config.wasm_relaxed_simd(true)"),
-        ("fuel", "compilation", "config.consume_fuel(true)", "config.consume_fuel(false)"),
+        ("relaxed-simd", "policy", "config.wasm_relaxed_simd(false)", "config.wasm_relaxed_simd(true)"),
+        ("fuel", "policy", "config.consume_fuel(true)", "config.consume_fuel(false)"),
         ("imports", "compilation", "if !imports.is_empty()", "if false"),
         ("policy", "compilation", "limits.max_wasm_stack_bytes != self.0.max_wasm_stack_bytes", "false"),
         ("owner", "host", "ComponentCompilation::new(&limits)?", "unowned_engine()?"),
@@ -335,7 +336,7 @@ def run_self_test(payload: dict[str, object]) -> None:
         ("linker", "host", "Linker::<HostState>::new(engine)", "ambient_linker(engine)"),
     ]
     for name, owner, original, replacement in source_mutations:
-        source = host_source if owner == "host" else compilation_source
+        source = {"host": host_source, "compilation": compilation_source, "policy": policy_source}[owner]
         if original not in source:
             raise QualificationError(f"mutation target is absent: {name}")
         changed = source.replace(original, replacement)
@@ -347,8 +348,9 @@ def run_self_test(payload: dict[str, object]) -> None:
         else:
             raise QualificationError(f"mutation did not fail: {name}")
         mutations.append((name, payload))
+    from component_bundle_boundary import self_test as bundle_self_test
     from test_component_publication import publication_self_test
-    count = artifact_self_test() + feature_boundary_self_test(REPO_ROOT) + publication_self_test()
+    count = artifact_self_test() + feature_boundary_self_test(REPO_ROOT) + publication_self_test() + bundle_self_test(REPO_ROOT)
     print(f"compiler component qualification self-test ok: mutations={len(mutations) + count}")
 
 

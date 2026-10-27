@@ -7532,10 +7532,21 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "sifr_compiler_component_engine",
  "sifr_diagnostics",
  "sifr_identity",
  "wasmtime",
  "wat",
+]
+
+[[package]]
+name = "sifr_compiler_component_engine"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
+ "sha2 0.11.0",
+ "sifr_identity",
+ "wasmtime",
 ]
 
 [[package]]
