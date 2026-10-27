@@ -81,9 +81,18 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
         raise RuntimeError("emission requires inputs and positive worker count")
     if any(not path.is_absolute() for path in files):
         raise RuntimeError("emission requires absolute source paths")
+    count = min(jobs, len(files))
+    allocation = os.environ.get("SIFR_VERIFY_PROCESS_SLOTS")
+    if allocation is not None:
+        try:
+            slots = int(allocation)
+        except ValueError as error:
+            raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer") from error
+        if slots < 1:
+            raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer")
+        count = min(count, slots)
     env = formatter_environment(repo)
     owner = Path(tempfile.mkdtemp(prefix="sifr-emission-batch-"))
-    count = min(jobs, len(files))
     chunks = [list(range(worker, len(files), count)) for worker in range(count)]
 
     def run(worker):

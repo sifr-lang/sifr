@@ -326,29 +326,44 @@ class BatchEmissionTests(unittest.TestCase):
                     batch.read_results(output, [Path("/source.sifr")], result)
 
     def test_bounded_batches_restore_lexical_order_and_remove_only_successful_owner(self):
-        with tempfile.TemporaryDirectory() as directory:
-            owner = Path(directory) / "owner"
-            owner.mkdir()
-            files = [Path(f"/source-{index}.sifr") for index in range(7)]
-            def run(argv, **kwargs):
-                manifest = json.loads(Path(argv[3]).read_text())
-                output = Path(argv[5])
-                output.mkdir()
-                entries = []
-                for index, source in enumerate(manifest["files"]):
-                    (output / f"{index}.rs").write_text(source)
-                    entries.append({"index": index, "source": source, "exit_code": 0, "stderr": ""})
-                (output / "report.json").write_text(json.dumps({"schema": 1, "entries": entries}))
-                return subprocess.CompletedProcess(argv, 0, b"", b"")
-            with patch.object(batch, "formatter_environment", return_value={}), \
-                 patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
-                 patch.object(batch.subprocess, "run", side_effect=run) as launched:
-                results = batch.emit_many(Path("/compiler"), files, 3, Path(directory))
-                self.assertEqual(launched.call_count, 3)
-                self.assertEqual([result.stdout for result in results],
-                                 [str(path).encode() for path in files])
-                self.assertFalse(owner.exists())
+        for allocation, jobs, expected in [(None, 3, 3), ("2", 8, 2), ("4", 1, 1), ("100", 8, 7)]:
+            with self.subTest(allocation=allocation, jobs=jobs), tempfile.TemporaryDirectory() as directory:
+                owner = Path(directory) / "owner"
+                owner.mkdir()
+                files = [Path(f"/source-{index}.sifr") for index in range(7)]
+                def run(argv, **kwargs):
+                    manifest = json.loads(Path(argv[3]).read_text())
+                    output = Path(argv[5])
+                    output.mkdir()
+                    entries = []
+                    for index, source in enumerate(manifest["files"]):
+                        (output / f"{index}.rs").write_text(source)
+                        entries.append({"index": index, "source": source, "exit_code": 0, "stderr": ""})
+                    (output / "report.json").write_text(json.dumps({"schema": 1, "entries": entries}))
+                    return subprocess.CompletedProcess(argv, 0, b"", b"")
+                environment = {} if allocation is None else {"SIFR_VERIFY_PROCESS_SLOTS": allocation}
+                with patch.dict(batch.os.environ, environment, clear=True), \
+                     patch.object(batch, "formatter_environment", return_value={}), \
+                     patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
+                     patch.object(batch.subprocess, "run", side_effect=run) as launched:
+                    results = batch.emit_many(Path("/compiler"), files, jobs, Path(directory))
+                    self.assertEqual(launched.call_count, expected)
+                    self.assertEqual([result.stdout for result in results],
+                                     [str(path).encode() for path in files])
+                    self.assertFalse(owner.exists())
 
+    def test_invalid_profile_allocations_reject_before_preparation_or_children(self):
+        for allocation in ("", "0", "-1", "1.5", "unbounded"):
+            with self.subTest(allocation=allocation), \
+                 patch.dict(batch.os.environ, {"SIFR_VERIFY_PROCESS_SLOTS": allocation}), \
+                 patch.object(batch, "formatter_environment") as prepare, \
+                 patch.object(batch.tempfile, "mkdtemp") as owner, \
+                 patch.object(batch.subprocess, "run") as launch:
+                with self.assertRaisesRegex(RuntimeError, "positive integer"):
+                    batch.emit_many(Path("/compiler"), [Path("/source")], 8, Path("/repo"))
+                prepare.assert_not_called()
+                owner.assert_not_called()
+                launch.assert_not_called()
 
     def test_failed_batch_retains_all_sibling_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -366,7 +381,8 @@ class BatchEmissionTests(unittest.TestCase):
                          "stderr": "compiler diagnostic" if code else ""}
                 (output / "report.json").write_text(json.dumps({"schema": 1, "entries": [entry]}))
                 return subprocess.CompletedProcess(argv, code, b"", b"")
-            with patch.object(batch, "formatter_environment", return_value={}), \
+            with patch.dict(batch.os.environ, {}, clear=True), \
+                 patch.object(batch, "formatter_environment", return_value={}), \
                  patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
                  patch.object(batch.subprocess, "run", side_effect=run), \
                  contextlib.redirect_stderr(io.StringIO()):
