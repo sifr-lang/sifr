@@ -17893,3 +17893,101 @@ for, current failing assertions identified, total elapsed/CPU and three largest
 costs reported. A passing correctness sweep does not satisfy the600s timing
 criterion or repeated V5 scenarios. Choose the next macro repair from this
 integrated result rather than accumulating unqualified small changes.
+
+
+### V1bz completed reconciliation — full coverage, timing still open
+
+Frozen candidate75b9a43ac9ca83a1b1089ae2f2f247fa52440392: complete merge correctness-only discovery
+executes all38 steps,37 pass/1 fail, in4740.453s with
+10712.785CPU seconds. All17 preparations and18 crate
+configurations pass. All86 isolated native cases and732 positive E2E fixtures
+pass; the latter takes100.918s. All20 areas execute569 variants:568pass/1fail,
+none skipped. Ordinary driver794/794passes in330.617s, including the repaired
+native capture path. No safety deadline, reserve stop, tracked drift or surviving
+process session occurred.
+
+The only failing variant is developer_tooling/typescript-go-transfer:
+native_capture.rs:57 lacked its direct-file inventory row. This checks metadata
+on an opened native output, not semantic source discovery. Added its explicit
+driver-build-output ownership row. The guard and its self-tests both pass;
+external v1bz-inventory-repair records this documentation-only correction.
+Preserve the original complete sweep as FAILED; the documentary repair receives
+separate evidence and does not relabel the original report.
+
+Non-overlapping category totals: preparations782.194s, guardrails215.172s,
+areas2338.294s, crate configurations1287.497s, native E2E100.918s;
+the facade and enclosing-step remainder accounts for the rest. Largest individual
+costs include SQL537.361s (clean protocol382.429s), generated driver409.588s,
+lowering/CLI407.548s, sysroot380.725s and ordinary driver330.617s.
+All costs are below the1800s per-category diagnostic cap. Child invocation and
+test-body times are nested/overlapping; do not add them to category totals.
+
+The complete source/metadata corpus category is216.085s: source profiles62.393s,
+installed public CLI emission46.325s, installed sequential commands77.776s,
+binding/copy/comparison/remainder29.591s. Both source profiles and installed CLI
+each cover732fixtures; all installed native, relocation, live-generation,
+corruption/rejection and recovery assertions remain present.
+
+External v1bz-summary.json, v1bz-progress.json, v1bz-native-timings.json,
+v1bz-libtest-target-times.json and v1bz-inner-summary.json bind the full report
+to this candidate. v1bz-evidence-manifest.json records4537 files and retained
+original/current reports. An external reporting helper initially mistook three
+runner-self-test corpus paths for the real corpus output; its corrected path
+binding and failure are recorded separately, without rerunning tests.
+
+This source-changed retained-state run is not comparable to an unchanged warm
+run and is not repeated V5 qualification. Its measured CPU work alone is
+1339.098s at eight fully occupied logical CPUs; this is a bound for this workload,
+not a universal gate lower bound. Scheduling alone cannot meet600s here.
+Select the directly demonstrated repeated compiler graph work next; final full
+gates and every repeated V5 scenario remain OPEN.
+
+### V1ca prospective experiment — explicit numeric feature ownership
+
+V1bz is reconciled; select this bounded macro experiment before further tuning.
+Read-only Cargo feature trees and recursive fingerprint comparisons identify one
+incidental difference between grouped compiler tests and standalone LSP:
+frontend dev tests select sifr_sql_runtime -> sifr_runtime -> num-traits/default,
+whereas standalone LSP selects std directly. Pinned num-traits0.2.19 defines
+default=[std], with no default conditional in its Rust sources/build script.
+The difference propagates through12 first-party build units. The current grouped
+preparation is164.614s and separate LSP140.151s; these are observed invocations,
+not a proven recoverable saving.
+
+Test the smallest declaration change: keep the version and std behavior, explicitly
+disable the default alias and request std in the first-party workspace num-traits
+dependency. Do not widen grouped package selection, drop standalone configurations,
+edit third-party code/versions, remove numeric behavior, change native optimization
+or use cached correctness results. Confirm actual resulting feature graphs before
+compiling: other consumers can still enable default, so a matching name alone is
+insufficient proof of reuse.
+
+Good enough for adoption: at least25% lower complete affected preparation after
+the same observable compiler source edit, with ordinary measured wall/CPU time
+and retained targets; the compatible second selection must not rebuild the shared
+compiler library units. Record initial manifest invalidation separately and keep
+it in whole-scenario accounting. Use observable source/output witnesses and stale
+negative controls if temporary diagnostic edits are necessary; restore exact
+source bytes before qualification. Do not infer speed from an unchanged-only run
+or compare different Cargo allocation/profile settings.
+
+Before adopting, require exact graph/feature comparisons, numeric and runtime
+regressions, both complete grouped and standalone affected compiler/LSP tests,
+canonical native E2E and source/metadata corpus checks, all selected Python
+authoring checks, affected dependency/policy inventories, formatting and size.
+Preserve emitted gate selections and official checksums/locks. All independent
+SQL feature and clean-build obligations remain. Keep per-category1800s caps,
+capacity reserves and failed evidence. Exact-candidate review and intermediate
+PR/merge follow the approved policy; final complete gates and every repeated V5
+scenario remain open. Reject this experiment if it does not produce the required
+macro gain without weakening semantics.
+
+
+The source-edit witness is a temporary change to the actual undefined-variable
+diagnostic in sifr_lowering. Compile both original grouped and standalone LSP
+selections with the same allocation; a public parser/lowering API probe verifies
+the changed message, unchanged diagnostic code/range and a valid positive input.
+Retained pre-edit probes must reject the new expectation. Preserve temporary
+diagnostic commits outside the implementation branch; restore exact original
+compiler source bytes before full affected correctness qualification. Do not
+execute unchanged snapshot expectations against the deliberately edited message.
