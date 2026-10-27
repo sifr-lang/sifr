@@ -17418,3 +17418,13 @@ affected SQL application/area assertion remain required before adoption, togethe
 with build-plus-execution comparisons and independent review. Record any slower
 steady execution explicitly. The probe is not production acceptance or evidence
 that the complete gate can meet600seconds.
+
+V1br probe correction before further measurement: the unchanged Speed baseline
+exhausted100million fuel on100-table MySQL DDL (v1br-measurements, seventh
+command). No candidate speedup or policy acceptance. This100million allowance
+matches the existing SQL direct component tests, not the10million production
+default; the probe must not conflate these scopes. Keep100-table input as a
+rejection-outcome comparison, and use10-table DDL for successful multi-table
+lifetime comparisons. Do not raise fuel or memory limits. Preserve this failed
+attempt. Actual-host production-limit validation remains mandatory if the
+feasibility screen passes.
