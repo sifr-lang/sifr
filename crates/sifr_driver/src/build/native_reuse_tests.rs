@@ -187,35 +187,6 @@ fn dx9_real_same_name_root_error_lint_and_native_stage_failures() {
 
 #[test]
 fn dx9_real_concurrent_same_root_capture_is_serialized() {
-    const CASE: &str =
-        "build::native_reuse_tests::dx9_real_concurrent_same_root_capture_is_serialized";
-    const CHILD: &str = "SIFR_NATIVE_CAPTURE_TEST_CHILD";
-    if std::env::var(CHILD).as_deref() != Ok(CASE) {
-        // An unrelated libtest thread can fork while capture has the executable
-        // open for writing. CLOEXEC closes that inherited descriptor only at
-        // exec; until then Linux rejects our launch with ETXTBSY. Own the
-        // process boundary, while retaining all four competing builders below.
-        let mut command = std::process::Command::new(std::env::current_exe().expect("test binary"));
-        command
-            .args([CASE, "--exact", "--nocapture", "--test-threads=1"])
-            .env(CHILD, CASE);
-        let output = crate::process_execution::output_with_deadline(
-            &mut command,
-            std::time::Duration::from_secs(120),
-        )
-        .expect("isolated capture test");
-        assert!(
-            output.status.success(),
-            "{}\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr),
-        );
-        assert!(
-            String::from_utf8_lossy(&output.stdout).contains("1 passed; 0 failed"),
-            "the isolated process must execute the capture assertion"
-        );
-        return;
-    }
     let root = root("concurrent");
     let threads: Vec<_> = (0..4)
         .map(|value| {
@@ -251,7 +222,7 @@ fn dx9_real_concurrent_same_root_capture_is_serialized() {
                 .expect("compile");
                 // Capture belongs to this invocation, not to the retained
                 // mutable family another invocation may acquire after release.
-                std::fs::copy(report.binary_path, &captured).expect("capture");
+                super::native_capture::copy(&report.binary_path, &captured).expect("capture");
                 drop(family);
                 drop(publication);
                 assert_eq!(

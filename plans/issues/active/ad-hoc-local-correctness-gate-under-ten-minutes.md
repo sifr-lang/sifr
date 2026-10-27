@@ -17575,3 +17575,35 @@ inventory guards; independently review the exact candidate. Use the approved
 focused intermediate policy; preserve the failed full run. After closure return
 to macro CPU work and resource-bounded scheduling; do not repeat the whole gate
 solely for this isolated repair or claim600seconds.
+
+### V1bu initial repair rejected; shared publication boundary is required
+
+Candidate24357b736 passed preparation142.263s, focused15.697s, including
+both simultaneous invocations. Complete ordinary-driver validation failed
+340.945s/853.292CPU seconds:789pass/1fail/82ignored. The original concurrent
+capture test passed, but dx9_build_script_inputs_rebuild_unchanged_generated_root
+failed with the same ETXTBSY at actual returned-binary execution. Guard342.564s
+found no source drift or remaining session. Preserve both broad failures.
+The isolated-process wrapper is insufficient; do not merge it as the repair.
+
+Prospective correction: fix the shared NativeSnapshot capture boundary, remove
+the test-only process wrapper, and keep invocation-owned capture paths.
+Stage each changed file beside its destination; hold a raw exclusive file lock
+on its writable descriptor. Close that descriptor and wait for a read-only
+shared lock before atomically publishing. Unlike cache ProcessLease, do not
+explicitly unlock the writer: inherited writable descriptors must retain the
+lock until their final close. Never use the cache exclusive-lock helper on the
+binary because it writes lock-owner notes. Bound waits and honor cancellation.
+Keep every byte comparison, bundle identity, permission and runtime assertion.
+No execution retry, global test serialization, timing-based pass or skipped case.
+
+The external v1bu-writer-lock-control deterministically confirmed that the
+read-only lock remains blocked while the fork holds the writer, succeeds after
+child exit, and the captured executable then runs0. This is mechanism evidence,
+not production acceptance. Required checks: real paused-fork positive control,
+timeout/cancellation preserving the prior destination and removing staging,
+copy-error cleanup, all snapshot/content tests, existing native-reuse assertions
+(including simultaneous complete invocations), full ordinary-driver configuration,
+format/size/affected inventories and exact-candidate independent review.
+Good enough is closure of this failure class with these checks; afterward return
+to macro work reduction. Final full gates and repeated V5 remain OPEN.

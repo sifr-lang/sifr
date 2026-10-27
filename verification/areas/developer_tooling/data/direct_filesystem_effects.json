@@ -7592,13 +7592,6 @@
     {
       "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
       "symbol": "dx9_real_concurrent_same_root_capture_is_serialized",
-      "operation": "copy",
-      "site": "std::fs::copy(report.binary_path, &captured).expect(\"capture\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/native_reuse_tests.rs",
-      "symbol": "dx9_real_concurrent_same_root_capture_is_serialized",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(root).expect(\"cleanup\");",
       "classification": "output-effect"
@@ -8126,13 +8119,6 @@
       "symbol": "capture",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(parent)?;",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/build/native_storage.rs",
-      "symbol": "capture",
-      "operation": "copy",
-      "site": "std::fs::copy(source, destination)?;",
       "classification": "output-effect"
     },
     {
@@ -25507,6 +25493,167 @@
       "symbol": "missing_project_entry_keeps_canonical_resolution_error_precedence",
       "operation": "exists",
       "site": "assert!(!output.join(format!(\"{index}.rs\")).exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "copy",
+      "operation": "copy",
+      "site": "std::fs::copy(source, destination).map(|_| ())",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "drop",
+      "operation": "remove_file",
+      "site": "let _ = std::fs::remove_file(&self.path);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "stage",
+      "operation": "open",
+      "site": "let mut input = File::open(source)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "stage",
+      "operation": "metadata",
+      "site": "let metadata = input.metadata()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "stage",
+      "operation": "is_file",
+      "site": "if !metadata.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "stage",
+      "operation": "set_permissions",
+      "site": "writer.set_permissions(metadata.permissions())?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture.rs",
+      "symbol": "publish",
+      "operation": "rename",
+      "site": "std::fs::rename(&self.path, destination)",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "names",
+      "operation": "read_dir",
+      "site": "let mut names: Vec<_> = fs::read_dir(root)",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "write",
+      "site": "fs::write(&destination, b\"old publication\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(&destination).unwrap(), b\"old publication\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "read",
+      "site": "fs::read(&destination).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "read",
+      "site": "fs::read(\"/bin/true\").unwrap()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "metadata",
+      "site": "fs::metadata(&destination).unwrap().permissions().mode(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "inherited_writer_blocks_publication_until_real_exec",
+      "operation": "metadata",
+      "site": "fs::metadata(\"/bin/true\").unwrap().permissions().mode()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "publication_timeout_preserves_destination_and_removes_staging",
+      "operation": "write",
+      "site": "fs::write(&destination, b\"old publication\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "publication_timeout_preserves_destination_and_removes_staging",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(&destination).unwrap(), b\"old publication\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "publication_cancellation_preserves_destination_and_removes_staging",
+      "operation": "write",
+      "site": "fs::write(&destination, b\"old publication\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "publication_cancellation_preserves_destination_and_removes_staging",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(&destination).unwrap(), b\"old publication\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "copy_and_rename_failures_preserve_existing_paths",
+      "operation": "write",
+      "site": "fs::write(&destination, b\"old publication\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "copy_and_rename_failures_preserve_existing_paths",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(&destination).unwrap(), b\"old publication\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "copy_and_rename_failures_preserve_existing_paths",
+      "operation": "remove_file",
+      "site": "fs::remove_file(&destination).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "copy_and_rename_failures_preserve_existing_paths",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&destination).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/build/native_capture_tests.rs",
+      "symbol": "copy_and_rename_failures_preserve_existing_paths",
+      "operation": "is_dir",
+      "site": "assert!(destination.is_dir());",
       "classification": "tooling-input"
     }
   ]
