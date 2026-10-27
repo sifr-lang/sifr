@@ -78,12 +78,23 @@ class ExecutionScopeTests(unittest.TestCase):
     def test_scoped_runner_executes_every_retained_step_without_benchmark_admission(self):
         runner = ProfileRunner("merge", ["--no-fail-fast"], correctness_only=True)
         selected = [name for name, _ in runner.selected_steps()]
-        with patch.object(runner, "prepare_step_budget", return_value=None), \
+        def paired(owner, names):
+            # Keep this selection-only control in-process. The area ownership
+            # suite exercises real bounded children and their result validation.
+            self.assertIs(owner, runner)
+            for name, callback in owner.selected_steps():
+                if name in {"area_" + area for area in names}:
+                    self.assertEqual(owner.execute_step(name, callback), 0)
+            return 0
+        with patch("sifr_verify.profile_runner.run_area_group", side_effect=paired) as groups, \
+             patch.object(runner, "prepare_step_budget", return_value=None), \
              patch.object(runner, "admit_performance_reference") as admission, \
              patch.object(runner, "prepare_cargo_cache") as setup, \
              patch.object(runner, "run_guardrail"), patch.object(runner, "run_area") as areas, \
              patch.object(runner, "run_toolchain_step"), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(runner.run(), 0)
+        groups.assert_called_once_with(runner, ["python_interop", "generated_code_quality"])
+        self.assertEqual(len(areas.call_args_list), len(runner.profile["selected_areas"]))
         admission.assert_not_called()
         setup.assert_called_once_with()
         self.assertTrue(set(selected).issubset(runner.completed_steps))

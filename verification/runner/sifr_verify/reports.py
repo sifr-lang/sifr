@@ -14,6 +14,7 @@ from .paths import REPO_ROOT
 from .trace_reports import Traces
 from .command_progress import decode_child
 from .profiles import load_profile
+from .area_group_policy import order_area_steps
 from .execution_scope import scope_metadata
 
 ARTIFACT_CACHE_ROOT = Path(os.environ.get("SIFR_CACHE_DIR", (
@@ -342,7 +343,7 @@ def summarize(args: argparse.Namespace) -> int:
         median_group = int(e2e_metrics.get("median_group_fixtures", 0))
         group_skew_ratio = largest_group / max(median_group, 1) if largest_group > 0 else 0.0
     advisories = build_advisories(profile, warm_target_minutes, real_seconds, time_metrics, e2e_metrics)
-    lane_steps = list(parsed_log["lane_steps"])
+    lane_steps = order_area_steps(load_profile(args.profile), list(parsed_log["lane_steps"]))
     lane_step_budgets = parsed_log["lane_step_budgets"]
     lane_step_cache = parsed_log["lane_step_cache"]
     if isinstance(lane_step_budgets, dict):

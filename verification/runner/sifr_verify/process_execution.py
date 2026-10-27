@@ -18,6 +18,8 @@ import time
 from pathlib import Path
 from typing import Callable
 
+from .process_ownership import launch_options
+
 
 @dataclasses.dataclass(frozen=True)
 class Outcome:
@@ -88,6 +90,7 @@ def execute(
 
     start = time.monotonic()
     child_env, deadline = deadline_environment(env, deadline_seconds)
+    ownership = launch_options(child_env)
     streams = {"stdout": bytearray(), "stderr": bytearray()}
     truncated = False
     cause = "exit"
@@ -128,7 +131,7 @@ def execute(
             with _input_stream(input_bytes) as stdin:
                 proc = subprocess.Popen(command, cwd=cwd, env=child_env, stdin=stdin,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                        start_new_session=True)
+                                        **ownership)
         # Ownership begins at spawn. Selector, registration and user callback
         # failures all pass through the same group teardown and child wait.
         if proc is None:

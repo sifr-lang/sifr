@@ -16,6 +16,7 @@ from verification.json_schema_202012 import lint_schema
 
 from .native_test_allocation_checks import policy_checks as native_test_allocation_checks
 from .batch_execution_checks import policy_checks as batch_execution_checks
+from .area_group_checks import policy_checks as area_group_checks
 from .installed_emission_checks import policy_checks as installed_emission_checks
 from .generated_materialization_checks import policy_checks as generated_materialization_checks
 from .generated_quality_batch_checks import policy_checks as generated_quality_batch_checks
@@ -80,6 +81,7 @@ def run_all() -> list[str]:
         ("DX.4 shared fixture checks", dx4_fixture_checks),
         ("DX.3 subprocess ownership checks", dx3_process_checks),
         ("bounded independent command ownership", batch_execution_checks),
+        ("bounded complete-area ownership", area_group_checks),
         ("native test allocation and admission", native_test_allocation_checks),
         ("installed public emission completeness", installed_emission_checks),
         ("generated materialization completeness", generated_materialization_checks),

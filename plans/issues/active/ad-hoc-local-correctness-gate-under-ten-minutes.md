@@ -18315,3 +18315,29 @@ A production paired result is the next milestone, not another micro-optimization
 After this bounded item, reassess the largest remaining whole-gate work costs.
 Do not claim that a roughly four-minute pair saving achieves the full 600-second
 objective or eliminates mandatory clean construction and invalidation costs.
+
+
+### V1ce implementation qualification in progress
+
+The canonical correctness runner now dispatches the selected Python/quality pair
+with partitioned resources and independent canonical results. Full and other
+profiles retain sequential dispatch. Ten emitted profile/scope plans match the
+baseline exactly after removing only the new execution-group metadata.
+
+The initial nested-cancellation control FAILED: an outer worker could terminate
+before its inner executor killed a child in a separate session. Preserve the
+original source and observation under external v1ce/initial-cancellation-failure.
+The repair keeps nested executor groups inside each explicitly owned area session;
+the outer owner cleans all groups and treats abandoned live descendants as failure.
+Ordinary executors outside these area sessions keep their existing behavior.
+Cancellation tests cover both inner executor types and unrelated-session isolation.
+
+Initial focused ownership controls passed 57 tests. The first full foundation run
+FAILED because two selection/failure controls mocked sequential dispatch only;
+their test seams now cover the grouped path or isolate the intended corpus owner.
+The repaired full foundation suite passed all 35 check groups. Preserve both runs.
+The first external plan-comparison harness also failed (iteration over mapping
+keys); its separately repaired run passed all ten plans. No failed run is a pass.
+
+Complete real-area qualification, matched integrated timing, exact-candidate
+review and merge are still pending. The whole-gate 600s/V5 objective remains OPEN.
