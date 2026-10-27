@@ -17516,3 +17516,62 @@ cost baseline for this retained state. Do not call one pass repeated qualificati
 or use this unchanged-state result to waive required edit/invalidation scenarios.
 Use its largest remaining measured work and critical path to choose the next
 architectural change. Full final create-pr/merge and V5 remain OPEN.
+
+### V1bt concluded — complete retained-state sweep, one concurrency-test failure
+
+Exact candidate44b6a59617d8f7a095567d4777bad16ef313a5ff completed the public
+merge correctness-only failure-continuation facade in4121.582s (68m42s);
+outer guard4123.001s. CPU9355.153s. All38selected steps executed:
+37pass/1fail, no blocked or capped category. All17preparations and20areas pass.
+All80generated-driver and6CLI native cases pass. Positive E2E executes all732
+assertions across186retained native groups in105.661s, with no batch fallback.
+
+Nonoverlapping totals: preparation211.542s, guards178.825s, areas2297.369s,
+crate configurations1314.889s, positive E2E105.661s; remainder13.296s.
+Largest current costs: SQL540.129s (independent clean protocol389.507s),
+sysroot427.804s, lowering/CLI420.122s, generated driver414.520s,
+ordinary driver340.758s, Python292.855s, generated quality281.875s.
+Preparation differs from the earlier changed-artifact run; these are not paired
+code-speedup measurements. At eight ideal logical CPUs the observed CPU work
+alone requires1169.394s. Scheduling alone cannot satisfy600s for this workload.
+Do not generalize this bound to every state or a different implementation.
+
+Ordinary driver:789pass/1fail/82ignored; ignored ownership remains explicitly
+covered by the declared native/corpus selections. The failure is
+build::native_reuse_tests::dx9_real_concurrent_same_root_capture_is_serialized,
+ExecutableFileBusy/ETXTBSY when launching its copied executable. The history
+4097-publication assertion passed. Preserve the full run as FAILED.
+
+Evidence: v1bt-integrated-v2, its guard/empty-session receipt,
+v1bt-complete-archive (55files/65783948bytes with SHA256 manifest),
+v1bt-summary.json, v1bt-native-final.json, v1bt-declared-graph.json.
+The archive also retains contextual files; attribution requires current transcript
+and executed reports, not merely archive location. Graph export invokes no callbacks
+and does not prove output independence. Final gates and all V5 scenarios remain OPEN.
+
+### V1bu prospective — isolate native capture ownership before further scheduling
+
+A deterministic external control reproduces Linux ETXTBSY with an inherited
+writable descriptor: parent closes its CLOEXEC descriptor, paused fork still owns
+it, executable launch fails26, and launch succeeds after child exit.
+This proves the platform mechanism, not the identity of the inheriting child in
+V1bt. [Upstream explanation](https://github.com/rust-lang/rust/issues/114554).
+Evidence v1bu-fork-control/result.json; no production code changed for the control.
+
+The affected test writes and executes a captured executable inside the parallel
+libtest process. Its captures also use fixed names in retained mutable families
+after releasing their leases. Give the test its own bounded exact-test child
+process and invocation-owned capture paths. Preserve all four concurrent builders,
+different native contexts, the common caller-owned publication root, actual Cargo
+compilation, capture-before-release and all four runtime output assertions.
+Keep retained family build targets. No retry/sleep-to-pass or reduced coverage;
+this is test-process/capture ownership, not a production executable-publication fix.
+
+Good enough: the exact existing concurrency test passes, two simultaneous complete
+invocations cannot share capture paths, the full native-reuse module passes under
+ordinary libtest concurrency, and the complete ordinary-driver configuration
+passes with all expected assertions. Run formatting, file-size and affected
+inventory guards; independently review the exact candidate. Use the approved
+focused intermediate policy; preserve the failed full run. After closure return
+to macro CPU work and resource-bounded scheduling; do not repeat the whole gate
+solely for this isolated repair or claim600seconds.
