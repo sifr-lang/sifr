@@ -18571,3 +18571,33 @@ source before any subsequent qualification. This rejected prototype receives
 no implementation acceptance or review. Complete correctness gates and all V5
 scenarios remain OPEN. Choose a structural ownership/representation change
 from the measured dominant work, rather than extending local parser tuning.
+
+
+### V1ch prospective — integrated correctness and cost reconciliation
+
+V1bz's complete79-minute result predates V1ca's shared compiler graph correction
+and V1ce's production area scheduler. Those affect shared preparation and real
+category integration; both have scoped qualification, but no complete integrated
+run at their combined tree. V1cf and V1cg are rejected and production source is
+restored. Stop isolated optimizer/parser tuning and reconcile the actual gate.
+
+Run one source-frozen complete merge correctness-only sweep with no-fail-fast,
+canonical resource defaults and retained owned targets. Emit/inspect the current
+plan and check capacities first; preparation rebuilds ordinary tools as needed,
+including replacement of V1cg's rejected oracle. Keep1750-second inner safety
+deadlines below the1800-second per-category diagnostic cap. Preserve every
+failure, admission/cap stop and unexecuted category; schedule remaining independent
+coverage explicitly if a whole-run safety stop occurs. Do not mutate source or
+owned inputs during the run, and verify process cleanup.
+
+Good enough for this diagnostic: every selected preparation, crate configuration,
+native E2E fixture and area variant accounted for; complete failures, actual total
+elapsed/CPU, top costs, preparation freshness and emitted execution topology.
+Keep pair wall time distinct from summed overlapping area work. Classify this as
+a retained-state integration run with actual preparation; do not call it a warm
+unchanged run or repeated V5 qualification. Select the next structural change
+from the current largest costs rather than old aggregate estimates.
+
+No new compiler, cache, profile or scheduling implementation is authorized by this
+diagnostic record alone. Final complete phase gates and every repeated V5 edit/
+invalidation scenario remain OPEN even if this correctness sweep passes.
