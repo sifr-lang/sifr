@@ -17843,3 +17843,53 @@ Do not revive rejected V3 semantic fingerprints or duplicate existing V4aq
 batching. No persistent native deserialization, skipped checks or warm-only
 replacement for invalidation acceptance. Register production scope separately
 before implementation. User continuation authorizes the next bounded item.
+
+
+### V1by diagnostic complete — quality costs and reuse boundaries
+
+Retained final V1bx evidence provides a complete non-overlapping map:
+preparation145.476s = compiler freshness0.578s +93 materializations109.573s
+(four workers) +93 locked fetches34.705s +0.620s remainder.
+Consumer274.970s = shared read-only batch106.661s +determinism51.915s
++freshness84.816s +native10.813s +inventory20.379s +intrinsic lint0.197s
++adapter/cleanup0.189s. Combined420.446s; this sum covers those two commands,
+not the whole gate. Shared batch owns17 fresh programs for five independent
+checking modes. Determinism emits12 cases twice; freshness emits264 companions;
+two native cases retain optimized compile/link/runtime checks. Preparation still
+executes all93 public materializations and portable locked-graph checks.
+
+Three complete ordinary materializations take22.200s combined. Child-scoped CPU
+sampling and independent syscall tracing produce exactly the same generated
+trees as the ordinary executions. All three diagnostics finish under the cap,
+without tracked source drift or surviving session processes. The profiler also
+samples its diagnostic helper: do not present rounded leaf percentages as exact
+stage durations or sum overlapping command times as wall time.
+
+Compiler-PID syscall accounting shows each of the two heavier cases reads both
+SQLite C source files13times, among repeated runtime-tree integrity observations.
+Code inspection places source observations in probe snapshots and native input
+validation. Before/after-Cargo observations protect mutation detection; identical
+file paths alone do not authorize deleting those checks. Existing V4aq corpus
+sharing and V1bj finite freshness emission already remove substantial duplication.
+No newly measured safe macro change meets an adoption contract yet. Preserve
+the root-cause lead without introducing another cache or unmeasured batch API.
+
+Evidence: external v1by/cost-ownership-map.json, ordinary/profile/sampled/
+syscalls/traced directories, raw perf/trace evidence and guarded receipts.
+V1by is a diagnostic closure, not a production optimization or final qualification.
+
+### V1bz prospective integrated reconciliation
+
+Run one complete current merge correctness-only discovery sweep after V1bv's
+capture repair and V1bx's shared compiler optimization. This broad run is
+justified by changed shared compiler behavior and the previous integrated failure,
+not another unchanged timing retry. Use canonical retained preparation, inspect
+the emitted plan and capacity, keep failure continuation and1750s child safety
+deadlines below the1800s per-category cap. Preserve failed/incomplete categories;
+schedule any blocked or unexecuted required coverage explicitly.
+
+Good enough for this milestone: every declared preparation/category accounted
+for, current failing assertions identified, total elapsed/CPU and three largest
+costs reported. A passing correctness sweep does not satisfy the600s timing
+criterion or repeated V5 scenarios. Choose the next macro repair from this
+integrated result rather than accumulating unqualified small changes.
