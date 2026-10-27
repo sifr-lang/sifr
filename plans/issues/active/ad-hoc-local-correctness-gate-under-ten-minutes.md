@@ -18481,3 +18481,38 @@ warm execution alone. Retain the1800s category cap, reserves, owned targets and
 source-frozen comparisons. Final full correctness gates and every V5 scenario
 remain required. This is a bounded macro CPU experiment, not a new cache or
 evidence that the whole gate meets600seconds.
+
+
+### V1cf concluded — native JIT optimization screen rejected
+
+Frozen record17ae730967d86e3c972b1c7e6a6f9aea071fbda6, unchanged product source.
+The opt3 native Cranelift/register-allocation probe completes90 executions across
+SQLite, MySQL and PostgreSQL, valid/changed/invalid10-table inputs, repeated
+fresh Stores and100-table fuel-limit controls. All paired responses are byte
+identical and resource-limit outcomes agree. Aggregate one-request medians fall
+14.199% elapsed and13.756% CPU, below the prospective25% screen. Reject the
+experiment; do not expand to production or spend more tuning this profile.
+
+Baseline preparation reuses all179 artifacts in0.201s. Optimized preparation
+takes92.378s/274.890CPU seconds and rebuilds9 artifacts; these are retained-target
+transition costs, not a cold-build comparison or projected full-gate saving.
+Package/target/feature inventories match. The only effective profile differences
+are opt_level for the two named libraries and Cranelift's build script (a package
+override also applies there); assertions/overflow/debug settings are unchanged.
+The external probe includes the cache feature but explicitly disables caching;
+it does not qualify the production host. No repository profile or lock changed.
+
+Preserve two investigative failures: the first comparison incorrectly collapsed
+duplicate host/target artifact rows and expected only two profile changes; the
+repaired multiset-aware comparison passes. The first workload reused V1br's
+original100-table successful-input assumption, which exhausts100-million fuel.
+The separately repaired run retains that rejection control and uses V1br's
+qualified10-table successful workload without raising limits. Original failures
+remain failures. The successful complete guard takes115.254s; all sessions
+finish empty and source-frozen, without reserve violations.
+
+Evidence under external v1cf includes original/corrected helpers, all raw
+outputs/requests/responses, build profiles, source and binary identities and
+guards. This is a rejected feasibility experiment, so no implementation review
+or PR is required. Final gate/V5 remains OPEN. Continue with structural repeated-
+work elimination; do not portray this modest probe improvement as a gate gain.
