@@ -19103,3 +19103,61 @@ tools through this change. Target compatibility, installed relocation, build cos
 artifact growth, bounds, source tampering and all versioned provider components
 must be qualified before adoption. Do not assume the experimental producer's
 build cost is amortized away in a mandatory invalidation scenario.
+
+### V1co concluded — actual SQL category saves89.242seconds
+
+All29 tests pass both at ordinary baseline29634786c and temporary integration
+b568ae14fe6ab4fb975c5928ee0693b3186657b3, with four libtest threads and identical
+ordinary allocation. Category time falls160.106597 to70.864338s (55.74% reduction).
+CPU falls1057.807280 to303.869915s (71.27% reduction). All33 component-host tests
+(including3 selection controls) pass; formatting and file guardrails pass.
+Preparation is separately recorded: baseline native24.380s + CLI29.111s;
+prototype native22.831s + CLI18.074s plus7.347s focused controls/build. Those
+preparation sequences differ, so do not claim their difference as a speedup.
+
+The temporary integration clears its25%/30s and CPU thresholds. It does not
+qualify final generation/invalidation costs: V1cn separately spent81.753s
+building its producer and4.000s creating images. Preserve exact evidence,
+source patch and diagnostic branch; restore production source before any new
+architecture. Existing target binaries still contain the experimental loader
+until ordinary preparation rebuilds them. Full gates and repeated V5 stay OPEN.
+
+Preserve two harness setup failures separately: the initial baseline output
+directory collided with its guard directory before tests ran; the first
+prototype guard was launched before its helper existed after a docs whitespace
+check stopped setup. Neither failure executed or passed a category. A transient
+SSH interruption during the successful prototype did not stop its owned guard;
+its final receipt confirms normal exit, no source drift and an empty session.
+
+### V1cp prospective — build-owned immutable bundle boundary
+
+Before adopting the runtime optimization, exercise the actual generation model
+in an external crate: one Engine policy source used by its build script and
+runtime; pinned Wasmtime48.0.1; exact maintained Wasm inputs hashed/deduplicated;
+build-script-produced native images embedded from OUT_DIR. Never accept supplied
+native files, stale external producer outputs or runtime native paths. A private
+unsafe deserialize operation accepts only those generated immutable constants.
+
+Measure initial construction separately, then unchanged reconstruction and
+invalidation of Wasm/policy/generator inputs. Unknown or incompatible source/
+Engine identity stays on the existing safe Wasm path. Preserve all limits and
+authentication ordering. A build failure must not silently select older images.
+Artifact/source identities and the generated native-byte hashes are recorded.
+
+The production boundary should remain compiler-owned and independent of provider
+Rust/native-tool compilation. Share the policy source inside that dedicated
+crate, avoiding new runtime dependencies on SQL implementation crates. Native
+builds can precompile for their build host; cross-target construction outside this
+local timing goal must preserve existing safe compilation and never execute or
+assume host-native images on a different target. CPU/config changes must reject
+incompatible embedded code before execution. Do not alter Engine policy merely
+to force compatibility.
+
+Good enough: demonstrate ordinary reuse without rerunning image generation, and
+correct image regeneration for every declared producer input while retaining the
+actual category's material improvement after counting generation in affected
+scenarios. Track build-script dependency optimization cost explicitly: a fast
+standalone producer is not evidence that a Cargo build-script producer is fast.
+Qualify all maintained versions, native-input rejection, relocation without build
+files, source/policy misses and precise invalidation before production adoption.
+Final complete correctness-only gates and repeated V5 remain OPEN.
