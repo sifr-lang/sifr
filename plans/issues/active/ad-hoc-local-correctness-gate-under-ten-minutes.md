@@ -17991,3 +17991,60 @@ Retained pre-edit probes must reject the new expectation. Preserve temporary
 diagnostic commits outside the implementation branch; restore exact original
 compiler source bytes before full affected correctness qualification. Do not
 execute unchanged snapshot expectations against the deliberately edited message.
+
+
+### V1ca closure — merged numeric feature ownership and compiler reuse
+
+PR4505 merged as5bc920607ec028aeea5366e35344402619fa8be1.
+Exact reviewed/qualified implementation:c5690c40b5329a7c6269dfb6a057ee4d08406d23.
+The sole production change explicitly requests num-traits0.2.19/std without its
+default alias. Versions, locks, optimization and test selection remain unchanged.
+
+A controlled real lowering edit takes80.265s/221.403CPU seconds on the baseline
+versus47.467s/127.422CPU seconds on the candidate:40.862% wall reduction,
+exceeding the25% adoption criterion. Grouped preparation49.179s ->46.952s;
+standalone LSP31.086s ->0.515s with zero rebuilt units. Eleven shared compiler
+libraries and the LSP test executable match across the compatible selections.
+Commands, environments, source-edit bytes and behavioral outputs match; both
+pre-edit binary sets correctly reject the new diagnostic expectation.
+Temporary diagnostic commits7a82b4e92/cf82f4b9b remain outside the implementation.
+Original compiler source is restored for every qualification below.
+
+Initial feature normalization plus restoration of the diagnostic source costs
+283.449s separately. Qualification preparation includes229.922s release/corpus
+preparation. Do not add alternating experiments into a fictitious gate total.
+The complete native E2E run takes316.446s with9/186 cache hits, distinct from the
+earlier warm100.918s run. All732 runtime assertions pass without blocked cases
+or original batch failures.
+
+Scoped tests:2827 grouped executions,116 standalone LSP,1148 lowering,
+100 runtime,118 runtime-http,1 stdlib,11 stdlib feature-API and59 all-features
+pass. Counts are executions across configurations, not unique tests.
+The unchanged lowering ignore test_bare_deque_call_resolves_without_import
+depends on the driver-loaded stdlib registry; it is recorded, not counted passing.
+Both development/release732-fixture source/metadata corpora pass in83.934s
+outer time. All30 selected Python variants pass in403.952s; formatting, size,
+inventories and profile checks pass. The complete emitted merge correctness-only
+plan is exactly equal to V1bz, including assertion owners and exclusions.
+
+The external extra corpus comparison initially addressed the archived parent
+instead of its release directory. Both canonical current profiles had already
+passed. Preserve that wrapper and sequence as FAILED; a separate0.589s comparison
+repair verifies baseline/current release outputs, publication equality, and
+development/release equality with unchanged input SHA256 values and source.
+An earlier external unit-proof helper expected an LSP rlib rather than its actual
+test executable; its correction preceded temporary source mutation. Preserve
+both diagnostic records without treating them as product failures.
+
+Exact-candidate Claude review:SATISFIED, no blockers. Evidence under
+reviews/c5690c40b5329a7c6269dfb6a057ee4d08406d23 contains the atomic response,
+prompt, log and metadata. v1ca/accepted-summary.json and
+v1ca-evidence-manifest.json bind4626 locally size/SHA256-verified files.
+Eight probe binaries remain remotely retained with explicit hashes/sizes.
+
+Nonblocking follow-ups and owners: stdlib-parity historical feature-tree snapshots
+still display the old default alias; their README already defines point-in-time
+evidence, so refresh/provenance belongs to their next evidence update. The transfer
+inventory's existing blank line breaks Markdown table rendering; its documentation
+owner can repair that cosmetic structure separately. Neither changes executed
+coverage. Final whole-phase gates and repeated V5 remain OPEN; no600s claim.
