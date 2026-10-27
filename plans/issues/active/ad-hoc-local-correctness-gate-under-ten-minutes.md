@@ -17607,3 +17607,65 @@ copy-error cleanup, all snapshot/content tests, existing native-reuse assertions
 format/size/affected inventories and exact-candidate independent review.
 Good enough is closure of this failure class with these checks; afterward return
 to macro work reduction. Final full gates and repeated V5 remain OPEN.
+
+### V1bv delivered — shared inherited-writer publication boundary
+
+[PR4503](https://github.com/sifr-lang/sifr/pull/4503) merged as
+ec151a3148debb3f333c35a7275d6cad7c65375d; validated/reviewed implementation
+6a873c1dfc36df395fc01f79f3932057a22cb58b. Unix NativeSnapshot capture now stages
+beside the destination and retains a raw writer lock through inherited descriptor
+lifetimes; read-only shared admission precedes atomic replacement. Existing
+non-Unix copy behavior remains. Removed the insufficient isolated-test wrapper;
+all four builders and runtime results remain, with invocation-owned captures.
+
+Preparation guard156.769s PASS: metadata/test build33.525s; four deterministic
+publication regressions0.466s; format, size, method-authority, unsafe-ABI and
+filesystem inventories pass. Seven native-reuse and ten native-storage tests pass,
+as do two simultaneous complete concurrency invocations. The external focused
+harness incorrectly expected seven storage cases after all ten passed; preserve
+that failure. Recovery validated the exact candidate/output identities and ran
+only the remaining concurrent invocations (guard5.688s PASS).
+
+Complete ordinary-driver configuration334.906s/858.425CPU seconds:
+794pass/0fail/82ignored. Those ignored cases retain separate gate ownership.
+Guard336.556s reports no source drift, leftovers or session. Independent exact-
+candidate Claude Opus review SATISFIED, no blockers; retained outside the tree at
+reviews/6a873c1dfc36df395fc01f79f3932057a22cb58b. Nonblocking follow-ups belong
+to storage portability/durability owners: network-filesystem lock semantics,
+macOS copy metadata/clone behavior, optional crash durability. They are not
+local timing acceptance or part of this repair. No extra sync or retries added.
+
+Evidence: v1bv-preparation-validation, v1bv-focused-validation,
+v1bv-focused-recovery-validation, v1bv-ordinary-driver-validation and guards.
+The first preparation harness attempt collided with its own new evidence directory
+before executing tests; its failure remains in v1bv-preparation. Both earlier
+broad ETXTBSY failures remain failed. This is correctness recovery, not a speedup
+comparison or a new full-gate pass. Final complete gates and V5 remain OPEN.
+
+### V1bw prospective — attribute dominant compiler work before structural redesign
+
+The complete V1bt workload consumed9355CPU seconds; ideal eight-way scheduling
+alone still needs1169seconds. Native capture correctness is now repaired.
+Prioritize reducing repeated compiler work across the expensive corpus,
+lowering/CLI and SQL consumers before adding scheduler complexity.
+
+Inspect current source and prepared-artifact contracts. Prepare affected tools
+once against the current immutable candidate with retained owned targets.
+Run child-scoped CPU sampling of one complete corpus oracle and one complete
+SQL application test group; use the ordinary passing V1bt runs as contextual
+costs only, and record current ordinary comparison runs when input/state differs.
+Do not reuse old pass results or substitute a fixture subset for full group
+assertions. Record binary/input identity, wall/CPU, memory and preparation costs;
+sampling overhead is diagnostic, never acceptance timing. Keep a1800s category
+cap, bounded resources/reserve, no simultaneous builds or global perf-policy
+changes. Preserve all failures and verify source immutability.
+
+Good enough: identify the dominant shared operations with CPU samples plus
+source corroboration, map each to retained assertions/isolation, and estimate
+the maximum whole-gate benefit before selecting one bounded architectural
+prototype. Prefer a change that materially reduces a dominant workload (target
+at least25percent), measure build plus execution and required invalidation early,
+and stop proposals that cannot materially change the macro cost. Do not weaken
+the independent SQL cold constructions, source-versus-metadata oracle, CLI
+boundaries or optimized-runtime assertions. No global process cache or universal
+cache redesign without a demonstrated ownership/invalidation contract.
