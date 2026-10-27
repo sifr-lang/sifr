@@ -18906,3 +18906,61 @@ The previous persistent native-image cache remains unaccepted; no deserializatio
 daemon, cache or production behavior change is authorized by this diagnostic.
 Restore instrumentation after archiving it, preserve its candidate, and verify
 ordinary behavior before qualified reuse. Full gates and repeated V5 remain OPEN.
+
+
+### V1cl concluded — repeated component compilation is category-scale work
+
+All29 application tests pass at instrumented candidate
+7dbb944b9c967063fc735bc114c43cb773e6f834. Native prerequisite25.241s and
+instrumented build33.561s are separate from test command180.204s/
+1077.462CPU seconds. Guard244.507s completes empty without source/capacity
+failure. Compare with the ordinary163.715s only as attribution context, not a
+speed regression or acceptance measurement.
+
+The811 recorded events cover71 observed processes:83 Engine constructions,
+83 component compilations,182 host analyses/executions and99 owner-cache hits.
+SQLite compiles45 times across39 processes; MySQL18 across16; PostgreSQL20
+across18. One process recompiles SQLite7 times and the other families3 times
+each; all other observed process/hash pairs compile once. Engine construction
+totals0.014s; guest execution0.433s; compilation288.266s summed overlapping
+child wall time. The union of compilation intervals is147.192s within180.204s
+category wall time. This union is NOT removable critical-path time or CPU time;
+do not promise that entire amount as a saving.
+
+Preserve exact per-process events and v1cl-reconciled.json. The instrumentation
+records observed component calls, not every CLI process (early rejects may never
+compile). Pointer-based owner labels may repeat across lifetimes. All test
+outcomes are independently reconciled from the terminal29-pass libtest result.
+The unchanged compiled-owner cache works; sharing only the parent test harness's
+owner cannot remove the dominant fresh CLI-process work. No persistent cache or
+service is adopted. Archive then restore the two diagnostic source files.
+
+### V1cm prospective feasibility — separate guest production optimization
+
+The canonical SQL component producer uses the workspace release profile.
+That profile's LTO-off choice was accepted to reduce native compiler rebuilds;
+it also currently governs Wasm guest construction. This is a measured ownership
+boundary to test, not proof that changing guest optimization will improve speed.
+
+First build an external SQLite component using the same pinned source, Rust1.98.1,
+WASI SDK34, virtualizer, feature selection and codegen-units16, changing only
+guest LTO to thin. Keep the ordinary compiler profile, Wasmtime Engine policy,
+sandbox, fuel/stack/memory/import limits, component protocol and every runtime
+assertion unchanged. Use an owned external target and external artifacts; do not
+publish speculative component bytes or stamp checked-in provenance. Charge actual
+producer build time separately and preserve exact rustc flags/source/tool/output
+identities. No native-image serialization/cache or new daemon is involved.
+
+Run alternating fresh-process baseline/candidate component probes with identical
+requests and compare full output bytes. Good enough to expand: at least25% lower
+median SQLite compilation-plus-execution time with exact positive/changed/negative
+outputs and no omitted invocation, recording size and producer cost. If rejected,
+stop this profile hypothesis. If promising, expand to all three families and
+register the actual producer/profile/provenance implementation, all supported
+versions, component-host/runtime/CLI/corpus and mutation controls before adoption.
+
+A complete29-test application comparison must then improve at least25% and30s,
+with no more than5% CPU increase, before accepting a category speedup. Required
+producer reconstruction and profile/dependency invalidation costs must remain in
+their gate scenarios; never hide a slower mandatory build as bootstrap. Final
+correctness-only gates, all coverage and repeated V5 remain OPEN.

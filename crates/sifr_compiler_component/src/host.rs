@@ -57,8 +57,6 @@ impl ComponentHost {
         component_bytes: &[u8],
         request: &EmbeddedAnalysisRequest,
     ) -> Result<ComponentRun, ComponentError> {
-        let _analysis_span =
-            crate::compilation::DiagnosticSpan::new("analysis", 0, &request.component.sha256);
         if component_bytes.len() > self.limits.max_component_bytes {
             return Err(ComponentError::new(
                 ComponentErrorKind::ResourceLimit,
@@ -150,11 +148,6 @@ impl ComponentHost {
         let component = self
             .compilation
             .component(&request.component.sha256, component_bytes)?;
-        let _execution_span = crate::compilation::DiagnosticSpan::new(
-            "guest_execution",
-            0,
-            &request.component.sha256,
-        );
         let engine = self.compilation.engine();
         let linker = Linker::<HostState>::new(engine);
         let store_limits = StoreLimitsBuilder::new()
