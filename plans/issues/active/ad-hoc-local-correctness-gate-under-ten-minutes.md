@@ -18160,3 +18160,44 @@ v1cc evidence remain for reproducibility; no PR or independent acceptance review
 is appropriate for a rejected prototype. Full gates and repeated V5 remain OPEN.
 Next prioritize bounded whole-category overlap with explicit output/build ownership
 and allocation, while continuing to distinguish total work from elapsed time.
+
+### V1cd prospective — resource-bounded overlap of complete verification areas
+
+Stop isolated compiler tuning after V1cb/V1cc rejection. Test the complete selected
+Python interoperability and generated-code-quality areas as the first independent
+execution pair. Their shared immutable compiler/input dependencies are prepared
+once; generated quality owns its generated/shared/batch roots, while Python owns
+its examples, authoring, readonly and native-runtime roots. Preserve leases on any
+shared native Cargo families and all per-consumer freshness, mutation and runtime
+checks. Shared compiler executables must remain byte-identical during execution.
+A source/output collision or compiler mutation is a failed feasibility result.
+
+Prerequisite: finite demo emission currently defaults to eight workers regardless
+of SIFR_VERIFY_PROCESS_SLOTS. Cap emitted worker count by a valid declared profile
+allocation; retain explicit standalone --jobs behavior when no allocation exists.
+Reject malformed/nonpositive allocations before starting children. Validate worker
+bounds, original lexical outcomes, failures, cleanup and complete input accounting.
+Do not turn this prerequisite alone into a claimed speedup.
+
+Use the canonical emitted merge correctness-only selection, preparation dependency
+closure and all selected suites for both areas. Record the complete ownership and
+nested allocation map before overlap. Compare sequential execution with the full
+four-slot budget against concurrent quality/Python execution within that same
+total budget (initially three slots plus one). Propagate Cargo, Rayon, libtest,
+finite-emission and native-test allocations; do not rely on an outer thread limit
+while children retain larger budgets. Retain shared targets; measure Cargo waits,
+wall/CPU and memory/reserve observations. Every child/category has an1800s cap;
+failure continuation cannot erase a failed or unexecuted consumer.
+
+Good enough to propose a production scheduler: both complete area reports pass
+with exactly matching selected assertions/certification, at least20% lower paired
+elapsed time, no more than10% extra CPU work, no memory reserve violation, source
+or compiler-byte drift, output collision or surviving processes. Charge required
+preparation separately and report the combined lifecycle, not only the best lane.
+Repeat in reverse order if the first feasibility result passes. First use an
+external controller; do not change canonical area ordering or introduce a general
+scheduler until the ownership/resource/benefit proof passes. Register concrete
+production scheduling and failure/cancellation/blocked-consumer tests separately
+before adoption, with exact-candidate independent review and final phase gates.
+A large elapsed-time gain still cannot remove the measured whole-gate CPU-work
+floor; the600s objective and all V5 scenarios remain OPEN.
