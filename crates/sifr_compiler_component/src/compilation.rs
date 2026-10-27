@@ -9,6 +9,8 @@ use std::sync::{Arc, Mutex};
 use wasmtime::component::Component;
 use wasmtime::{Config, Engine};
 
+mod embedded;
+
 const MAX_ENTRIES: usize = 8;
 const MAX_IMAGE_BYTES: usize = 128 * 1024 * 1024;
 
@@ -116,8 +118,12 @@ impl ComponentCompilation {
         {
             cache.compilations += 1;
         }
-        let component =
-            Component::new(self.engine(), bytes).map_err(crate::host::component_error)?;
+        let component = match embedded::load(self.engine(), hash, self.0.max_wasm_stack_bytes)
+            .map_err(crate::host::component_error)?
+        {
+            Some(component) => component,
+            None => Component::new(self.engine(), bytes).map_err(crate::host::component_error)?,
+        };
         let imports = component
             .component_type()
             .imports(self.engine())
