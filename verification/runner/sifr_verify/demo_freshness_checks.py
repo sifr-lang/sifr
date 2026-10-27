@@ -332,6 +332,11 @@ class BatchEmissionTests(unittest.TestCase):
                 owner.mkdir()
                 files = [Path(f"/source-{index}.sifr") for index in range(7)]
                 def run(argv, **kwargs):
+                    child = kwargs["env"]
+                    expected_inner = "7" if allocation is None else "1"
+                    self.assertEqual(child["CARGO_BUILD_JOBS"], expected_inner)
+                    self.assertEqual(child["RAYON_NUM_THREADS"], expected_inner)
+                    self.assertEqual(child["RUSTFMT"], "/pinned/rustfmt")
                     manifest = json.loads(Path(argv[3]).read_text())
                     output = Path(argv[5])
                     output.mkdir()
@@ -343,7 +348,9 @@ class BatchEmissionTests(unittest.TestCase):
                     return subprocess.CompletedProcess(argv, 0, b"", b"")
                 environment = {} if allocation is None else {"SIFR_VERIFY_PROCESS_SLOTS": allocation}
                 with patch.dict(batch.os.environ, environment, clear=True), \
-                     patch.object(batch, "formatter_environment", return_value={}), \
+                     patch.object(batch, "formatter_environment", return_value={
+                         "CARGO_BUILD_JOBS": "7", "RAYON_NUM_THREADS": "7",
+                         "RUSTFMT": "/pinned/rustfmt"}), \
                      patch.object(batch.tempfile, "mkdtemp", return_value=str(owner)), \
                      patch.object(batch.subprocess, "run", side_effect=run) as launched:
                     results = batch.emit_many(Path("/compiler"), files, jobs, Path(directory))

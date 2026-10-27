@@ -92,6 +92,9 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
             raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer")
         count = min(count, slots)
     env = formatter_environment(repo)
+    if allocation is not None:
+        # Parallel finite batches each own one slot of the declared budget.
+        env.update(CARGO_BUILD_JOBS="1", RAYON_NUM_THREADS="1")
     owner = Path(tempfile.mkdtemp(prefix="sifr-emission-batch-"))
     chunks = [list(range(worker, len(files), count)) for worker in range(count)]
 
