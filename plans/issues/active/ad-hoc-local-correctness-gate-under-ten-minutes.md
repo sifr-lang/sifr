@@ -18398,3 +18398,295 @@ runner self-tests, profile/plan validation, size and diff checks, then obtain
 exact-candidate independent review. If execution inputs change beyond this
 boundary, rerun the affected complete areas. Complete final phase correctness
 gates and repeated V5 timing remain OPEN.
+
+
+### V1ce closure — production bounded area scheduling merged
+
+PR [#4507](https://github.com/sifr-lang/sifr/pull/4507) merged final candidate
+680a0edb8808fab3af20609c05f061808ac3b9a0 as
+c19e758bf69253b128f351087185d3225bfef17d. The merge tree is identical to the
+reviewed candidate. The measured execution identity remains2463d50dd92aa04408216405729c519a6c5b79f0.
+The exact measured-to-final production diff contains only child report encoding
+and emitted normal-slot metadata substitutions; retained execution inputs are
+unchanged. Complete real-parent replay preserves all131 merge and55 create-pr
+metric rows and prevents child text from forging authoritative parent results.
+
+Final affected43 tests pass; the final guarded validation takes83.743s and passes
+all35 foundation groups, profiles check, ten baseline-equivalent emitted plans,
+file-size guardrails and diff checks. External v1ce/final-policy and
+v1ce/final-reporting-replay retain exact commands, results and the reuse boundary.
+All574 evidence payloads in v1ce-evidence-manifest.json were copied and verified
+by SHA256/size; archive SHA256 is
+b015f9746131fc3292c788c711776be0ba329903d8374bc29d061a62f506a821.
+Initial cancellation, foundation, plan-comparison and create-pr harness failures
+remain preserved as failures.
+
+Independent exact-candidate review is SATISFIED with no blocking findings.
+External reviews/680a0edb8808fab3af20609c05f061808ac3b9a0/response.md has SHA256
+4b299e95db5e005beb29cb219e66b5f8b72c7aa677d591f7d30c72865dcb57f7.
+The scoped intermediate policy applies; this is not final phase acceptance.
+The measured pair saves242.815s for merge and19.954s against the warmed create-pr
+control. Stop tuning this pair. Complete correctness gates and repeated V5,
+including required edits/invalidation, remain OPEN.
+
+Separate follow-up ownership from the review:
+- Portable process supervision: qualify macOS ps/getsid and permission-denied
+  behavior before portability acceptance; outside this local Linux measurement.
+- Runner deadline policy: document/align the group's default2400s safety deadline
+  versus scalar execution's unset overall deadline. Diagnostics retain1800s caps.
+- Future native allocation: audit per-lane reserve accounting before admitting a
+  native subowner; current enrolled areas do not use one.
+- Runner observability: consider streaming bounded child progress; current32MiB
+  buffered outputs preserve results but delay live progress.
+- V5 integrated failure accounting: exercise admitted sibling completion and
+  rejection of later queued categories; quality now starts at Python's position.
+- Corpus coverage: optional combined grouped-dispatch/corpus failure control;
+  existing separate controls cover their declared boundaries.
+- Toolchain lifecycle: start any future persistent compiler cache daemon outside
+  owned area sessions; preserve leftover-process failure semantics.
+
+Next: reassess remaining macro work using current source and retained complete
+costs. Historical serial-libtest and failed concurrent observations are not
+accepted speedups. Do not revive the rejected V1cc syntax cache or V1be durable
+storage rewrite without a materially different, measured ownership contract.
+
+
+### V1cf prospective feasibility — native JIT compiler work reduction
+
+V1bw attributes substantial SQL CPU to Cranelift/register allocation. Current
+development dependencies use opt1; the earlier opt0 experiment made real guest
+execution8.6 times slower and was rejected. Guest OptLevel::None is separately
+rejected. Neither experiment measures a more optimized native JIT implementation.
+
+Use the retained external component probe to compare baseline opt1 with native
+cranelift-codegen and regalloc2 opt3, keeping Wasmtime48.0.1, Cargo.lock, guest
+optimization Speed, component bytes, request bytes, fuel/memory/stack/import
+policies and four-worker allocation identical. Compile both through pinned Rust,
+retain/copy each executable and its source/config/artifact identity, and record
+preparation separately. This external feasibility experiment changes no product
+source, dependency pins, guest artifact or production policy.
+
+Run fresh processes over SQLite, MySQL and PostgreSQL valid, changed, invalid
+and larger schemas, including repeated fresh Stores. Alternate executable order,
+compare every response byte and diagnostics, and preserve all failures. Good
+enough to expand: at least25% lower aggregate one-request elapsed and CPU, no
+provider slowdown above10%, unchanged repeated execution behavior, and explicit
+added build cost. Reject marginal results without full production qualification.
+
+If promising, register a production profile proposal only after measuring the
+complete29-case SQL CLI group, all actual provider component assertions, and
+the mandatory clean-build protocol/build-plus-execution tradeoff. More optimized
+dependencies may increase clean construction and cannot be accepted by citing
+warm execution alone. Retain the1800s category cap, reserves, owned targets and
+source-frozen comparisons. Final full correctness gates and every V5 scenario
+remain required. This is a bounded macro CPU experiment, not a new cache or
+evidence that the whole gate meets600seconds.
+
+
+### V1cf concluded — native JIT optimization screen rejected
+
+Frozen record17ae730967d86e3c972b1c7e6a6f9aea071fbda6, unchanged product source.
+The opt3 native Cranelift/register-allocation probe completes90 executions across
+SQLite, MySQL and PostgreSQL, valid/changed/invalid10-table inputs, repeated
+fresh Stores and100-table fuel-limit controls. All paired responses are byte
+identical and resource-limit outcomes agree. Aggregate one-request medians fall
+14.199% elapsed and13.756% CPU, below the prospective25% screen. Reject the
+experiment; do not expand to production or spend more tuning this profile.
+
+Baseline preparation reuses all179 artifacts in0.201s. Optimized preparation
+takes92.378s/274.890CPU seconds and rebuilds9 artifacts; these are retained-target
+transition costs, not a cold-build comparison or projected full-gate saving.
+Package/target/feature inventories match. The only effective profile differences
+are opt_level for the two named libraries and Cranelift's build script (a package
+override also applies there); assertions/overflow/debug settings are unchanged.
+The external probe includes the cache feature but explicitly disables caching;
+it does not qualify the production host. No repository profile or lock changed.
+
+Preserve two investigative failures: the first comparison incorrectly collapsed
+duplicate host/target artifact rows and expected only two profile changes; the
+repaired multiset-aware comparison passes. The first workload reused V1br's
+original100-table successful-input assumption, which exhausts100-million fuel.
+The separately repaired run retains that rejection control and uses V1br's
+qualified10-table successful workload without raising limits. Original failures
+remain failures. The successful complete guard takes115.254s; all sessions
+finish empty and source-frozen, without reserve violations.
+
+Evidence under external v1cf includes original/corrected helpers, all raw
+outputs/requests/responses, build profiles, source and binary identities and
+guards. This is a rejected feasibility experiment, so no implementation review
+or PR is required. Final gate/V5 remains OPEN. Continue with structural repeated-
+work elimination; do not portray this modest probe improvement as a gate gain.
+
+
+### V1cg prospective feasibility — avoid unused stdlib analysis
+
+Current plan_demanded_stdlib_sources performs two eager analyses whose results
+are unused on common paths: it parses module definitions to intersect an empty
+suppressed-union set, and parses selected-source identifiers before checking
+whether the module has any dependencies. V1bx already retains analyses within a
+request; V1cc's prepared-syntax representation was rejected. This proposal changes
+neither representation nor lifetime: defer each canonical analysis until its
+existing consumer actually needs it. All dependency, suppression, constant,
+canonical-name, declaration-order and fixed-point semantics remain unchanged.
+
+First rebuild the ordinary corpus producer to remove any retained rejected
+prototype, then run the complete732-fixture source/metadata oracle as a current
+baseline. Prototype only the two demand checks above and run the existing
+selection regressions, all codegen tests, formatting and size guards. Compare
+the complete ordinary corpus and all emitted bytes against that baseline.
+Good enough to expand: at least25% lower complete corpus elapsed and CPU, with
+identical coverage/output. If rejected, restore production source and retain
+the prototype/evidence without further tuning. If promising, repeat alternating
+timings and qualify both source/metadata profiles, all732 native E2E assertions,
+affected generated quality/CLI/invalidation contracts and exact-candidate review
+before intermediate merge. Charge actual preparation separately. Preserve
+1800s caps, capacity reserves and final complete gate/V5 requirements.
+
+
+### V1cg concluded — eager-analysis avoidance screen rejected
+
+Prototype fa073ffb93c887f6212ae16e679a49cb74fb32fc passes all5 selection
+regressions and1785 codegen tests, formatting and file-size checks. Both complete
+732-fixture source/metadata oracle runs pass and all emitted output compares
+exactly. Baseline5dc74840ff744acc49ff839ab10ac0eac5f2c4af takes56.436s/
+56.348CPU seconds; candidate takes57.631s/56.895CPU seconds. No meaningful
+improvement, and the25% adoption threshold fails. Restore the sole changed
+production file; do not tune or expand qualification for this prototype.
+
+Avoiding these visibly unused eager calls does not establish a macro cost
+reduction: their analyses can still be demanded by later dependency propagation.
+The experiment does not prove that parsing overall is cheap or justify removing
+required analyses. Original canonical parser, caches and selection are retained.
+
+Preparation remains separate: baseline107.442s (110.253s guarded), candidate
+109.268s (112.253s guarded). Candidate selection-test command159.036s includes
+test-executable compilation; the subsequent complete codegen command takes
+4.374s, with libtest body3.91s. Full focused guard178.306s. All guards complete
+source-frozen, within reserves and with empty owned process sessions.
+
+External v1cg retains the exact patch/helper, both full corpus outputs, all
+commands and guards, source/binary identities and the ordinary baseline snapshot.
+The retained target currently contains the rejected oracle; rebuild ordinary
+source before any subsequent qualification. This rejected prototype receives
+no implementation acceptance or review. Complete correctness gates and all V5
+scenarios remain OPEN. Choose a structural ownership/representation change
+from the measured dominant work, rather than extending local parser tuning.
+
+
+### V1ch prospective — integrated correctness and cost reconciliation
+
+V1bz's complete79-minute result predates V1ca's shared compiler graph correction
+and V1ce's production area scheduler. Those affect shared preparation and real
+category integration; both have scoped qualification, but no complete integrated
+run at their combined tree. V1cf and V1cg are rejected and production source is
+restored. Stop isolated optimizer/parser tuning and reconcile the actual gate.
+
+Run one source-frozen complete merge correctness-only sweep with no-fail-fast,
+canonical resource defaults and retained owned targets. Emit/inspect the current
+plan and check capacities first; preparation rebuilds ordinary tools as needed,
+including replacement of V1cg's rejected oracle. Keep1750-second inner safety
+deadlines below the1800-second per-category diagnostic cap. Preserve every
+failure, admission/cap stop and unexecuted category; schedule remaining independent
+coverage explicitly if a whole-run safety stop occurs. Do not mutate source or
+owned inputs during the run, and verify process cleanup.
+
+Good enough for this diagnostic: every selected preparation, crate configuration,
+native E2E fixture and area variant accounted for; complete failures, actual total
+elapsed/CPU, top costs, preparation freshness and emitted execution topology.
+Keep pair wall time distinct from summed overlapping area work. Classify this as
+a retained-state integration run with actual preparation; do not call it a warm
+unchanged run or repeated V5 qualification. Select the next structural change
+from the current largest costs rather than old aggregate estimates.
+
+No new compiler, cache, profile or scheduling implementation is authorized by this
+diagnostic record alone. Final complete phase gates and every repeated V5 edit/
+invalidation scenario remain OPEN even if this correctness sweep passes.
+
+
+### V1ch concluded — complete integrated diagnostic, SQL provenance failure
+
+Candidate ee5d2eb97e71fa110fc9d75715b1e5c2e0d89ce5 completed all38 top-level
+steps:37pass,1fail. All17 preparations,18 crate configurations,732 native E2E
+fixtures and86 isolated native assertions executed and passed. All20 areas
+executed569 variants:565pass,4fail, all four in sql_platform. Actual facade
+elapsed5276.663s (87m56.663s), child CPU12954.227s. The enclosing guard took
+5277.908s, without capacity stop, unexpected source changes or leftover owned
+sessions. This retained-target run includes real rebuilds and is not an unchanged
+warm timing or V5 acceptance. Do not compare its total as a matched speedup or
+regression against V1bz's different retained preparation state.
+
+Non-overlapping accounting: preparation1383.817s; guards194.265s; crate
+configurations1347.522s; native E2E105.795s; scalar areas1865.886s; Python/quality
+paired window356.825s; facade/unattributed22.554s. The pair window comes from
+plan/final-outcome publication timestamps, not a monotonic group timer. Its
+355.778s Python and338.349s quality child durations must not be added as wall
+time. Largest preparations: SQL394.218s, runtime-platform309.079s,
+crate-tests252.936s, generated167.059s, release-compiler110.377s.
+Generated-driver configuration460.379s, ordinary-driver341.003s, combined
+lowering/CLI406.098s. Isolated-case and libtest-body breakdowns are retained;
+concurrent case durations are not additive.
+
+The SQL area took635.504s. Its actual clean/unchanged/independent-clean protocol
+passed387.384s; the canonical protocol records the combined duration, not
+separate measured build times. Four failing qualification/mutation variants
+reject stale component source provenance. Comparing all recorded inputs proves
+mysql, postgresql and sqlite each differ only in root Cargo.toml: V1ca's
+num-traits default-feature normalization changed its hash. SQLite is also stale
+even though early validation reports the first failing family. This is an
+in-scope missed artifact regeneration, not a broken validator or external drift.
+Do not merely update hashes; use each canonical producer and qualify the result.
+
+External v1ch evidence contains the complete original failed run, exact emitted
+plan, area reports, all732 outcome records,86 native-case receipts, preparation
+command ledger, inner installed-corpus evidence, CPU/capacity guards and source/
+binary identities. The first archive finalizer stopped because group JSON was
+already archived; preserve that helper and use byte-equality checks before
+completing the archive. An initial preparation-command grouping wrongly assigned
+preceding guardrail commands; preserve original JSON and the corrected ledger.
+These reporting repairs do not modify execution outcomes or measured durations.
+No implementation is accepted by this diagnostic. Full phase gate/V5 remains OPEN.
+
+### V1ci prospective correction — regenerate manifest-bound SQL components
+
+Bounded scope: canonically rebuild the three SQL component families invalidated
+by V1ca's root manifest correction. Use retained pinned Rust/WASI/native producer
+inputs, retain original receipts/artifact hashes, verify exact changed-input sets
+before building, and allow only each producer's declared artifact/receipt outputs.
+Do not edit words-component inputs or dependencies; its independent provenance
+remains valid. Preserve per-family1800s caps, resource reserves and owned-session
+cleanup. Actual production is required even if final component bytes are identical.
+
+Good enough: all three provenance source-input sets match current source; actual
+producer receipts/tool versions and output hashes recorded; component and each
+SQL-family qualification plus their mutation controls pass; all component-host
+and SQL application assertions pass; formatting/size/diff checks pass. Freeze the
+integrated candidate, open one implementation PR and obtain exact-candidate
+independent review under the approved intermediate policy. Full gates/repeated
+V5 remain phase-end requirements. Preserve V1ch as failed and record focused
+repair evidence separately. No performance gain is claimed for this correction.
+
+After closing this item, evaluate the measured SQL protocol test dependency
+boundary: migration_source.rs is the only sifr_sql_tool test that needs the
+canonical semantic compiler, yet its unconditional dev-dependency burdens the
+protocol fixture test graph. Moving those same assertions to an existing compiler
+owner and keeping explicit area enrollment is a hypothesis, not an adopted change.
+Register and measure complete affected preparation before accepting it. A cheap
+early provenance preflight is a separate follow-up; do not weaken late checks.
+
+V1ci production completes: PostgreSQL252.937s, MySQL8.880s, SQLite19.291s
+including guards. All10 component and core artifact records compare exactly
+with the original produced records; the canonical rebuild changes only each
+receipt's root Cargo.toml hash and aggregate source digest. All three current
+source provenance checks pass. Production guards finish empty, with no reserve
+stop or unexpected tracked changes. Actual producer invocations and before/after
+hashes are retained externally; identical final bytes are measured, not assumed.
+Focused host/runtime qualification and independent review remain pending.
+
+V1ch report attribution correction:29 nested/intermediate libtest subprocess
+summaries had been attached to their enclosing target header. Preserve the
+original archive; the separate corrected ledger selects terminal summaries and
+cross-checks each against its initial test count:129 targets, zero unresolved.
+This changes no facade/category/native timing or pass/fail result. Do not infer
+duplicate whole-suite executions from nested libtest summaries. The complete
+original archive has4539 verified files, SHA256
+91cd564846bc9b00cb7fad55d5a58132240409dcb75259988098f38050ccd4bb.
