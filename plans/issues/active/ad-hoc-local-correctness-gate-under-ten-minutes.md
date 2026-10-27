@@ -17373,3 +17373,48 @@ file-size/diff checks pass on one immutable candidate; independently review
 the exact candidate and classifications. Use the approved focused intermediate
 policy; do not repeat the81minute facade for inventory-only changes. Preserve
 the original failed run. Stop this repair after merge and return to macro costs.
+
+### V1bq delivered — inventory integration repair
+
+Merged [PR #4502](https://github.com/sifr-lang/sifr/pull/4502) as
+d242e0f7ad6fdc8ab5932438449ea5bd9faac7f3. Exact tested/reviewed candidate
+61e4c606ab6678e786464546b84f3ac988d6072a; merge tree matches.
+Both complete normal inventory guards, both scanner self-tests, size and diff
+checks pass in58.213s, with no source drift or leftover process. Independent
+review SATISFIED/no blockers65.930s, v1bq-review-bohwv7ky/response.md,
+SHA256589b2fbee3f5785db71dcd487d9412675d395d4d204d60480e476e2cf1f065db.
+All unrelated inventory row values and ordering are preserved. Follow-up owner:
+verification policy; document/test the batch-manifest tooling-input override
+against future inventory reseeding. PR attachment reached the100-identity cap.
+This repair is good enough; stop. Original broad failures remain failed and
+final phase correctness/timing qualification remains OPEN.
+
+### V1br prospective — reduce repeated SQL guest compilation work
+
+The current Engine defaults to Cranelift Speed. Compiled code is already shared
+inside one compiler/editor lifetime, with fresh Stores per request, but separate
+compiler lifetimes compile guests again. First compare the supported None
+optimization level against Speed in an external controlled probe using the same
+current authenticated guest artifacts, engine features and resource limits.
+Do not change production policy yet. Keep the production-ready register allocator,
+canonical NaNs, fuel, stack/memory limits, forbidden imports and fresh Stores.
+No persistent native-image cache, prior-result reuse or reduced assertion scope.
+
+Use three alternating paired trials per MySQL/PostgreSQL/SQLite provider:
+one-table and100-table DDL, each with one request; small requests repeated100
+and1000times with fresh Stores; large requests repeated100times. Check changed
+and invalid DDL controls. Require byte-identical response pairs, consistent
+fresh-Store responses, correct success/diagnostic outcomes and separately report
+compilation, execution, CPU and total lifetime. Controlled experiment build
+cost is preparation, not a timing improvement. Check capacity and use the1800s
+diagnostic cap; preserve failed attempts.
+
+Good enough to continue: at least25% aggregate one-request reduction, no
+provider/size one-request regression and no more than10% total-lifecycle
+regression on any repeated workload. Otherwise reject this hypothesis and stop
+tuning it. A passing probe only justifies the next bounded actual-host experiment:
+current provenance/host authentication, limits/imports/negative cases and every
+affected SQL application/area assertion remain required before adoption, together
+with build-plus-execution comparisons and independent review. Record any slower
+steady execution explicitly. The probe is not production acceptance or evidence
+that the complete gate can meet600seconds.
