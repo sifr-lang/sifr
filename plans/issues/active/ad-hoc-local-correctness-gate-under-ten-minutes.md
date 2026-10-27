@@ -19439,3 +19439,17 @@ targets, failures and evidence. No active consumers or build leases may exist
 during this operation. Record movement as capacity preparation, not a speedup.
 Require release generation below30s, unchanged reuse, current provenance and
 affected development/installed-compiler execution after this profile correction.
+
+### V1cq release correction reconstruction
+
+The three canonical producers pass from797729ec8: PostgreSQL336.498s,
+MySQL48.349s, SQLite29.301s, including the changed host build-tool configuration.
+All10 SQL Wasm files change slightly (roughly-1.9KiB to+123bytes per file), so
+the previous artifact hashes and runtime observations are historical, not current
+qualification. Their genuine receipts include new core/component hashes.
+The independent words artifact/receipt remains unchanged.
+
+Requalify all maintained provider components and application assertions on these
+new artifacts, repeat the bounded producer invalidation/relocation controls,
+and measure release construction/reuse under the corrected profile. Preserve
+all earlier measurements and the rejected175.115s generation result.
