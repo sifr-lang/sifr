@@ -18847,3 +18847,62 @@ consumers, with explicit coverage and invalidation tests, before changing
 production. The required independent native graphs and compiler-adapter
 feature qualifications remain intact. These artifact-recording runs are diagnostic
 preparation, not ordinary full-gate performance acceptance or V5.
+
+
+### V1ck concluded — eight valid compiler configurations, not cache failure
+
+At72f06b36a7549140dde51bb764bc4a3c66265a4e all eight selected consumer
+preparations pass, producing eight distinct lowering rlibs. All28 pairwise
+comparisons have concrete transitive feature differences. Lowering's own features,
+optimization, debug/overflow settings and rustflags match. Differences include
+parser AST/text serialization, derive-macro features, numerical serialization/
+math/default aliases, collection capabilities and digest MAC support. They
+propagate through diagnostics, IR, type system, parser and standard-library
+owners. This corroborates V4bj; changing the test owner merely moved the work.
+
+The guarded diagnostic takes423.095s; eight Cargo consumer commands sum367.587s,
+and the native prerequisite takes27.103s. These are instrumented artifact-capture
+durations, not a matched speed comparison or full-gate acceptance. The ordinary
+compiler witness observes the restored "undefined variable" diagnostic. No source
+drift, reserve stop or leftover session is reported.
+
+Retain v1ck-graphs and v1ck-reconciled.json. The original capture helper's escaped
+regex omitted library fingerprints; preserve it and its raw per-command Cargo
+records. A separately labeled postrun snapshot captures840 fingerprint files;
+all eight lowering rlib hashes still match their per-command records. Resolve
+duplicate build-script fingerprints only when their JSON is byte-equivalent.
+All28 recorded distinguishing feature traces resolve without ambiguous edges.
+Do not call those postrun files historical per-command snapshots.
+
+No configuration widening, cache-key change or test removal follows. A compiler
+foundation/diagnostic dependency split is a possible architectural follow-up,
+but source inspection alone does not predict a material full-gate saving. Keep
+all current independent native and compiler-adapter configurations.
+
+### V1cl prospective diagnostic — category-scale component compilation ownership
+
+Before revisiting any component reuse design, attribute actual compilation in
+the complete29-test SQL native-application target. V1ci's uninstrumented exact
+candidate passes all29 in163.715s command time (163.02s test body). Those tests
+launch real CLI subprocesses; a process-local owner shared only by the libtest
+harness cannot remove compilation inside those subprocesses. Do not substitute
+an in-process semantic call for these CLI assertions.
+
+Temporarily instrument Engine creation, compiled-component cache hits/misses,
+Component::new, guest execution and host analysis with PID/owner/component hash,
+timestamps and elapsed time. Write diagnostic events only to an owned external
+directory. Preserve all existing runtime/diagnostic/sandbox assertions and normal
+component policy. Build instrumentation separately, then run the complete target
+with canonical allocation and1800s caps. Instrumented time is attribution only,
+not an acceptance speedup. Preserve failures and disclose any missing trace
+events, especially where sandbox/environment isolation prevents event capture.
+
+Good enough: reconcile all29 outcomes and parent/child observations; measure
+unique component hashes, compilations by process/owner and overlapping component
+work against category elapsed time. Only propose reuse if the category opportunity
+is material (at least50% observed category time or another explicitly measured
+macro contribution), with a concrete ownership/safety/invalidation contract.
+The previous persistent native-image cache remains unaccepted; no deserialization,
+daemon, cache or production behavior change is authorized by this diagnostic.
+Restore instrumentation after archiving it, preserve its candidate, and verify
+ordinary behavior before qualified reuse. Full gates and repeated V5 remain OPEN.
