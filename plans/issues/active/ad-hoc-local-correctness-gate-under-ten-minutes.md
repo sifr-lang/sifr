@@ -19745,3 +19745,51 @@ coverage, optimized behavior where required, independent construction and
 source/input invalidation. No lowered profile, dependency version change,
 retained cold-build output reuse or coverage exemption is authorized by this
 diagnostic. The complete600s objective and every required V5 scenario stay OPEN.
+
+### V1cs diagnostic complete — cost is real compilation, not a stalled test
+
+Exact-profile clean A links all three tools in245.342s/927.947CPU; guard247.852s.
+All385 Cargo timing units are retained with current commands, profiles, features,
+outputs and hashes. Source2dedd5864facdd80d0aee95d8241944c0d82e404 stays frozen.
+No reserve stop or surviving process occurs. This is an attributed single build,
+not clean-A/reused-A/clean-B qualification or an ordinary speedup comparison.
+
+Largest unit wall spans overlap: AWS-LC native build78.41s; LALRPOP compilation
+55.37s (49.56s codegen); PostgreSQL native parser build42.16s; Syn2.0.11734.55s
+and Syn3.0.535.20s. The Syn units are different required versions, not proof of
+duplicate compatible artifacts. PostgreSQL's build ends227.42s; its Rust library,
+tool library and final bin then finish the build at245.26s. LALRPOP is not the
+last dependency, but occupies build capacity150.67–206.04s. Its actual MySQL
+generator invocation takes0.04s. Do not sum unit wall durations as CPU or claim
+that deleting one unit saves its full duration on the complete critical path.
+
+### V1ct prospective feasibility — optimize build time of the parser generator
+
+Root-cause hypothesis: optimizing the LALRPOP generator library is disproportionate
+to the tiny grammar-generation workload. First use an external Cargo configuration
+override for profile.dev.package.lalrpop.opt-level=0 in a separately owned empty
+target. Do not edit production Cargo.toml or generated parser sources yet.
+Keep the current explicit host target, all three tools, dev optimization of every
+application/runtime dependency, locked/offline versions, constant A/B path maps,
+four-job allocation and safety reserves. Do not change Syn, crypto or C compiler
+settings, merge distinct feature graphs or reuse cold-build outputs.
+
+First screen: another single clean A with the same Cargo unit instrumentation,
+compare complete build wall/CPU and generated MySQL Rust bytes with V1cs. Require
+at least15% lower complete elapsed and lower CPU, identical parser output, and
+proof from Cargo artifacts that only the generator optimization profile changed.
+Different owned target paths and docs-only candidate revisions are recorded;
+this screen alone is not ordinary acceptance timing.
+
+If the screen passes, run matched ordinary complete clean-A/reused-A/clean-B
+protocols for baseline and candidate, retaining independent empty construction.
+Require at least15% and60s lower complete protocol elapsed, no CPU regression,
+all original executable identity/byte-equality rejection controls, and unchanged
+generated parser bytes. Confirm the benefit in reverse order before production
+adoption. Reject a marginal result rather than expanding profile changes.
+
+Any production adoption must separately qualify all affected MySQL parser/runtime
+assertions, generator invalidation/provenance, exact selected profiles, and the
+canonical component rebuilds required by a root-manifest change; keep optimized
+generated programs and product behavior intact. Register that bounded production
+scope only after feasibility. Complete phase gates/repeated V5 remain OPEN.
