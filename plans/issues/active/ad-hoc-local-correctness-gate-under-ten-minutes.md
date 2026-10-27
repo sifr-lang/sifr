@@ -17436,7 +17436,7 @@ invocations across all three providers in153.285s, with identical successful
 responses and matched oversized-input rejection outcomes. Small/10-table
 one-request aggregate median ratio None/Speed0.845472:15.453% improvement,
 below the prospective25% threshold. All repeated workloads improved total
-lifetime in this probe (8.8–17.9%), with steady execution separately recorded.
+lifetime in this probe (9.4–18.0%), with steady execution separately recorded.
 No production change, no full-host acceptance claim; stop this hypothesis.
 The original oversized baseline failure remains preserved. Evidence:
 v1br-probe-build, v1br-measurements, v1br-measurements-r2 and their guards.
@@ -17468,3 +17468,51 @@ smallest root-cause change, targeting at least50% of this measured repeated
 cost while retaining every runtime and invalidation assertion. If no avoidable
 work is shown, record the result and stop; do not redesign cache identity from
 a timing guess. Final complete gates and V5 remain OPEN.
+
+### V1bs concluded — retained dependencies do reuse; historical cost not reproduced
+
+Source-frozen diagnostic passed: native metadata admission1.516s,
+preparation41.910s/17.437CPU seconds, complete positive assertion15.280s/
+8.775CPU seconds. A following process-only trace passed11.478s; its timing is
+diagnostic, not a paired speedup. Guard72.757s found no source drift or leftover
+session. SSH connectivity interrupted but the guard and all children completed;
+the exact receipt/result were recovered before continuing.
+
+Trace confirms no Rust compilation except rustc -vV identity inspection.
+Within the traced assertion: Cargo metadata0.570s, two native checks0.768s/
+0.259s, native build0.730s, actual runtime0.014s. Twenty rustfmt processes are
+small. The894150648-byte native executable requires full snapshot identity
+and cached-bundle verification; source corroborates these reads. Roughly5.27s
+lies between Cargo build completion and runtime launch, consistent with that
+publication path but not separately instrumented as hashing-only cost.
+Do not claim those operations explain the previous86.632s or all preparation
+cost. The isolated untraced observation is15.280s; cache/IO warmth and competing
+work differ from the broad run. No product/cache change is justified by this
+diagnostic. Stop this item. Evidence: v1bs-attribution/{result.json,
+process-attribution.json,positive-process.trace} and guard.
+
+### V1bt prospective — complete retained-state diagnostic after integration repair
+
+All observed integrated failures now have focused passing recovery, and the
+prepared native observation differs materially from the earlier combined run.
+Run one complete public merge correctness-only facade with failure continuation
+to measure the retained scenario and establish the actual remaining critical
+path. This is a new diagnostic input state, not repeating failed preparation
+unchanged or beginning repeated V5 timing qualification. Keep every selected
+assertion, independent SQL constructions, source/integrity checks and category.
+
+Publish the exact immutable candidate before generated graph preparation.
+Check emitted plan, dependency selection, pinned tools, capacity/allocation and
+reserves. Reuse the verified parent PATH for the public uv facade and retain
+owned targets. Archive all previous reports. No concurrent builds, artifact
+transfers or source edits during measurement. Categories retain1750s safety
+deadlines within the1800s cap; overall diagnostic envelope remains4hours.
+Record preparation, areas, crate configurations, positive E2E and overhead
+without double counting; preserve every failure and explicitly recover any
+blocked or unexecuted categories.
+
+Good enough: complete coverage/outcome accounting and one observed elapsed/CPU
+cost baseline for this retained state. Do not call one pass repeated qualification,
+or use this unchanged-state result to waive required edit/invalidation scenarios.
+Use its largest remaining measured work and critical path to choose the next
+architectural change. Full final create-pr/merge and V5 remain OPEN.
