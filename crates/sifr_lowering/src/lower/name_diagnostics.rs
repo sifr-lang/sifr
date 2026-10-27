@@ -6,7 +6,7 @@ use super::LowerCtx;
 pub(in crate::lower) fn undefined_variable(ctx: &mut LowerCtx, name: &str, range: TextRange) {
     ctx.error_with_code_at(
         DiagnosticCode::NAME_UNDEFINED_VARIABLE,
-        format!("unbound variable: '{name}'"),
+        format!("undefined variable: '{name}'"),
         range,
     );
 }

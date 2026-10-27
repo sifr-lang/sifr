@@ -527,6 +527,13 @@
           "command": "sql-schema-tool-tests",
           "expect_exit_code": 0,
           "diagnostic_formats": []
+        },
+        {
+          "id": "sql-migration-source-tests",
+          "entry": "crates/sifr/tests/sql_migration_source.rs",
+          "command": "sql-migration-source-tests",
+          "expect_exit_code": 0,
+          "diagnostic_formats": []
         }
       ]
     },

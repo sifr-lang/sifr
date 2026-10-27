@@ -249,6 +249,9 @@ COMMANDS = {
     "sql-host-tool-cli-tests": [
         "cargo", "test", "--locked", "-p", "sifr", "--test", "host_tool_cli",
     ],
+    "sql-migration-source-tests": [
+        "cargo", "test", "--locked", "-p", "sifr", "--test", "sql_migration_source",
+    ],
     "sql-schema-tool-tests": [
         "cargo", "test", "--locked", "-p", "sifr_sql_tool",
         "-p", "sifr_sql_postgresql_tools", "-p", "sifr_sql_mysql_tools",

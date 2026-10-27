@@ -83184,7 +83184,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_sql_sqlite_tools/src/provision.rs::provision_with_authority enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sql_tool/tests/migration_source.rs::reflect_ddl::literal-match::1",
+      "site": "crates/sifr/tests/sql_migration_source.rs::reflect_ddl::literal-match::1",
       "fingerprint": "805fc9008ed465fe270d8e1193ed407f46ed00e8380f2de39c886980c543c457",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83192,11 +83192,11 @@
       "inputs": "fn reflect_ddl ( & self , _input : & SchemaIr , statement : & str , )",
       "outputs": "Result < DdlReflection , MigrationCompileError >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sql_tool/tests/migration_source.rs::reflect_ddl enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sql_tool/tests/migration_source.rs::reflect_ddl enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr/tests/sql_migration_source.rs::reflect_ddl enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_migration_source.rs::reflect_ddl enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals::literal-match::1",
+      "site": "crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals::literal-match::1",
       "fingerprint": "f43e5c12d9e1c0936eb2c0d1a1c4610fc38b375d35de68122d87b829698f4048",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83204,11 +83204,11 @@
       "inputs": "fn checked_source_build_is_deterministic_and_preserves_executable_literals ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals::literal-comparison::1",
+      "site": "crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals::literal-comparison::1",
       "fingerprint": "315b3e827718f7bab37f01cc4924cf8fb4b01ce72030d5b78e145432e917207a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83216,8 +83216,8 @@
       "inputs": "fn checked_source_build_is_deterministic_and_preserves_executable_literals ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_sql_tool/tests/migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/sql_migration_source.rs::checked_source_build_is_deterministic_and_preserves_executable_literals enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_stdlib/src/fs.rs::open_file::literal-match::1",
