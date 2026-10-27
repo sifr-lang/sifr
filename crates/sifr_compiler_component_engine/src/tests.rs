@@ -52,3 +52,24 @@ fn engine_policy_is_deterministic_and_has_no_ambient_imports() {
         assert_eq!(component.component_type().imports(&engine).count(), 0);
     }
 }
+
+#[test]
+fn different_engine_configuration_with_same_stack_cannot_select_an_image() {
+    let engine = Engine::default();
+    for hash in generated::SOURCE_HASHES {
+        assert!(
+            load_embedded(&engine, hash, policy::DEFAULT_STACK)
+                .expect("Engine configuration miss")
+                .is_none()
+        );
+    }
+}
+
+#[test]
+fn embedded_native_images_are_rejected_as_untrusted_wasm_input() {
+    let engine = engine(policy::DEFAULT_STACK).expect("ordinary Engine");
+    for hash in generated::SOURCE_HASHES {
+        let native = generated::image(hash).expect("generated image");
+        assert!(Component::new(&engine, native).is_err());
+    }
+}

@@ -19323,3 +19323,24 @@ existing compiler-owner policy contract. The full authority inventory passes
 6,455 sites /235 nodes; all17 policy self-tests pass. Existing entries are unchanged.
 Proceed with genuine four-family reconstruction under capacity/session guards;
 preserve the previous receipts and compare produced artifact bytes.
+
+### V1cq canonical reconstruction completed
+
+All four canonical producers pass from4502262a5: PostgreSQL250.979s,
+MySQL8.790s, SQLite19.295s and words1.823s. All11 component files and complete
+artifact records (including core identities) are identical; only their four
+source-provenance receipts change. No manually restamped receipt is used.
+Each guard ends with an empty owned session and no unexpected source changes.
+
+The first comparison helper assumed the words receipt has the SQL artifacts
+array and stopped before adding tests or this record. Its corrected comparison
+uses the words single-artifact/core fields. Production results are unaffected.
+The preceding commit6116ce938 contains only the four genuine receipts.
+
+Add persistent negative runtime controls for a changed Engine configuration
+at the same requested stack and native image bytes supplied to the safe Wasm
+compiler. Next qualify the actual production application category, provider
+runtime tests and immutable loading from a relocated executable in an isolated
+filesystem with no repository/build output mounted. Use controlled producer
+input edits to verify actual Cargo invalidation; restore exact sources before
+final candidate validation and review. Full-gate qualification remains open.
