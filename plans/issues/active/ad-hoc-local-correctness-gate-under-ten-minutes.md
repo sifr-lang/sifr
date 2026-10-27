@@ -17320,3 +17320,56 @@ do not repeat a full run or optimize isolated seconds without new justification.
 No assertion removal, scope narrowing, stale-result reuse, profile substitution
 or weakened independent SQL build checks. Final create-pr/merge gates and repeated
 V5 scenario qualification remain required; under600seconds is still unproven.
+
+### V1bp completed diagnostic — integrated costs and recovery
+
+Candidate74b9a8cfaf674fee95bf59e0ea743914eabc40d0 completed the public merge
+correctness-only facade in4878.715s (81m19s),10812.046CPU seconds. Of38top-level
+steps,34passed,3failed and1was blocked. All18crate configurations,80generated
+driver assertions,6generated CLI assertions and732positive E2E fixtures passed.
+No category reached its1800s cap; the guard found no source drift or leftover
+process group. The first233.842s attempt remains cancelled: its wrapper passed
+the effective child PATH to the public uv facade, which changed native identity.
+The second attempt used the verified parent PATH. This is a diagnostic after
+changed artifacts, not unchanged-warm timing acceptance or a paired speedup.
+
+Non-overlapping costs: preparation1061.628s; verification areas2203.615s;
+guardrails187.299s; crate configurations1308.611s; positive E2E105.179s.
+The remaining12.383s is facade/reporting overhead. Largest successful areas:
+SQL627.622s (independent clean builds383.661s), sysroot446.180s,
+Python313.465s. Lowering/CLI426.808s, generated driver406.844s,
+ordinary driver333.480s. SQL application assertions29/29passed in178.44s.
+Positive E2E retained all186native groups and all732assertions; good enough for
+this retained scenario. Do not optimize its isolated seconds now.
+
+Original failures remain failed: generated preparation133.379s could not fetch
+the unpublished exact revision after materializing93graphs; its consumer was
+blocked. Publishing the unchanged candidate allowed the exact locked fetch.
+A separately guarded recovery ran actual workspace/generated/compiler-identity
+preparation142.744s and generated-code-quality283.494s, both passing.
+This is separate evidence, not a retroactive successful contiguous gate.
+The other failures are stale method-dispatch and filesystem-effect inventories
+from V1bj/V1bl. No compiler regression was observed in this diagnostic.
+
+Evidence: v1bp-integrated-v2, v1bp-integrated-v2-guard, v1bp-complete-archive
+(55files with SHA256 manifest), v1bp-summary.json (19area reports/559variant
+rows), v1bp-generated-recovery and its guard. Rows without individual timers
+are executed assertions included in their parent, not zero-cost or unexecuted.
+The observed CPU work alone needs1351.506s on8ideal logical workers; this bound
+applies only to this diagnostic workload, not a warm gate or universal floor.
+Scheduling alone cannot remove this observed work. Final gates/V5 remain OPEN.
+
+### V1bq prospective — reconcile inventories for delivered batch/lease changes
+
+Repair only the two inventory JSON files and this phase record. Method dispatch
+keeps the existing test-assertion/test-owner classification while binding the
+renamed acquire_with_wait context. Filesystem effects add the finite batch
+manifest tooling input, output effects and test fixture operations; preserve
+build-identity classification on the three renamed native-cache owner checks.
+No scanner, assertion, compiler, profile selection or runtime semantics changes.
+
+Good enough: both full normal inventory guards, both scanner self-tests,
+file-size/diff checks pass on one immutable candidate; independently review
+the exact candidate and classifications. Use the approved focused intermediate
+policy; do not repeat the81minute facade for inventory-only changes. Preserve
+the original failed run. Stop this repair after merge and return to macro costs.

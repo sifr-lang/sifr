@@ -7321,16 +7321,16 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr/tests/e2e_support/harness_model.rs::application_profile enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr/tests/e2e_support/native_cache.rs::acquire::literal-comparison::1",
-      "fingerprint": "99e3dc5416e0216e4baf99af2d95d9c41f0d24cecaaaf2662ce486a6bc8b1924",
+      "site": "crates/sifr/tests/e2e_support/native_cache.rs::acquire_with_wait::literal-comparison::1",
+      "fingerprint": "1b845ac7ec790490ee3122094ded10452f8f6e33315ccca37ed1e31f57200cde",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if std :: fs :: read_dir ( & root ) ? . any ( | entry | entry . is_ok_and ( | entry | entry . file_name ( ) != \".locks\" ) )",
-      "inputs": "fn acquire ( requested : & Path )",
+      "inputs": "fn acquire_with_wait ( requested : & Path , limit : std :: time :: Duration , )",
       "outputs": "io :: Result < Self >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr/tests/e2e_support/native_cache.rs::acquire enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/e2e_support/native_cache.rs::acquire enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr/tests/e2e_support/native_cache.rs::acquire_with_wait enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr/tests/e2e_support/native_cache.rs::acquire_with_wait enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr/tests/e2e_support/native_cache.rs::select_artifact::literal-match::1",
