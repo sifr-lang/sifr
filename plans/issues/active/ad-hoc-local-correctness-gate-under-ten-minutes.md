@@ -19453,3 +19453,28 @@ Requalify all maintained provider components and application assertions on these
 new artifacts, repeat the bounded producer invalidation/relocation controls,
 and measure release construction/reuse under the corrected profile. Preserve
 all earlier measurements and the rejected175.115s generation result.
+
+### V1cq current qualification and installed-path regression
+
+Candidate c3af999c4e passes27 focused commands157.274s; all29 SQL application
+assertions78.665s/321.697CPU after restoration versus160.107s/1057.807CPU baseline.
+Actual producer-edit cycle125.141s, restored cycle117.658s. All28 invalidation and
+isolated relocation controls pass391.834s. Release generation18.725s meets30s;
+initial release preparation572.633s and unchanged1.040s are charged separately.
+
+The first installed attempt stops at the20GiB reserve after757.472s preparation;
+it is incomplete, not passing. Four inactive passed installation workspaces
+are preserved byte-for-byte (287964files,9.101GB) before reclaiming originals.
+The retry passes installed corpus250.137s and boundary equivalence169.355s.
+Installed smoke and heavy checks FAIL on a real checkout-path leak in bin/sifr.
+
+All122 checkout occurrences originate in six PostgreSQL guest components'
+C __FILE__ assertion strings. All SQL families also embed Cargo/Rustup paths.
+Outer compiler remapping cannot rewrite already embedded Wasm/native bytes.
+Correct canonical guest production: stable Rust and C path remapping for
+repository, tool homes, target and SDK; preserve assertions and reject outputs
+with producer paths before publication. Genuinely rebuild all four affected
+families and qualify current runtime/installed behavior. Do not patch artifacts,
+restamp receipts, weaken installed scanners, or claim this candidate approved.
+Previous passing measurements remain observations of c3af, not new-artifact
+qualification. Full gates and repeated under600s V5 remain OPEN.

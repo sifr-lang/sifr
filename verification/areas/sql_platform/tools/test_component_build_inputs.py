@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shlex
 import tarfile
 import tempfile
 import unittest
@@ -10,11 +11,47 @@ from pathlib import Path
 from unittest.mock import patch
 
 import component_provenance
+from component_build_paths import PATH_POLICY, build_path_mappings, remap_environment, validate_build_paths
 from component_provenance import guest_environment, source_inputs
 from wasi_sdk_inputs import reject_c_overrides, sdk_environment, sdk_version_text, verify_contents
 
 
 class SdkInputsTests(unittest.TestCase):
+    def test_remapping_preserves_space_paths_and_nested_root_precedence(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="component paths ") as directory:
+            root = Path(directory)
+            environment = {"CARGO_HOME": str(root / "cargo"),
+                           "RUSTUP_HOME": str(root / "rustup"),
+                           "CARGO_TARGET_DIR": "target space",
+                           "WASI_SDK_PATH": str(root / "sdk"),
+                           "WASI_SYSROOT": str(root / "sdk/share/wasi-sysroot")}
+            result = remap_environment(root, environment)
+            mappings = build_path_mappings(root, environment)
+            rust = result["CARGO_ENCODED_RUSTFLAGS"].split("\x1f")
+            c = shlex.split(result["CFLAGS_wasm32_wasip2"])
+            self.assertEqual(c[0], f"--sysroot={environment['WASI_SYSROOT']}")
+            self.assertNotIn("RUSTFLAGS", result)
+            for source, destination in mappings:
+                self.assertIn(f"--remap-path-prefix={source}={destination}", rust)
+                self.assertIn(f"-ffile-prefix-map={source}={destination}", c)
+            self.assertLess(mappings.index((str(root), "/sifr")),
+                            mappings.index((str(root / "target space"), "/cargo-target")))
+            self.assertNotIn("CARGO_ENCODED_RUSTFLAGS", environment)
+
+    def test_publication_rejects_each_build_root_and_accepts_remapped_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            environment = {"CARGO_HOME": str(root / "cargo"),
+                           "RUSTUP_HOME": str(root / "rustup"),
+                           "WASI_SDK_PATH": str(root / "sdk")}
+            artifact = root / "component.wasm"
+            for source, _ in build_path_mappings(root, environment):
+                artifact.write_bytes(b"\0asm" + source.encode() + b"/source.rs")
+                with self.assertRaisesRegex(ValueError, "producer path"):
+                    validate_build_paths(artifact, root, environment)
+            artifact.write_bytes(b"\0asm" + "\0".join(PATH_POLICY.values()).encode())
+            validate_build_paths(artifact, root, environment)
+
     def test_upstream_version_metadata_retains_exact_release_selection(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -28,7 +65,7 @@ class SdkInputsTests(unittest.TestCase):
                     sdk_version_text(root)
 
     def test_higher_priority_compiler_and_linker_overrides_are_rejected(self) -> None:
-        for name in ("CC", "CC_wasm32-wasip2", "CC_wasm32_wasip2", "TARGET_CC", "AR_wasm32-wasip2"):
+        for name in ("CC", "CC_wasm32-wasip2", "CC_wasm32_wasip2", "TARGET_CC", "AR_wasm32-wasip2", "CFLAGS_wasm32_wasip2", "CC_SHELL_ESCAPED_FLAGS"):
             with self.assertRaisesRegex(ValueError, "ambient"):
                 reject_c_overrides({name: "/substitute"})
         for name in ("RUSTC", "CARGO_TARGET_WASM32_WASIP2_LINKER", "CARGO_ENCODED_RUSTFLAGS"):

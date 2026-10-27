@@ -127,7 +127,7 @@ def sdk_environment() -> tuple[dict[str, str], dict[str, object]]:
 
 def reject_c_overrides(environment: dict[str, str]) -> None:
     for name in environment:
-        if name in {"CC", "CXX", "AR", "RANLIB", "WASI_SYSROOT"} or name.startswith(
+        if name in {"CC", "CXX", "AR", "RANLIB", "WASI_SYSROOT", "CC_SHELL_ESCAPED_FLAGS"} or name.startswith(
             ("CC_", "CXX_", "AR_", "RANLIB_", "CFLAGS", "CXXFLAGS", "ARFLAGS", "SYNTAQLITE_CFLAG_", "TARGET_CC", "TARGET_AR")
         ):
             raise ValueError(f"ambient component build override is unsupported: {name}")

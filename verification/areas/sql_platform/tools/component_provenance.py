@@ -12,6 +12,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from component_build_paths import PATH_POLICY, remap_environment
 from wasi_sdk_inputs import SDK_ASSETS, SDK_VERSION, content_sha256, sha256
 from wasi_virt_inputs import WASI_VIRT_COMMIT, WASI_VIRT_SOURCE_SHA256, WASI_VIRT_VERSION
 
@@ -42,6 +43,7 @@ def source_inputs(family: str, root: Path = ROOT) -> dict[str, str]:
         root / "rust-toolchain.toml",
         root / "crates/sifr_compiler_component/wit/compiler-component.wit",
         root / TOOLS / "component_provenance.py",
+        root / TOOLS / "component_build_paths.py",
         root / TOOLS / "wasi_sdk_inputs.py",
     }
     if family == "words":
@@ -131,15 +133,14 @@ def guest_environment(environment: dict[str, str]) -> dict[str, str]:
             raise ValueError(f"ambient component compiler override is unsupported: {key}")
     if any(key.startswith("CARGO_TARGET_") and key != "CARGO_TARGET_DIR" for key in result):
         raise ValueError("ambient target linker or compiler flags are unsupported")
-    result["RUSTFLAGS"] = f"--remap-path-prefix={ROOT}=/sifr"
-    return result
+    return remap_environment(ROOT, result)
 
 
 def provenance(family: str, rust: dict[str, str], **tools: object) -> dict[str, object]:
     inputs = source_inputs(family)
     return {"schema_version": 1, "family": family, "source_inputs": inputs,
             "source_sha256": inputs_digest(inputs), "rust": rust, "tools": tools,
-            "rustflags": "--remap-path-prefix=<repository>=/sifr",
+            "path_remapping": PATH_POLICY,
             "build_environment": {key: value for key, value in sorted(os.environ.items())
                                   if key.startswith("CARGO_PROFILE_") or key in {"CARGO_INCREMENTAL", "CARGO_BUILD_JOBS"}}}
 
@@ -147,6 +148,8 @@ def provenance(family: str, rust: dict[str, str], **tools: object) -> dict[str, 
 def validate_provenance(value: object, family: str, root: Path = ROOT) -> None:
     if not isinstance(value, dict) or value.get("schema_version") != 1 or value.get("family") != family:
         raise ValueError("component producer identity is missing or invalid")
+    if value.get("path_remapping") != PATH_POLICY:
+        raise ValueError("component producer path remapping policy differs")
     inputs = source_inputs(family, root)
     if value.get("source_inputs") != inputs or value.get("source_sha256") != inputs_digest(inputs):
         raise ValueError(f"{family} component source provenance has drifted; rebuild its artifacts")

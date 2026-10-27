@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from component_build_paths import validate_build_paths
 from component_provenance import FAMILIES, ROOT, SERIES, guest_environment, provenance, rust_identity, target_directory, toml
 from wasi_sdk_inputs import sdk_environment, sha256
 from wasi_virt_inputs import WASI_VIRT_COMMIT, WASI_VIRT_SOURCE_SHA256, WASI_VIRT_VERSION, validate_wasi_virt
@@ -64,6 +65,7 @@ def build(family: str) -> int:
             filename = f"{family}-{series}.wasm"
             output = stage / filename
             subprocess.run([str(virtualizer), str(core), "-o", str(output)], cwd=ROOT, check=True)
+            validate_build_paths(output, ROOT, environment)
             artifact = {"path": f"components/{filename}", "sha256": sha256(output),
                         "size_bytes": output.stat().st_size, "core_sha256": sha256(core)}
             if family == "postgresql":
