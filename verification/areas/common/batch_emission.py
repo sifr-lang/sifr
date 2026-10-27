@@ -85,6 +85,9 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
     allocation = os.environ.get("SIFR_VERIFY_PROCESS_SLOTS")
     if allocation is not None:
         try:
+            # Match build_allocation.positive: budgets are ASCII decimal strings.
+            if not allocation.isascii() or not allocation.isdecimal():
+                raise ValueError("non-decimal allocation")
             slots = int(allocation)
         except ValueError as error:
             raise RuntimeError("SIFR_VERIFY_PROCESS_SLOTS must be a positive integer") from error
@@ -93,7 +96,7 @@ def emit_many(compiler: Path, files: list[Path], jobs: int, repo: Path):
         count = min(count, slots)
     env = formatter_environment(repo)
     if allocation is not None:
-        # Parallel finite batches each own one slot of the declared budget.
+        # Each finite batch owns one slot, including a one-batch selection.
         env.update(CARGO_BUILD_JOBS="1", RAYON_NUM_THREADS="1")
     owner = Path(tempfile.mkdtemp(prefix="sifr-emission-batch-"))
     chunks = [list(range(worker, len(files), count)) for worker in range(count)]

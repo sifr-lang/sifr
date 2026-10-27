@@ -326,7 +326,7 @@ class BatchEmissionTests(unittest.TestCase):
                     batch.read_results(output, [Path("/source.sifr")], result)
 
     def test_bounded_batches_restore_lexical_order_and_remove_only_successful_owner(self):
-        for allocation, jobs, expected in [(None, 3, 3), ("2", 8, 2), ("4", 1, 1), ("100", 8, 7)]:
+        for allocation, jobs, expected in [(None, 3, 3), ("2", 8, 2), ("4", 1, 1), ("100", 8, 7), ("02", 8, 2)]:
             with self.subTest(allocation=allocation, jobs=jobs), tempfile.TemporaryDirectory() as directory:
                 owner = Path(directory) / "owner"
                 owner.mkdir()
@@ -360,7 +360,11 @@ class BatchEmissionTests(unittest.TestCase):
                     self.assertFalse(owner.exists())
 
     def test_invalid_profile_allocations_reject_before_preparation_or_children(self):
-        for allocation in ("", "0", "-1", "1.5", "unbounded"):
+        from .build_allocation import positive
+        from .errors import VerificationError
+        for allocation in ("", "0", "-1", "1.5", "unbounded", " 2", "2\n", "+2", "1_0", "٢"):
+            with self.assertRaises(VerificationError):
+                positive(allocation, "SIFR_VERIFY_PROCESS_SLOTS")
             with self.subTest(allocation=allocation), \
                  patch.dict(batch.os.environ, {"SIFR_VERIFY_PROCESS_SLOTS": allocation}), \
                  patch.object(batch, "formatter_environment") as prepare, \

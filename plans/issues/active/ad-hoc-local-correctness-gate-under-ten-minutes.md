@@ -3,7 +3,7 @@
 status: in progress; integrated acceptance pending
 registered: 2026-10-19
 phase_id: LOCAL-GATE
-current_stage: "V1al structural checks complete; V1am package qualification; full phase open"
+current_stage: "V1cd overlap feasibility passed; allocation review repair in progress; full phase open"
 measured_baseline: `422c282720fd630aa938674f122d84aea7f1e26f`
 
 ## Objective and authority
@@ -18201,3 +18201,43 @@ production scheduling and failure/cancellation/blocked-consumer tests separately
 before adoption, with exact-candidate independent review and final phase gates.
 A large elapsed-time gain still cannot remove the measured whole-gate CPU-work
 floor; the600s objective and all V5 scenarios remain OPEN.
+
+
+### V1cd feasibility complete — repeated full-area overlap; allocation repair pending
+
+Frozen34300553f3be38bcb2825fc0d147f4e19195d1b3 ran complete canonical selected
+Python interoperability and generated-code-quality areas in serial/concurrent/
+concurrent/serial order. Every run passed10 quality and30 Python variants, the
+complete compiled certification, source/compiler identity checks and owned
+session cleanup. Exact coverage and certification contracts match in both pairs.
+
+| Matched pair | Serial elapsed | Concurrent3+1 elapsed | Reduction | Consumer CPU change |
+| --- | ---: | ---: | ---: | ---: |
+| Serial then concurrent |600.128s|335.070s|44.17%|+2.71%|
+| Concurrent then serial |566.119s|337.570s|40.37%|+5.22%|
+
+Both exceed the20% elapsed screen and remain within10% additional consumer CPU.
+Canonical prerequisite closure took206.980s separately; adding that measured
+preparation bill gives542.050s/544.550s for the concurrent pair's accounted
+lifecycle. These sums are not repeated whole-gate invocations. Only two areas
+are covered; the full600s objective and all V5 scenarios remain OPEN. Scheduling
+removes elapsed waiting/serialization, not the complete gate's CPU-work floor.
+No canonical production scheduler is adopted by this experiment.
+
+The allocation prerequisite is draft PR4506. Exact-candidate review rejected the
+initial parser because int() accepts whitespace, signs, underscores and non-ASCII
+digits that the canonical positive-allocation rule rejects. Preserve that review
+as NOT SATISFIED. The repair uses the same ASCII-decimal rule, adds rejection
+regressions checked against the canonical validator, and documents one slot per
+finite batch even for a single selected batch. Repeat affected self-tests, the
+complete strict freshness/debt gate, unchanged plan comparison and exact-candidate
+review before merging. Timing remains attributed to3430055; do not relabel old
+measurements as runs of the repaired source.
+
+The original preparation harness failure remains failed: it accidentally restored
+offline mode after canonical setup removed it. The corrected preparation-canonical-env
+run is separate and passed, with no product bypass. Evidence: external v1cd/
+comparison-{a,b}.json, all four pair directories, canonical preparation, immutable
+guard receipts and the candidate-keyed review. Production scheduling needs its
+own prospective ownership/allocation, reporting, cancellation, blocked-consumer
+and selection-preservation contract before implementation.
