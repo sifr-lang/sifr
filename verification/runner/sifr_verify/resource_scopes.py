@@ -31,16 +31,16 @@ def cpu_scope(kind, name):
         raise RuntimeError("CPU scopes require a serial main-thread owner")
     identity = uuid.uuid4().hex
     parent = _parent.get()
-    token = _parent.set(identity)
     before = counters()
     started = time.monotonic()
+    token = _parent.set(identity)
     completion = "raised"
     try:
         yield
         completion = "returned"
     finally:
-        after = counters()
         _parent.reset(token)
+        after = counters()
         user, system = (after[i] - before[i] for i in (0, 1))
         row = {
             "schema": 1, "id": identity, "parent_id": parent, "pid": os.getpid(),

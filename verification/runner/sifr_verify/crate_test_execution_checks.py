@@ -62,7 +62,8 @@ class CrateExecutionTests(unittest.TestCase):
                 runner.run_crate_tests("full")
             self.assertIs(caught.exception, failure)
             self.assertEqual(run.call_count, 3)
-            lines = stream.getvalue().splitlines()
+            lines = [line for line in stream.getvalue().splitlines()
+                     if line.startswith("[sifr-case-timing] ")]
             self.assertEqual(len(lines), 3)
             for i, status in enumerate(("fail", "pass", "fail")):
                 self.assertIn(f"case={i}", lines[i])
