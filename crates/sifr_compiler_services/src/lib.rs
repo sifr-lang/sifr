@@ -3,6 +3,7 @@ mod diagnostics;
 pub mod editor;
 pub use sifr_semantic_services::export_policy;
 pub mod metadata;
+pub mod project_history;
 pub use sifr_semantic_services::private_re_exports;
 pub mod python;
 pub use sifr_semantic_services::sql_diagnostics;

@@ -173,6 +173,20 @@ pub fn read_private_file(path: &Path) -> io::Result<File> {
     security::open_read(path)
 }
 
+/// Read a direct child of an owned directory under the Windows ACL/reparse policy.
+pub fn read_owned_payload(path: &Path) -> io::Result<(File, fs::Metadata)> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| invalid("missing payload parent"))?;
+    check_owned(parent)?;
+    let file = security::open_read(path)?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() {
+        return Err(invalid("unsafe opened cache payload"));
+    }
+    Ok((file, metadata))
+}
+
 /// Open an existing stable lease without following a reparse point.
 pub fn read_write_private_file(path: &Path) -> io::Result<File> {
     check_owned(path)?;

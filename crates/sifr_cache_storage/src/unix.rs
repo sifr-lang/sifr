@@ -65,7 +65,14 @@ pub fn directory(path: &Path) -> io::Result<()> {
                 let mut builder = fs::DirBuilder::new();
                 std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
                 match builder.create(&current) {
-                    Ok(()) => {}
+                    Ok(()) => {
+                        // A durable child publication also needs the newly
+                        // created directory entry to survive in its parent.
+                        let parent = current
+                            .parent()
+                            .ok_or_else(|| invalid("missing directory parent"))?;
+                        File::open(parent)?.sync_all()?;
+                    }
                     Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
                     Err(e) => return Err(e),
                 }
@@ -464,6 +471,25 @@ pub fn read_private_file(path: &Path) -> io::Result<File> {
         .read(true)
         .custom_flags(libc::O_NOFOLLOW)
         .open(path)
+}
+
+/// Read a direct child of an owned directory, checking the opened object rather
+/// than a pathname observation that could describe a different file.
+pub fn read_owned_payload(path: &Path) -> io::Result<(File, fs::Metadata)> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| invalid("missing payload parent"))?;
+    check_owned(parent)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+        .open(path)?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.uid() != uid() || metadata.permissions().mode() & 0o022 != 0
+    {
+        return Err(invalid("unsafe opened cache payload"));
+    }
+    Ok((file, metadata))
 }
 
 /// Open an existing stable lease without following a final symlink.

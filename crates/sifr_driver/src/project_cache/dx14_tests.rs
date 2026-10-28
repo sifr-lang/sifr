@@ -454,14 +454,22 @@ fn dx14_restored_interface_reports_unavailable_publication() {
         &inputs().identity().unwrap(),
     )
     .unwrap();
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o500),
+    )
+    .unwrap();
     fs::write(
         file.parent().unwrap().join("helper.sifr"),
         "def value() -> int:\n    return 7\n",
     )
     .unwrap();
     let (diagnostics, report) = run(&cache, &file, inputs());
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
     assert!(diagnostics.is_empty());
     assert_eq!(report.status, "interface-restored-write-unavailable");
     assert_eq!(report.restored_checks, 1);

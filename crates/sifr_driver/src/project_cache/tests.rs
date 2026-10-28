@@ -148,11 +148,19 @@ fn dx13_c04_unavailable_readonly_and_hintless() {
     assert_eq!(again, fresh);
     fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();
     let store = store(&cache, &file);
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o500),
+    )
+    .unwrap();
     fs::write(&file, "def main() -> None:\n    x: int = 2\n").unwrap();
     let (_, report) = run(&cache, &file);
     assert_eq!(report.status, "write-unavailable");
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
 }
 #[cfg(unix)]
 #[test]
@@ -162,7 +170,7 @@ fn dx13_c08_c09_inherited_payloads_reader_gc() {
     let store = store(&cache, &file);
     let old = store.latest().unwrap();
     let old_record = old.manifest.records.first().unwrap().clone();
-    let before = fs::read(old.path.join(&old_record)).unwrap();
+    let before = fs::read(old.record_path(&old_record).unwrap()).unwrap();
     let other = file.parent().unwrap().join("other.sifr");
     fs::write(&other, "def main() -> None:\n    missing()\n").unwrap();
     let (_, published) = run(&cache, &other);
@@ -170,20 +178,39 @@ fn dx13_c08_c09_inherited_payloads_reader_gc() {
     let latest = store.latest().unwrap();
     assert_eq!(latest.manifest.records.len(), 2);
     assert_eq!(
-        fs::metadata(old.path.join(&old_record)).unwrap().ino(),
-        fs::metadata(latest.path.join(&old_record)).unwrap().ino()
+        fs::metadata(old.record_path(&old_record).unwrap())
+            .unwrap()
+            .ino(),
+        fs::metadata(latest.record_path(&old_record).unwrap())
+            .unwrap()
+            .ino()
     );
-    assert_eq!(fs::read(old.path.join(&old_record)).unwrap(), before);
+    assert_eq!(
+        fs::read(old.record_path(&old_record).unwrap()).unwrap(),
+        before
+    );
     assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
     assert!(old.path.exists());
-    let mut unrelated = Command::new("sleep").arg("10").spawn().unwrap();
+    // A live history references the original payload even without its own reader.
+    let old_path = old.path.clone();
+    drop(old);
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
+    assert!(old_path.exists());
+    drop(latest);
+    // Evict both original records while preserving a reader of the first one.
+    let old = store.latest().unwrap();
+    publish_variants(&store, &file, storage::RECORD_COUNT);
+    store.prune(true, false).unwrap();
+    assert!(old_path.exists());
+    let mut unrelated = Command::new("sleep").arg("60").spawn().unwrap();
     drop(old);
     assert_eq!(store.prune(false, false).unwrap().deleted_generations, 0);
-    assert_eq!(store.prune(true, true).unwrap().eligible_generations, 1);
+    assert_eq!(store.prune(true, true).unwrap().eligible_generations, 2);
     let removed = store.prune(true, false).unwrap().deleted_generations;
     unrelated.kill().unwrap();
     unrelated.wait().unwrap();
-    assert_eq!(removed, 1);
+    assert_eq!(removed, 2);
+    assert!(!old_path.exists());
     let (_, reused) = run(&cache, &file);
     assert_eq!(reused.restored_checks, 1);
 }
@@ -194,14 +221,14 @@ fn dx13_c09_corrupt_schema_references_and_winners() {
     let store = store(&cache, &file);
     let generation = store.latest().unwrap();
     let record = generation.manifest.records.first().unwrap();
-    fs::write(generation.path.join(record), "incomplete").unwrap();
+    fs::write(generation.record_path(record).unwrap(), "incomplete").unwrap();
     let (actual, report) = run(&cache, &file);
     assert_eq!(report.computed_checks, 1);
     assert_eq!(report.restored_checks, 0);
     assert_eq!(actual, compute(&file, &mut DiskSourceProvider::new()));
     // The corrupt winner is not trusted or rewritten in place.
     assert_eq!(
-        fs::read(generation.path.join(record)).unwrap(),
+        fs::read(generation.record_path(record).unwrap()).unwrap(),
         b"incomplete"
     );
     let mut record = super_record(&file);
@@ -217,6 +244,23 @@ pub(super) fn super_record(file: &Path) -> CompletedCheck {
     let mut capture = CapturingSourceProvider::new(&mut disk);
     let result = compute(file, &mut capture);
     CompletedCheck::capture(file, context(), &capture, &result).unwrap()
+}
+// Distinct valid publications without incidental compiler setup. The captured
+// source observations remain current, so the final record still restores it.
+pub(super) fn publish_variants(store: &storage::Store, file: &Path, count: usize) {
+    let original = super_record(file);
+    for index in 0..count {
+        let mut record = original.clone();
+        record
+            .displays
+            .insert(format!("unused-{index}"), "unused".into());
+        store
+            .publish(
+                &serde_json::to_vec(&record).unwrap(),
+                &AtomicBool::new(false),
+            )
+            .unwrap();
+    }
 }
 #[test]
 fn cancel_transient_and_changed_input() {
@@ -321,7 +365,7 @@ fn dx13_process_worker() {
 #[test]
 fn process_death_and_new_process_restore() {
     let (root, file, cache) = fixture();
-    for point in ["before-rename", "after-rename"] {
+    for point in ["before-rename", "after-stage-validation"] {
         let marker = root.path().join(point);
         let mut child = worker(&file, &cache, point, &marker);
         let deadline = Instant::now() + Duration::from_secs(15);
@@ -413,7 +457,8 @@ fn dx13_c09_concurrent_process_reader_and_gc() {
     assert!(marker.exists());
     fs::write(&file, "def main() -> None:\n    absent()\n").unwrap();
     assert_eq!(run(&cache, &file).1.status, "published");
-    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
+    publish_variants(&store, &file, storage::RECORD_COUNT);
+    store.prune(true, false).unwrap();
     assert!(old.exists());
     reader.kill().unwrap();
     reader.wait().unwrap();
@@ -685,7 +730,9 @@ fn windows_portability_workspace_identity_alias_and_orphan_prune() {
     fs::create_dir(&outside).unwrap();
     fs::write(outside.join("keep"), "intact").unwrap();
 
-    let alias = context.join("latest.stage-10-20");
+    let alias = context
+        .join("generations")
+        .join(format!("0000000000000000-{}.stage-10-20", "b".repeat(64)));
     let status = Command::new("cmd")
         .args(["/C", "mklink", "/J"])
         .arg(&alias)

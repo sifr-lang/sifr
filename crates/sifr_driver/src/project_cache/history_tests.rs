@@ -48,7 +48,7 @@ fn history_over_4096_keeps_publishing_and_recent_aba() {
                 .manifest
                 .records
                 .iter()
-                .map(|id| fs::metadata(generation.path.join(id)).unwrap().len())
+                .map(|id| generation.manifest.payloads[id].length)
                 .sum();
             rows.push(serde_json::json!({
                 "history_inputs": index + 1, "retained_records": generation.manifest.records.len(),

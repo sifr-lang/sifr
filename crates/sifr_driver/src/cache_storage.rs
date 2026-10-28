@@ -170,7 +170,12 @@ pub fn inspect() -> io::Result<CacheInspection> {
         ),
         (
             "projects",
-            "project generations",
+            "legacy project generations",
+            "legacy owner namespace; protected",
+        ),
+        (
+            sifr_compiler_services::project_history::PROJECTS,
+            "project generation bundles",
             "cache prune-project owns exact workspace",
         ),
         (
@@ -191,7 +196,13 @@ pub fn inspect() -> io::Result<CacheInspection> {
             let child = child?.path();
             if !matches!(
                 child.file_name().and_then(|v| v.to_str()),
-                Some("native" | "metadata" | "projects" | "test-fixtures")
+                Some(
+                    "native"
+                        | "metadata"
+                        | "projects"
+                        | "test-fixtures"
+                        | sifr_compiler_services::project_history::PROJECTS
+                )
             ) {
                 protected_roots.push(child);
             }

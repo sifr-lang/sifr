@@ -1,5 +1,7 @@
 //! Driver-owned project storage behind the frontend's completed result contract.
 #[cfg(test)]
+mod bundle_tests;
+#[cfg(test)]
 mod dx14_tests;
 #[cfg(test)]
 mod history_tests;
@@ -14,6 +16,9 @@ mod package_reuse_tests;
 #[cfg(all(test, unix))]
 mod process_lease;
 mod record_validation;
+
+#[cfg(test)]
+mod commit_tests;
 mod storage;
 #[cfg(test)]
 mod tests;

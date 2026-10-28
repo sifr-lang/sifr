@@ -376,7 +376,7 @@ The logical layout is:
 ```text
 <cache-root>/
   metadata/<compiler-id>/<target-id>/<stdlib-inputs-id>/
-  projects/<workspace-id>/<compiler-id>/generations/<generation-id>/
+  projects-v3/<workspace-id>/<context-id>/generations/<sequence>-<manifest-digest>
   native/roots/<root-identity>/
   native/targets/<compatible-family-id>/
   native/artifacts/<native-build-id>/
@@ -397,15 +397,24 @@ DX.6 adds per-key dev-metadata ensure and conservative reader protection; DX.8 a
 
 Only DX.13 introduces the full **project** generation protocol below, alongside its first persisted semantic results. Do not implement hard-link inheritance, a graph of shared project records or project-generation garbage collection as an unused DX.3 framework. Share already-proven atomic/locking primitives, not a new cache service. [R3]
 
-1. A writer acquires an OS-backed ownership lock and creates a unique working directory under the destination parent.
-2. It opens a compatible finalized generation with a reader lease, revalidates its inputs, and retains still-needed complete records by immutable reference or hard-link/copy.
-3. Changed records are written as new files. A hard-linked file is never truncated or modified in place.
-4. Record payloads and the complete generation manifest are flushed; directory durability is handled by the supported local filesystem adapter.
-5. The writer finalizes by a same-filesystem atomic publication. A `latest`/workspace pointer is updated separately and is only a hint.
-6. Concurrent completed generations are independently valid only for their recorded inputs. A winner is not trusted merely because its directory exists: validate its manifest, required paths and identity before reuse.
+1. A writer acquires an OS-backed ownership lock and creates a unique private staging file under the destination parent.
+2. It opens a compatible finalized generation with a reader lease, revalidates its current payload bytes, and retains a bounded recent history of complete records.
+3. Each publication contains one new record and its complete history manifest in one immutable bundle. Inherited records name their direct payload-owning bundle; readers never follow a chain of historical manifests. The shared `sifr_compiler_services::project_history` module owns the format and bounds for both driver and editor.
+4. The new payload and manifest are flushed together and validated before commit. Same-filesystem atomic rename into the sequence-bearing committed name is the visibility point; parent-directory synchronization completes durability. New Unix directory entries and the immutable namespace owner are synchronized when created. The 128-record, 64 MiB history bound and 16 MiB per-record limit remain enforced.
+5. The immutable bundle is the commit authority; no separate mutable cache pointer is published. Driver and editor select the highest committed sequence, verify its digest/sequence/context and current payloads, and reject an invalid or ambiguous head without rolling back. Head discovery enumerates unpruned directory names with bounded memory. The workspace `.sifrbuildinfo` remains an optional atomic hint and requires no durability barrier.
+6. Concurrent completed generations are independently valid only for their recorded inputs. An existing publication is not trusted merely because its path exists: validate its manifest, current payload hashes, ownership and semantic completion before reuse.
 7. The next run ignores incomplete working state. Cleanup removes it only after proving it has no live owner.
 
 Readers keep a lease while they require an entry, including metadata or executables with dependent side files. GC requires exclusive ownership. A lease is a real lock/reference held through the relevant operation, not a PID string or a lock file's mere existence. Define lock ordering and test process death, contention and interrupted acquisition.
+
+Project-history GC holds the writer lease and a short exclusive reader-admission
+lease while marking references and reclaiming entries. New readers hold that
+admission lease shared only until their individual generation lease is acquired;
+existing readers keep working. GC retains every payload owner named by the latest
+generation or an actively leased predecessor. An unreadable live manifest makes
+reclamation ambiguous and preserves generation candidates. Entry leases are
+checked one at a time, bounding open descriptors independently of history size.
+Old `projects` namespaces are neither consumed nor reclaimed by the v3 owner.
 
 The supported persistence contract is for qualified local filesystems with working lock/atomic-publication semantics. Arbitrary shared/network filesystem behavior is not guaranteed. Failure to obtain safe project-cache persistence leaves normal uncached semantic computation available with a clear cache status. Required artifact preparation/materialization failures remain actionable errors. These are explicit supported behaviors, not alternative semantic implementations.
 
@@ -452,10 +461,10 @@ DXF.3 implements explicit project housekeeping under `cache prune-project`.
 A zero reserve (the default), or available bytes meeting the reserve, performs
 no inspection or deletion. Under pressure, cleanup considers recognized entries
 in the exact workspace namespace, preserving its newest valid bounded history,
-leased readers and active writers. An invalid existing latest pointer protects
+leased readers and active writers. An invalid or ambiguous highest committed name protects
 finalized history rather than guessing which generation is current. Only
 writer-serialized stage lock files are reclaimable during live project cleanup;
-generation lock inodes remain permanent. Partial cache pointer scratch is owned
+generation lock inodes remain permanent. Private generation stages are owned
 by that writer. Workspace hint scratch requires a complete matching owner/context
 hint; ambiguous partial hints are preserved.
 

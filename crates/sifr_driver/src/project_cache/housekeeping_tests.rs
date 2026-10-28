@@ -19,7 +19,7 @@ fn wait(marker: &Path) {
     assert!(marker.exists(), "worker reached its real lock boundary");
 }
 fn stage(store: &storage::Store, suffix: &str) -> (PathBuf, fs::File) {
-    let name = format!("{}.stage-{suffix}", "a".repeat(64));
+    let name = format!("0000000000000000-{}.stage-{suffix}", "a".repeat(64));
     let parent = store.root.join("generations");
     let lease = cache_storage::process_entry_lock(&parent, &name).unwrap();
     cache_storage::directory(&parent.join(&name)).unwrap();
@@ -55,11 +55,14 @@ fn abandoned_stages_reclaimed_live_locks_preserved() {
         .join(".locks")
         .join(live.file_name().unwrap());
     let live_inode = fs::metadata(&live_lock).unwrap().ino();
-    let scratch = store.root.join("latest.stage-10-22");
-    storage::write_new(&scratch, b"partial").unwrap();
+    let (scratch, scratch_lease) = stage(&store, "10-22");
+    drop(scratch_lease);
     let outside = root.path().join("outside");
     fs::write(&outside, "preserve").unwrap();
-    let alias = store.root.join("latest.stage-10-23");
+    let alias = store
+        .root
+        .join("generations")
+        .join(format!("0000000000000000-{}.stage-10-23", "b".repeat(64)));
     symlink(&outside, &alias).unwrap();
     let hint = file.parent().unwrap().join(".sifrbuildinfo.stage-10-24");
     fs::copy(file.parent().unwrap().join(".sifrbuildinfo"), &hint).unwrap();
@@ -79,7 +82,7 @@ fn abandoned_stages_reclaimed_live_locks_preserved() {
     assert_eq!(store.prune(true, false).unwrap().deleted_entries, 0);
     // Actual process contention and killed writer at both payload and pointer
     // scratch boundaries. Reclamation cannot race an active writer.
-    for point in ["before-rename", "pointer-scratch"] {
+    for point in ["before-rename", "before-commit"] {
         fs::write(
             &file,
             format!("def main() -> None:\n    value: str = \"{point}\"\n"),
@@ -130,7 +133,7 @@ fn orphan_prune_requires_owner_and_inactivity() {
     let unknown = root.path().join("unknown-owner");
     fs::create_dir(&unknown).unwrap();
     let unknown_id = identity("project-workspace-v1", &unknown.canonicalize().unwrap()).unwrap();
-    let unknown_namespace = cache.join("projects").join(unknown_id);
+    let unknown_namespace = cache.join(storage::PROJECTS).join(unknown_id);
     cache_storage::directory(&unknown_namespace).unwrap();
     fs::write(unknown_namespace.join("unclaimed"), "preserve").unwrap();
     assert!(storage::Store::open(&cache, &unknown, &tests::context().identity().unwrap()).is_err());
@@ -227,7 +230,10 @@ fn pressure_prune_counts_are_truthful() {
     store.prune(true, false).unwrap();
     let (path, lease) = stage(&store, "30-40");
     drop(lease);
-    let unsafe_path = store.root.join("latest.stage-30-41");
+    let unsafe_path = store
+        .root
+        .join("generations")
+        .join(format!("0000000000000000-{}.stage-30-41", "b".repeat(64)));
     fs::write(&unsafe_path, "ambiguous").unwrap();
     fs::set_permissions(&unsafe_path, fs::Permissions::from_mode(0o666)).unwrap();
     let dry = store.prune(true, true).unwrap();

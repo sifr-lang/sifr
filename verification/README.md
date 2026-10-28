@@ -61,6 +61,13 @@ prepare through Cargo; tests whose contract requires a build use the explicit
 locks currently require POSIX, like the local process ownership runner. This is
 artifact reuse within one frozen candidate, not reuse of test results.
 
+The owner must retain exclusive access to its Cargo target from preparation
+through publication: another producer replacing Cargo's output after Cargo exits
+but before copying starts is outside this contract. Prepared development consumers
+receive the declared source sysroot explicitly, including when target storage
+resolves outside the checkout; installed-product and discovery checks clear that
+setting and retain their separate qualification.
+
 Start with the smallest check affected by the edit. The public facade defaults
 to `merge`; choose a profile explicitly when preparing a candidate, rather than
 running the full gate after every local edit.

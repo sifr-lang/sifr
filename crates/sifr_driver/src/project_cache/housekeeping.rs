@@ -1,10 +1,12 @@
 //! Explicit owner-scoped cleanup. The stable namespace lock is outside the
 //! namespace; stores and detached readers hold it shared, orphan GC exclusively.
-use super::storage::{Hint, Store, invalid, key, read, stamp, write_new};
+use super::storage::{Hint, PROJECTS, Store, invalid, key, read, stamp, write_new};
+use super::storage::{generation_key, latest_generation};
 use crate::cache_storage;
 use serde::{Deserialize, Serialize};
 use sifr_cache_storage::ProcessLease;
 use std::{
+    collections::BTreeSet,
     fs::{self, File},
     io,
     path::{Component, Path, PathBuf},
@@ -71,8 +73,10 @@ pub(super) fn open_namespace(
     workspace: &Path,
     id: &str,
 ) -> io::Result<Arc<ProcessLease>> {
-    let projects = cache.join("projects");
+    let projects = cache.join(PROJECTS);
     let lease = ProcessLease::shared(cache_storage::process_entry_lock(&projects, id)?)?;
+    #[cfg(unix)]
+    File::open(projects.join(".locks"))?.sync_all()?;
     let namespace = projects.join(id);
     cache_storage::directory(&namespace)?;
     // Never retroactively claim unknown pre-existing payloads for this owner.
@@ -97,7 +101,12 @@ pub(super) fn open_namespace(
         &namespace.join("owner.json"),
         &serde_json::to_vec(&expected)?,
     ) {
-        Ok(()) => {}
+        Ok(()) => {
+            // The immutable owner file is part of the namespace authority.
+            // Commit its directory entry before any generation can be returned.
+            #[cfg(unix)]
+            File::open(&namespace)?.sync_all()?;
+        }
         Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
         Err(error) => return Err(error),
     }
@@ -185,7 +194,7 @@ fn token(value: &str) -> bool {
 }
 fn stage(name: &str) -> bool {
     name.split_once(".stage-")
-        .is_some_and(|(id, suffix)| key(id) && token(suffix))
+        .is_some_and(|(id, suffix)| generation_key(id) && token(suffix))
 }
 
 pub(super) fn prune_store(
@@ -202,15 +211,36 @@ pub(super) fn prune_store(
     };
     let _writer = ProcessLease::exclusive(writer)?;
     let latest = store.latest();
+    // Freeze new reader admission while marking. Existing readers retain their
+    // generation leases; closing them can only make this mark conservative.
+    // This avoids retaining one descriptor per inactive generation.
+    let Ok(admission) = existing_lease(&store.root, super::storage::READER_ADMISSION) else {
+        return Ok(report); // Incomplete writer setup never grants GC authority.
+    };
+    let _admission = ProcessLease::exclusive(admission)?;
     let parent = store.root.join("generations");
     if !safe_path(&parent) {
         return Ok(report);
     }
+    let mut protected = BTreeSet::new();
+    if let Some(latest) = &latest {
+        protected.insert(latest.path.clone());
+        protected.extend(
+            latest
+                .manifest
+                .payloads
+                .values()
+                .filter_map(|payload| payload.owner.as_ref().map(|owner| parent.join(owner))),
+        );
+    }
+    let mut candidates = Vec::new();
+    let mut ambiguous =
+        latest.is_none() && latest_generation(&parent).map_or(true, |head| head.is_some());
     for entry in fs::read_dir(&parent)? {
         let entry = entry?;
         let name = entry.file_name();
         let Some(name) = name.to_str() else { continue };
-        if !key(name) && !stage(name) {
+        if !generation_key(name) && !stage(name) {
             continue;
         }
         report.examined_entries += 1;
@@ -220,21 +250,48 @@ pub(super) fn prune_store(
         {
             continue;
         }
-        // If the latest pointer exists but cannot be validated, ownership of
-        // current history is ambiguous. Staging can still be reclaimed safely.
-        if key(name) && latest.is_none() && store.root.join("latest").symlink_metadata().is_ok() {
-            continue;
-        }
         if !safe_tree(&entry.path()) {
+            ambiguous |= generation_key(name);
             continue;
         }
         let Ok(lease) = existing_lease(&parent, name) else {
+            ambiguous |= generation_key(name);
             continue;
         };
-        let Ok(_lease) = ProcessLease::exclusive(lease) else {
-            continue;
+        match ProcessLease::exclusive(lease) {
+            Ok(lease) => {
+                drop(lease);
+                candidates.push((entry.path(), generation_key(name), name.to_owned()));
+            }
+            Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                if generation_key(name) {
+                    // A detached reader pins its history and every direct
+                    // payload owner, even when that owner has no reader itself.
+                    match store.generation_manifest(name) {
+                        Ok(manifest) => {
+                            protected.extend(manifest.payloads.values().filter_map(|payload| {
+                                payload.owner.as_ref().map(|owner| parent.join(owner))
+                            }))
+                        }
+                        Err(_) => ambiguous = true,
+                    }
+                }
+            }
+            Err(error) => return Err(error),
         };
-        report.reclaim(&entry.path(), key(name), dry_run)?;
+    }
+    // Admission remains exclusive through deletion. Recheck each entry lease
+    // before reclaiming it, with a bounded number of descriptors throughout.
+    for (path, generation, name) in &candidates {
+        if !protected.contains(path) && (!generation || !ambiguous) {
+            let Ok(lease) = existing_lease(&parent, name) else {
+                continue;
+            };
+            let Ok(_lease) = ProcessLease::exclusive(lease) else {
+                continue;
+            };
+            report.reclaim(path, *generation, dry_run)?;
+        }
     }
     // Only writer-serialized staging locks are ephemeral. Generation locks
     // remain permanent because readers may open them without the writer lock.
@@ -263,17 +320,6 @@ pub(super) fn prune_store(
             let Ok(_lease) = ProcessLease::exclusive(lease) else {
                 continue;
             };
-            report.reclaim(&entry.path(), false, dry_run)?;
-        }
-    }
-    for entry in fs::read_dir(&store.root)? {
-        let entry = entry?;
-        if entry
-            .file_name()
-            .to_str()
-            .is_some_and(|name| name.strip_prefix("latest.stage-").is_some_and(token))
-        {
-            report.examined_entries += 1;
             report.reclaim(&entry.path(), false, dry_run)?;
         }
     }
@@ -366,7 +412,7 @@ pub(super) fn prune_workspace(
         workspace.canonicalize()?
     };
     let id = stamp("project-workspace-v1", &workspace)?;
-    let projects = cache.join("projects");
+    let projects = cache.join(PROJECTS);
     let namespace = projects.join(&id);
     if !safe_path(cache) || !safe_path(&projects) || !safe_path(&namespace) {
         return Ok(report);

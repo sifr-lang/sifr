@@ -49,20 +49,29 @@ impl Fixture {
         let record_id = stamp("project-record-v1", &bytes).unwrap();
         let workspace_id = stamp("project-workspace-v1", &workspace).unwrap();
         let manifest = Manifest {
-            schema: 2,
+            schema: crate::project_history::SCHEMA,
+            sequence: 0,
             workspace: workspace_id.clone(),
             context: context.clone(),
             records: vec![record_id.clone()],
+            payloads: BTreeMap::from([(
+                record_id.clone(),
+                crate::project_history::Payload {
+                    owner: None,
+                    length: bytes.len() as u64,
+                },
+            )]),
         };
-        let generation_id = stamp("project-generation-v1", &manifest).unwrap();
+        let generation_id = manifest.generation().unwrap();
         let cache = temp.path().join("cache");
-        let projects = cache.join("projects");
+        let projects = cache.join(PROJECTS);
         let namespace = projects.join(&workspace_id);
         let root = namespace.join(&context);
         let generations = root.join("generations");
         let generation = generations.join(&generation_id);
-        sifr_cache_storage::directory(&generation).unwrap();
+        sifr_cache_storage::directory(generation.parent().unwrap()).unwrap();
         drop(sifr_cache_storage::open_entry_lock(&projects, &workspace_id, false).unwrap());
+        drop(sifr_cache_storage::open_entry_lock(&root, READER_ADMISSION, false).unwrap());
         drop(sifr_cache_storage::open_entry_lock(&generations, &generation_id, false).unwrap());
         let (device, inode) = file_identity(&workspace).unwrap();
         let created_ns = fs::metadata(&workspace)
@@ -81,21 +90,7 @@ impl Fixture {
             .unwrap(),
         )
         .unwrap();
-        write_private(generation.join(record_id), bytes).unwrap();
-        write_private(
-            generation.join("manifest.json"),
-            serde_json::to_vec(&manifest).unwrap(),
-        )
-        .unwrap();
-        write_private(
-            root.join("latest"),
-            serde_json::to_vec(&serde_json::json!({
-                "schema": 1, "workspace": workspace_id,
-                "context": context, "generation": generation_id,
-            }))
-            .unwrap(),
-        )
-        .unwrap();
+        crate::project_history::write(&generation, &manifest, &bytes).unwrap();
         Self {
             _temp: temp,
             cache,
@@ -115,7 +110,7 @@ impl Fixture {
     fn locks(&self) -> [File; 2] {
         [
             sifr_cache_storage::open_entry_lock(
-                &self.cache.join("projects"),
+                &self.cache.join(PROJECTS),
                 &self.workspace_id,
                 false,
             )
@@ -135,7 +130,26 @@ impl Fixture {
             assert!(acquired.is_ok(), "{name} remains locked: {acquired:?}");
             lease.unlock().unwrap();
         }
+        let admission = existing_lease(
+            self.generation.parent().unwrap().parent().unwrap(),
+            READER_ADMISSION,
+        )
+        .unwrap();
+        admission.try_lock().unwrap();
+        admission.unlock().unwrap();
     }
+}
+
+#[test]
+fn saved_reader_cannot_enter_during_gc_reference_marking() {
+    let fixture = Fixture::new();
+    let root = fixture.generation.parent().unwrap().parent().unwrap();
+    let admission =
+        ProcessLease::exclusive(existing_lease(root, READER_ADMISSION).unwrap()).unwrap();
+    assert!(fixture.load().is_err());
+    drop(admission);
+    assert_eq!(fixture.load().unwrap().records.len(), 1);
+    fixture.assert_available();
 }
 
 struct PausedChild {
@@ -225,10 +239,57 @@ fn rejected_saved_reader_releases_every_acquired_lease() {
         let path = if invalid_owner {
             fixture.namespace.join("owner.json")
         } else {
-            fixture.generation.join("manifest.json")
+            fixture.generation.clone()
         };
         write_private(path, b"{}").unwrap();
         assert!(fixture.load().is_err());
         fixture.assert_available();
     }
+}
+
+#[test]
+fn saved_reader_loads_inherited_payloads_and_rejects_corruption() {
+    let fixture = Fixture::new();
+    let mut manifest = Manifest::read(
+        &fixture.generation,
+        &fixture.workspace_id,
+        &fixture.context,
+        &fixture.generation_id,
+    )
+    .unwrap();
+    let old_id = manifest.records[0].clone();
+    let mut record = fixture.load().unwrap().records[0].clone();
+    record
+        .displays
+        .insert("unused".into(), "second publication".into());
+    let bytes = serde_json::to_vec(&record).unwrap();
+    let id = stamp("project-record-v1", &bytes).unwrap();
+    manifest.payloads.get_mut(&old_id).unwrap().owner = Some(fixture.generation_id.clone());
+    manifest.records.push(id.clone());
+    manifest.payloads.insert(
+        id,
+        crate::project_history::Payload {
+            owner: None,
+            length: bytes.len() as u64,
+        },
+    );
+    manifest.sequence += 1;
+    let generation_id = manifest.generation().unwrap();
+    let parent = fixture.generation.parent().unwrap();
+    let path = parent.join(&generation_id);
+    crate::project_history::write(&path, &manifest, &bytes).unwrap();
+    drop(sifr_cache_storage::open_entry_lock(parent, &generation_id, false).unwrap());
+    let reader = fixture.load().unwrap();
+    assert_eq!(reader.records.len(), 2);
+    assert_eq!(
+        reader.records[0].displays.get("unused").unwrap(),
+        "second publication"
+    );
+    let original = fs::read(&fixture.generation).unwrap();
+    let mut corrupted = original.clone();
+    corrupted[16] ^= 1;
+    write_private(&fixture.generation, corrupted).unwrap();
+    assert!(fixture.load().is_err());
+    write_private(&fixture.generation, original).unwrap();
+    assert_eq!(fixture.load().unwrap().records.len(), 2);
 }

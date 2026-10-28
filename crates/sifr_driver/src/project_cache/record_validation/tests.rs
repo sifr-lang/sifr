@@ -96,6 +96,109 @@ fn bounded_recency_and_zero_capacity_preserve_validation() {
 }
 
 #[test]
+fn byte_budget_evicts_proofs_without_losing_digest_facts() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let original = fixtures::super_record(&file);
+    let records: Vec<_> = (0..3)
+        .map(|index| {
+            let mut record = original.clone();
+            record
+                .displays
+                .insert(format!("unused-{index}"), "unused".into());
+            encoded(&record)
+        })
+        .collect();
+    let budget = records[0].1.len();
+    assert!(records.iter().all(|(_, bytes)| bytes.len() == budget));
+    let validation =
+        RecordValidation::with_limits(fixtures::context().identity().unwrap(), 2, budget);
+    for (id, bytes) in &records[..2] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+    }
+    {
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, budget);
+        assert!(entries.facts[0].bytes.is_none());
+        assert_eq!(
+            entries.facts[1].bytes.as_deref(),
+            Some(records[1].1.as_slice())
+        );
+    }
+    // The evicted byte proof still permits a digest hit, while corruption of
+    // either representation is rejected and cannot displace a successful fact.
+    for (id, bytes) in &records[..2] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+        let mut changed = bytes.clone();
+        changed[0] = b'[';
+        assert!(validation.validate(id, &changed, "mismatch").is_err());
+    }
+    assert_eq!(validation.stats(), (2, 4, 2));
+    validation
+        .validate(&records[2].0, &records[2].1, "mismatch")
+        .unwrap();
+    let entries = validation.entries.lock().unwrap();
+    assert_eq!(entries.retained_bytes, budget);
+    assert_eq!(entries.facts.len(), 2);
+    assert_eq!(
+        entries.facts.back().unwrap().bytes.as_deref(),
+        Some(records[2].1.as_slice())
+    );
+    assert!(entries.facts.front().unwrap().bytes.is_none());
+}
+
+#[test]
+fn oversized_and_zero_budget_records_keep_digest_validation() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let (id, bytes) = encoded(&fixtures::super_record(&file));
+    for budget in [0, bytes.len() - 1] {
+        let validation =
+            RecordValidation::with_limits(fixtures::context().identity().unwrap(), 2, budget);
+        for _ in 0..2 {
+            validation.validate(&id, &bytes, "mismatch").unwrap();
+        }
+        assert!(
+            validation
+                .validate(&"0".repeat(64), &bytes, "mismatch")
+                .is_err()
+        );
+        assert_eq!(validation.stats(), (1, 2, 1));
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, 0);
+        assert!(entries.facts[0].bytes.is_none());
+    }
+    let disabled =
+        RecordValidation::with_limits(fixtures::context().identity().unwrap(), 0, bytes.len());
+    disabled.validate(&id, &bytes, "mismatch").unwrap();
+    assert_eq!(disabled.entries.lock().unwrap().retained_bytes, 0);
+}
+
+#[test]
+fn count_eviction_releases_byte_budget() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let mut record = fixtures::super_record(&file);
+    let (first_id, first) = encoded(&record);
+    record.displays.insert("unused".into(), "unused".into());
+    let (second_id, second) = encoded(&record);
+    let validation = RecordValidation::with_limits(
+        fixtures::context().identity().unwrap(),
+        1,
+        first.len() + second.len(),
+    );
+    for (id, bytes) in [
+        (&first_id, &first),
+        (&second_id, &second),
+        (&first_id, &first),
+    ] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, bytes.len());
+        assert_eq!(entries.facts.len(), 1);
+        assert_eq!(entries.facts[0].bytes.as_deref(), Some(bytes.as_slice()));
+    }
+    assert_eq!(validation.stats(), (0, 3, 1));
+}
+
+#[test]
 fn generation_keeps_fact_owner_alive_until_last_reader_drops() {
     let (_root, file, cache) = fixtures::fixture();
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
@@ -118,13 +221,16 @@ fn warm_facts_reject_same_length_same_mtime_corruption_and_recover() {
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
     let store = fixtures::store(&cache, &file);
     let generation = store.latest().unwrap();
-    let path = generation.path.join(&generation.manifest.records[0]);
+    let path = generation
+        .record_path(&generation.manifest.records[0])
+        .unwrap();
     let original = fs::read(&path).unwrap();
     let modified = fs::metadata(&path).unwrap().modified().unwrap();
     generation.records().next().unwrap().unwrap();
     assert_eq!(store.validation.stats(), (1, 1, 1));
     let mut changed = original.clone();
-    changed[0] = b'[';
+    // Corrupt the payload, preserving the envelope, file size and mtime.
+    changed[16] = b'[';
     fs::write(&path, &changed).unwrap();
     File::options()
         .write(true)
@@ -158,7 +264,9 @@ fn warm_facts_still_check_permissions_and_symlink_substitution() {
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
     let store = fixtures::store(&cache, &file);
     let generation = store.latest().unwrap();
-    let path = generation.path.join(&generation.manifest.records[0]);
+    let path = generation
+        .record_path(&generation.manifest.records[0])
+        .unwrap();
     generation.records().next().unwrap().unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o666)).unwrap();
     assert!(store.latest().is_none());

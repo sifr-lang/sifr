@@ -5791,6 +5791,13 @@
       "classification": "tooling-input"
     },
     {
+      "path": "crates/sifr_compiler_services/src/editor/saved_check_lease_tests.rs",
+      "symbol": "saved_reader_loads_inherited_payloads_and_rejects_corruption",
+      "operation": "read",
+      "site": "let original = fs::read(&fixture.generation).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
       "path": "crates/sifr_compiler_services/src/editor/saved_checks.rs",
       "symbol": "read",
       "operation": "metadata",
@@ -12142,22 +12149,8 @@
     {
       "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
       "symbol": "dx14_restored_interface_reports_unavailable_publication",
-      "operation": "set_permissions",
-      "site": "fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
-      "symbol": "dx14_restored_interface_reports_unavailable_publication",
       "operation": "write",
       "site": "fs::write(",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
-      "symbol": "dx14_restored_interface_reports_unavailable_publication",
-      "operation": "set_permissions",
-      "site": "fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();",
       "classification": "output-effect"
     },
     {
@@ -12173,13 +12166,6 @@
       "operation": "write",
       "site": "fs::write(file, source(index)).unwrap();",
       "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
-      "symbol": "history_over_4096_keeps_publishing_and_recent_aba",
-      "operation": "metadata",
-      "site": ".map(|id| fs::metadata(generation.path.join(id)).unwrap().len())",
-      "classification": "tooling-input"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/history_tests.rs",
@@ -12401,13 +12387,6 @@
     {
       "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
       "symbol": "prune_store",
-      "operation": "symlink_metadata",
-      "site": "if key(name) && latest.is_none() && store.root.join(\"latest\").symlink_metadata().is_ok() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
-      "symbol": "prune_store",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(&locks)? {",
       "classification": "build-identity"
@@ -12417,13 +12396,6 @@
       "symbol": "prune_store",
       "operation": "symlink_metadata",
       "site": "if parent.join(name).symlink_metadata().is_ok()",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
-      "symbol": "prune_store",
-      "operation": "read_dir",
-      "site": "for entry in fs::read_dir(&store.root)? {",
       "classification": "build-identity"
     },
     {
@@ -13192,34 +13164,6 @@
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
       "symbol": "publish",
-      "operation": "metadata",
-      "site": "let size = fs::metadata(previous.path.join(id))?.len();",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "publish",
-      "operation": "exists",
-      "site": "if destination.exists() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "publish",
-      "operation": "hard_link",
-      "site": "if fs::hard_link(&source, &target).is_err() {",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "publish",
-      "operation": "exists",
-      "site": "if !stage.join(&record_id).exists() {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "publish",
       "operation": "exists",
       "site": "if stage.exists() {",
       "classification": "build-identity"
@@ -13227,15 +13171,8 @@
     {
       "path": "crates/sifr_driver/src/project_cache/storage.rs",
       "symbol": "publish",
-      "operation": "remove_dir_all",
-      "site": "let _ = fs::remove_dir_all(stage);",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/storage.rs",
-      "symbol": "point",
       "operation": "remove_file",
-      "site": "let _ = fs::remove_file(&scratch);",
+      "site": "let _ = fs::remove_file(stage);",
       "classification": "output-effect"
     },
     {
@@ -13318,29 +13255,15 @@
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c04_unavailable_readonly_and_hintless",
-      "operation": "set_permissions",
-      "site": "fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/tests.rs",
-      "symbol": "dx13_c04_unavailable_readonly_and_hintless",
       "operation": "write",
       "site": "fs::write(&file, \"def main() -> None:\\n x: int = 2\\n\").unwrap();",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
-      "symbol": "dx13_c04_unavailable_readonly_and_hintless",
-      "operation": "set_permissions",
-      "site": "fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
       "operation": "read",
-      "site": "let before = fs::read(old.path.join(&old_record)).unwrap();",
+      "site": "let before = fs::read(old.record_path(&old_record).unwrap()).unwrap();",
       "classification": "build-identity"
     },
     {
@@ -13354,21 +13277,21 @@
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
       "operation": "metadata",
-      "site": "fs::metadata(old.path.join(&old_record)).unwrap().ino(),",
+      "site": "fs::metadata(old.record_path(&old_record).unwrap())",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
       "operation": "metadata",
-      "site": "fs::metadata(latest.path.join(&old_record)).unwrap().ino()",
+      "site": "fs::metadata(latest.record_path(&old_record).unwrap())",
       "classification": "build-identity"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
       "operation": "read",
-      "site": "assert_eq!(fs::read(old.path.join(&old_record)).unwrap(), before);",
+      "site": "fs::read(old.record_path(&old_record).unwrap()).unwrap(),",
       "classification": "build-identity"
     },
     {
@@ -13380,16 +13303,37 @@
     },
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
+      "operation": "exists",
+      "site": "assert!(old_path.exists());",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
+      "operation": "exists",
+      "site": "assert!(old_path.exists());",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "dx13_c08_c09_inherited_payloads_reader_gc",
+      "operation": "exists",
+      "site": "assert!(!old_path.exists());",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c09_corrupt_schema_references_and_winners",
       "operation": "write",
-      "site": "fs::write(generation.path.join(record), \"incomplete\").unwrap();",
+      "site": "fs::write(generation.record_path(record).unwrap(), \"incomplete\").unwrap();",
       "classification": "output-effect"
     },
     {
       "path": "crates/sifr_driver/src/project_cache/tests.rs",
       "symbol": "dx13_c09_corrupt_schema_references_and_winners",
       "operation": "read",
-      "site": "fs::read(generation.path.join(record)).unwrap(),",
+      "site": "fs::read(generation.record_path(record).unwrap()).unwrap(),",
       "classification": "build-identity"
     },
     {
@@ -25711,6 +25655,489 @@
       "operation": "is_dir",
       "site": "assert!(destination.is_dir());",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/bundle.rs",
+      "symbol": "write",
+      "operation": "sync_all",
+      "site": "file.sync_all()",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "large_records_write_only_the_new_payload_and_bound_retained_history",
+      "operation": "metadata",
+      "site": "let length = fs::metadata(path).unwrap().len();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "read",
+      "site": "let original = fs::read(&path).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "write",
+      "site": "fs::write(&path, changed).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "write",
+      "site": "fs::write(&path, &original).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "read",
+      "site": "let saved = fs::read(&inherited).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "write",
+      "site": "fs::write(&inherited, changed).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "write",
+      "site": "fs::write(&inherited, &saved).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "bundle_corruption_never_restores_or_reclaims_an_ambiguous_history",
+      "operation": "write",
+      "site": "fs::write(inherited, retired_index).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "legacy_namespace_is_neither_consumed_nor_reclaimed",
+      "operation": "create_dir_all",
+      "site": "fs::create_dir_all(&legacy).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "legacy_namespace_is_neither_consumed_nor_reclaimed",
+      "operation": "write",
+      "site": "fs::write(legacy.join(\"latest\"), b\"legacy sentinel\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "legacy_namespace_is_neither_consumed_nor_reclaimed",
+      "operation": "read",
+      "site": "assert_eq!(fs::read(legacy.join(\"latest\")).unwrap(), b\"legacy sentinel\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "read",
+      "site": "let original = fs::read(&reader.path).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "write",
+      "site": "fs::write(&reader.path, damaged_index).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(retained.iter().all(|(_, path, _)| path.exists()));",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "write",
+      "site": "fs::write(&reader.path, original).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(retained.iter().all(|(_, path, _)| !path.exists()));",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "canonicalize",
+      "site": "let root = root.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "rename",
+      "site": "fs::rename(&path, root.join(\"retained\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "metadata",
+      "site": "assert_eq!(metadata.ino(), file.metadata().unwrap().ino());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "metadata",
+      "site": "assert_ne!(metadata.ino(), fs::metadata(&path).unwrap().ino());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "canonicalize",
+      "site": "let root = root.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, Permissions::from_mode(0o666)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, Permissions::from_mode(0o600)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&parent, Permissions::from_mode(0o777)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&parent, Permissions::from_mode(0o700)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "symlink",
+      "site": "symlink(&path, parent.join(\"alias\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "symlink",
+      "site": "symlink(&parent, root.join(\"alias\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+      "operation": "canonicalize",
+      "site": "let path = root.path().canonicalize().unwrap().join(\"fifo\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "open",
+      "site": ".open(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "metadata",
+      "site": "let metadata = file.metadata()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "is_file",
+      "site": "if !metadata.is_file() || metadata.uid() != uid() || metadata.permissions().mode() & 0o022 != 0",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_owned_payload",
+      "operation": "metadata",
+      "site": "let metadata = file.metadata()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_owned_payload",
+      "operation": "is_file",
+      "site": "if !metadata.is_file() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "directory",
+      "operation": "open",
+      "site": "File::open(parent)?.sync_all()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "directory",
+      "operation": "sync_all",
+      "site": "File::open(parent)?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index.rs",
+      "symbol": "latest_generation",
+      "operation": "read_dir",
+      "site": "for entry in fs::read_dir(parent)? {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_rejects_ambiguity_and_ignores_noncommitted_names",
+      "operation": "write",
+      "site": "fs::write(root.path().join(name(sequence, digit)), []).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_rejects_ambiguity_and_ignores_noncommitted_names",
+      "operation": "write",
+      "site": "fs::write(root.path().join(format!(\"{}.stage-1-2\", name(99, 'a'))), []).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_rejects_ambiguity_and_ignores_noncommitted_names",
+      "operation": "write",
+      "site": "fs::write(root.path().join(\"unrecognized\"), []).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_rejects_ambiguity_and_ignores_noncommitted_names",
+      "operation": "write",
+      "site": "fs::write(&duplicate, []).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_rejects_ambiguity_and_ignores_noncommitted_names",
+      "operation": "remove_file",
+      "site": "fs::remove_file(duplicate).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_compiler_services/src/project_history/commit_index_tests.rs",
+      "symbol": "head_discovery_handles_4097_unpruned_names",
+      "operation": "write",
+      "site": "fs::write(root.path().join(name(sequence, 'a')), []).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "committed_history_survives_death_before_advisory_hint",
+      "operation": "exists",
+      "site": "while !marker.exists() && Instant::now() < deadline {",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "committed_history_survives_death_before_advisory_hint",
+      "operation": "exists",
+      "site": "assert!(marker.exists(), \"writer reached durable commit\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "committed_history_survives_death_before_advisory_hint",
+      "operation": "exists",
+      "site": "assert!(!file.parent().unwrap().join(\".sifrbuildinfo\").exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "committed_history_survives_death_before_advisory_hint",
+      "operation": "read",
+      "site": "let result: serde_json::Value = serde_json::from_slice(&fs::read(restored).unwrap()).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "invalid_highest_commit_never_rolls_back_or_authorizes_reclamation",
+      "operation": "read",
+      "site": "let original = fs::read(&latest.path).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "invalid_highest_commit_never_rolls_back_or_authorizes_reclamation",
+      "operation": "write",
+      "site": "fs::write(&latest.path, b\"corrupt committed bytes\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "invalid_highest_commit_never_rolls_back_or_authorizes_reclamation",
+      "operation": "write",
+      "site": "fs::write(&latest.path, original).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "invalid_highest_commit_never_rolls_back_or_authorizes_reclamation",
+      "operation": "copy",
+      "site": "fs::copy(&latest.path, &false_head).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/commit_tests.rs",
+      "symbol": "invalid_highest_commit_never_rolls_back_or_authorizes_reclamation",
+      "operation": "remove_file",
+      "site": "fs::remove_file(false_head).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
+      "symbol": "dx14_restored_interface_reports_unavailable_publication",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/dx14_tests.rs",
+      "symbol": "dx14_restored_interface_reports_unavailable_publication",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "open_namespace",
+      "operation": "open",
+      "site": "File::open(projects.join(\".locks\"))?.sync_all()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "open_namespace",
+      "operation": "sync_all",
+      "site": "File::open(projects.join(\".locks\"))?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "open_namespace",
+      "operation": "open",
+      "site": "File::open(&namespace)?.sync_all()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/housekeeping.rs",
+      "symbol": "open_namespace",
+      "operation": "sync_all",
+      "site": "File::open(&namespace)?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "symlink_metadata",
+      "site": "if destination.symlink_metadata().is_ok() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "open",
+      "site": "fs::File::open(self.root.join(\".locks\"))?.sync_all()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "sync_all",
+      "site": "fs::File::open(self.root.join(\".locks\"))?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "open",
+      "site": "fs::File::open(parent.join(\".locks\"))?.sync_all()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "publish",
+      "operation": "sync_all",
+      "site": "fs::File::open(parent.join(\".locks\"))?.sync_all()?;",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "hint",
+      "operation": "rename",
+      "site": "let _ = fs::rename(&scratch, self.workspace_root.join(\".sifrbuildinfo\"));",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/storage.rs",
+      "symbol": "hint",
+      "operation": "remove_file",
+      "site": "let _ = fs::remove_file(&scratch);",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "dx13_c04_unavailable_readonly_and_hintless",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/tests.rs",
+      "symbol": "dx13_c04_unavailable_readonly_and_hintless",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "private_payload",
+      "operation": "open-write",
+      "site": ".open(path)",
+      "classification": "output-effect"
     }
   ]
 }

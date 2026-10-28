@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1 delivered, D2 preparation and execution boundaries
+- Status: in progress; D1 and D2 delivered; D3 baseline recovery, D4 durable history under qualification
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -362,7 +362,7 @@ and included verification JSON changes, as well as the already required fixture,
 addition/deletion, feature, toolchain and generated-input controls. The focused
 D1 gain does not establish a full-gate runtime.
 
-### D2 — preparation and execution boundaries (in progress)
+### D2 — preparation and execution boundaries (delivered)
 
 The next integrated chunk makes prepared compiler ownership explicit and repairs
 segmented Python failure discovery. Consumers must use the admitted product,
@@ -379,3 +379,374 @@ Validate these boundaries with focused positive/negative process tests, then
 execute all Python suites and the paired generated-code contract with retained
 targets. Measure actual producer invocations and full preparation/execution cost.
 Do not waive final phase gates, qualification or the ordinary-gate target.
+
+D2 merged in [PR #4514](https://github.com/sifr-lang/sifr/pull/4514), merge
+748d312418f2ac07cd0b645c220200b664fc5e8a. Reviewed implementation candidate:
+98dbc3490b91c976cea602d5cc9455e8963c04e6; base:
+6916f48778442aa5825cfd1389465ea832fee453.
+
+- Each profile publishes an immutable compiler copy, with a content-bound
+  admission manifest and active owner/consumer leases. Each new invocation still
+  enters Cargo. Explicit source-build contracts always enter Cargo.
+- Ordinary Python failures continue only under requested collection. Abnormal
+  execution, truncation and invalid evidence stop collection. Failed or missing
+  results cannot certify success; every selected suite records an outcome.
+- All 70 pinned affected checks, the complete runner foundation (79.245s), profile
+  checks, file-size guard and documentation checks passed on the candidate.
+- Complete selected merge pair: all 30 Python suites passed, all seven required
+  compiled capabilities passed with nine evidence records, and all ten selected
+  generated-code variants passed including strict fresh demo companions.
+- Pair elapsed: 961.757s including 149.135s preparation. Python 809.539s and generated
+  quality 403.789s overlap. No cap, source drift or surviving process. This is a
+  scoped result, not full-profile or final timing qualification.
+- The first Python runtime suite included a Cargo-reported 3m45s build of the
+  shared test binary; its five assertions took 0.25s. The following suites reused
+  it, with 15 and 21 assertions taking 0.51s and 0.47s. Do not interpret this cold
+  build as runtime assertion cost or a retained ordinary-run baseline.
+- Cold reconstruction before this run took 1030.716s: generated preparation 326.758s
+  and authoring preparation 688.701s. Retained candidate preparation took 144.373s
+  and 1.515s respectively. This cache-state comparison is not a D2 code speedup.
+- The first publication prototype rehashed the entire compiler in every child,
+  regressing four-consumer time 2.880s→7.284s. It was rejected. The final producer
+  hashes during copying and binds the small manifest into the inherited token;
+  consumers check published file identity and ownership. One actual Cargo build
+  supplied four sequential plus four concurrent consumers with zero Cargo calls
+  in those consumers. Consumer resolution plus identity execution was about 4ms;
+  publication was 1.986s. No general percentage speedup is inferred from that
+  small control because its first baseline build was slower than later builds.
+- Independent review: **SATISFIED**, no blockers, for the exact candidate.
+  Evidence: dev-verify-d2-review-s8x2lfi3/response.md.
+- Verified 111-payload archive: dev-verify-d2-qualified.tar.gz, SHA-256
+  74138b33dd22c9e1cfbbb19dd6185c12eb469e5abaccbca020fc9ffb96216d8c.
+  Rejected initial experiment and controls remain separately preserved in
+  dev-verify-d2-initial-evidence.tar.gz, SHA-256
+  f4a97099894cea16b9213699575ba3b477d7449f9ecf14c41061f8dab28ff663.
+
+Review follow-ups and ownership:
+
+- Prepared development consumers receive their explicit source sysroot because
+  a target directory may resolve outside the source tree. This is the prepared
+  product's declared source context. Installed/discovery qualification continues
+  to clear that setting. Preserve those dedicated discovery checks in the final
+  matrix; broad incidental execution with the explicit context is not discovery
+  evidence.
+- Publication detects changes during copying, but exclusive ownership must also
+  hold between Cargo completion and the start of copying. The README now names
+  this boundary. Do not claim protection against another process replacing the
+  Cargo product in that policy-prohibited interval.
+- Later runner simplification should surface retained failed suite-part details
+  in the reconciled report, beyond the current complete status journal.
+- Full-profile CI still stops before preparation at missing
+  SIFR_PERFORMANCE_REFERENCE. Owner: performance-reference/CI configuration.
+  No CI or full-profile pass is claimed.
+
+### D3 — ordinary Python verification costs (investigation)
+
+Python was the longer branch of the complete selected pair. First establish its
+retained ordinary cost now that the previously hidden native runtime build has
+completed. Reconcile all 30 suites and the existing compiled capability matrix;
+account for preparation and overlap with generated quality. Do not optimize from
+cold-build time disguised as assertion time.
+
+Then instrument a representative dominant operation and use the code and actual
+child-process timings to select one coherent root cause. Inspect repeated
+compiler/Python preparation, subprocess and frontend/probe work, native dependency
+reuse, and the boundary needed by each assertion. Preserve isolated mutable
+projects, environments and processes wherever the guarantee requires them.
+Do not replace execution with static checks or silently change required feature
+configurations.
+
+Use the phase's shared 120s integration budget as a design constraint, not a
+forecast. Compare the complete affected ordinary cycle before and after any
+candidate; retain it only for a substantial demonstrated improvement with the
+same obligations. Stop polishing subgroups already good enough and reassess the
+critical path. Generated preparation is separately over its 90s category budget;
+reducing a shorter overlapping branch alone cannot prove a faster pair.
+
+Intermediate work retains focused regressions and independent review. Final
+phase coverage, invalidation and repeated timing qualification remain required.
+
+#### D3 retained baseline and prioritization
+
+At the unchanged D2 candidate98dbc3490b91c976cea602d5cc9455e8963c04e6,
+the complete selected pair passes in497.492s including preparation. Python
+executes all30 suites in357.748s; generated quality executes all10 variants in
+314.351s, overlapping Python. All7 compiled capabilities and their9 evidence
+records reconcile. Generated preparation131.989s remains the dominant part of
+136.467s declared preparation. This is a retained-state diagnostic, not a new
+implementation speedup or complete480s gate acceptance.
+
+The74-payload archive dev-verify-d3-retained-qualified.tar.gz is independently
+SHA-verified locally:1e99aac2e3e150943d9a8252c5da2e54e65d72149a85abea448658444e01a983.
+The native Python test graph now executes in0.572/0.873/0.865s across the three
+runtime suites. It is already good enough for ordinary retained execution.
+
+Targeted traces preserve actual assertions and are separate from ordinary timing.
+Binding authoring runs in34.405s; CLI subprocess work dominates. Public Python
+metadata ownership discovery scans roughly20,000 installed files per call in
+this environment. Native example traces show about0.14s retained Cargo work,
+about0.6s stdlib loading, and1.4–1.6s generation for several cases. A formatter
+observer over all8 library examples records136 calls but34 distinct input hashes,
+with5.821s inside formatter calls including observer overhead. Do not turn these
+partial intervals into projected whole-gate savings. The first library trace
+executes its examples but fails its external report-path presentation; preserve
+that failed diagnostic. The corrected report-path observer passes. A separate
+native process trace selects a different invocation environment and rebuilds a
+native family; it is not retained timing evidence.
+
+Do not expand small formatter or metadata optimizations before current macro
+prioritization. The full emitted merge correctness-only plan is now undergoing
+an ordinary, untraced integrated discovery run, with failure continuation,
+1750s per top-level category and retained targets. Preparation reconstruction
+remains charged. If a cap stops the runner, independently schedule the remaining
+categories with their actual prerequisites and retain the original incomplete run.
+
+### D4 — durable history publication representation (prospective)
+
+The accepted phase explicitly permits redesigning storage while retaining all
+4097 real durable publications. Reuse V1be's attribution as historical evidence,
+then verify the current full history and project-cache costs. Source review
+confirms generation directories still link every retained record and perform
+separate durable writes for record, manifest, generation publication, cache
+pointer and optional workspace hint. A hardlink-only change is insufficient.
+
+Implement one immutable bundle per publication: a bounded manifest and the new
+record in one file, with explicit references to immutable payload owners for
+older retained records. Publish the complete bundle durably before atomically
+updating the authoritative cache pointer. A workspace hint is advisory: publish
+it atomically, but it cannot add a durability prerequisite beyond the already
+durable cache commit. Do not pack/copy all prior payloads on each publication,
+introduce a database dependency, weaken fsync on the authoritative commit, or
+reuse correctness results across changed inputs.
+
+Preserve the128-record/64MiB retained-history bound,16MiB record bound, ordered
+ABA reuse, old-input eviction, current-byte hashing and semantic validation,
+read-only/missing-workspace discovery, cancellation, disk-full recovery, stable
+namespace/generation leases and active-reader survival. Cleanup must retain
+payload owners referenced by every live generation, acquire exclusive ownership
+before deletion, and preserve unknown/unsafe state. Use a distinct versioned
+storage identity; do not add an old-format compatibility path or delete old
+namespaces as migration. All current assertions remain; representation-specific
+path/link checks must prove equivalent immutable sharing and reclamation.
+
+Before adoption require: at least50% lower ordinary complete4097-publication
+runtime, bounded near-limit write amplification, all affected cache/history/
+corruption/lease/crash/recovery tests, explicit publication-boundary failure
+controls, no leaked process ownership, independent exact-candidate review, and a
+measured complete ordinary-driver contribution. Preserve rejected experiments.
+An improvement in this item does not close the480s goal; final phase gates and
+all existing coverage/invalidation/timing qualifications remain required.
+
+
+#### D4 implementation checkpoint (unqualified)
+
+The format now lives in `sifr_compiler_services::project_history`, shared by
+writer and editor reader. This removes their duplicate manifest definitions and
+prevents a writer-only schema change from silently disabling editor reuse.
+Direct immutable payload owners are retained by the current history and every
+live predecessor. New controls exercise near-limit payloads, bounded write
+amplification, malformed envelopes, inherited-byte corruption, and legacy
+namespace preservation. Existing current-byte and same-mtime controls mutate
+the record inside its envelope, preserving the original guarantee.
+
+A local diagnostic compiled the shared implementation and executed all 53
+project-cache tests: 52 passed, including the full 4,097-publication test; one
+unchanged lease test failed when executing `/bin/true`, absent on this host.
+The failure occurred after its lease-release assertions. Preserve this result;
+it is not a complete affected-test pass and remote lease qualification remains
+required. The initial default temporary path traversed a symlink rejected by
+cache security; a private canonical scratch path corrected the test setup.
+No cache security check was relaxed. Local diagnostic elapsed time is not a
+matched performance comparison with historical remote measurements.
+
+The full baseline discovery at the unchanged D2 candidate stopped cleanly at
+its preparation safety deadline: 1,775.205s overall, 1,750.317s preparation.
+Workspace, fixtures, Python environment and generated preparation passed;
+crate-test preparation was capped after 1,614.636s. Remaining preparation and
+all main execution categories were unexecuted. Canonical preparation recovery
+is running one node at a time with real prerequisites and separate 1,750s caps.
+The original incomplete report is retained. No current full-gate runtime or
+speedup is established by this recovery.
+
+
+The separate editor-reader diagnostic executes three tests: inherited-payload
+reuse/corruption and rejected-reader lease release pass; the unchanged
+fork-before-exec control fails at the same absent `/bin/true` host utility after
+its lock assertions. This pre-existing host-path issue belongs to the portable
+lease test harness and is not repaired in D4. Source dependency-direction,
+filesystem-effect inventory/self-tests, formatting, and file-size checks pass.
+A first dependency-direction attempt lacked non-host registry metadata; fetching
+the locked metadata repaired setup without changing the lockfile.
+
+
+The consumer audit also includes cache CLI ownership inspection and both DX.13
+and DXF CLI acceptance scripts. Disabled-reuse checks now hash actual project
+bundles (with a nonempty assertion), rather than vacuously finding no old
+`manifest.json` files. CLI pruning first proves referenced payload owners are
+protected, then removes both discovery pointers and performs another real
+frontend publication to make abandoned histories eligible. It preserves dry-run,
+actual reclamation, idempotence, post-prune checking and orphan-namespace checks;
+no cache metadata is fabricated. Count-bound eviction remains covered by the
+existing complete history and live-reader tests.
+
+
+D4 resource-bound correction: the first GC prototype held one descriptor for
+all inactive generation candidates. Under a 64-descriptor process limit the real
+reader/eviction regression failed to reclaim the evicted generation (3.642s),
+confirming the defect. Replace that design with one short context-level reader
+admission lease: new readers acquire it shared until their generation lease is
+held; GC holds it exclusively through marking and reclamation. Existing readers
+continue using their own leases. GC probes/rechecks entries one at a time. A
+checked-in subprocess control reruns the complete existing eviction/active-reader
+assertions at the low descriptor limit. Driver and editor both test admission.
+The prior low-descriptor 4,097-publication experiment was cancelled after 63.433s
+because its assertions did not require reclamation; its incomplete result is
+retained and is not a pass. Normal full-history coverage remains required.
+
+The local CLI diagnostic also exposed pre-existing stale DXF expectations for
+the cache inspection root and owner inventory. The affected contract now verifies
+the actual cache root, the complete owner namespace set, protected legacy owner,
+v3 pruning owner, and matching text/JSON descriptions. This is part of qualifying
+the changed cache CLI boundary, not a removal of empty-cache assertions.
+
+
+The repaired admission design passes all five focused bundle controls locally
+in 7.94s, including the exact low-descriptor eviction regression that failed
+against the first prototype. Retained preparation plus execution is 30.171s;
+19.62s is recompilation. This is correctness evidence, not the matched history
+speedup required for adoption. Full affected Linux validation and ordinary
+before/after timing remain pending.
+
+
+At candidate `79feeea8ea4e61fa178d236bd2707b3ee1e23a87`, the real local cache
+CLI contract passes all 36 isolated calls. The full local project-cache run
+executes 55 tests: 53 pass, including all 4,097 publications; the known absent
+`/bin/true` harness failure remains, and the empty-store contract detects that
+admission authority was created during `Store::open`. Correct this by establishing
+the permanent admission inode only under the first writer lease. Empty-store
+opening and pruning remain read-only with respect to writer authority; incomplete
+writer setup grants no reclamation authority. The original pressure/count test
+passes after the correction (0.11s execution, 14.156s with recompilation).
+The editor suite executes four controls: three pass, including admission and
+inherited payloads; the same host-utility failure remains. None of these local
+partial results substitutes for complete Linux qualification.
+
+#### D4 measured rejection and prospective bounded byte proof
+
+Candidate `c200fb10e39baa436da9fb78d2176feaf9d15a11` is draft PR #4515,
+not adopted. On the same private SSD scratch and unchanged allocation, the
+complete ordinary 4,097-publication test passes at 173.822s before and 114.317s
+after: 34.23% lower, below the prospective 50% threshold. User CPU changes from
+46.09s to47.70s while system CPU falls43.24s to22.30s. The unchanged ordinary
+driver baseline passes794 cases with82 ignored native/corpus obligations in
+705.444s. The candidate's subsequent ordinary run was cancelled at288.349s
+because the implementation failed its adoption criterion; editor/CLI stages were
+not executed. No partial result counts as complete qualification.
+
+The first new baseline was cancelled at152.877s after detecting rotational
+scratch, repeating a placement rejected in V0.6a1. Its evidence is preserved.
+The accepted comparison above explicitly uses SSD scratch without changing any
+fsync operation. The complete13-node preparation recovery passes independently;
+98 payloads are locally SHA-verified in dev-verify-d3-preparation-recovery.tar.gz
+(6ce38d5f5bb99a90e2507246b69ea71560135d61df6307bd0a7ea0d7e66a5312).
+Its5287.327s sum includes separately repeated prerequisites after cleanup; it is
+not ordinary latency, a test-execution pass, or a contiguous full gate.
+
+A targeted129-publication control passes under CPU sampling. The sample places
+36 of69 user-CPU samples in SHA-256 compression. This is an attribution lead,
+not a precise whole-test percentage. The outer diagnostic wrapper fails because
+its same-user session guard sees the privileged observer; preserve that failure
+and do not weaken the generic guard or count it as qualified execution.
+
+Before further implementation, extend D4's proof representation while preserving
+its acceptance threshold and semantic guarantees. Retain at most2MiB of already
+validated record bytes per existing Store-owned validation cache, in addition to
+the existing count bound and digest facts. Every lookup still reads current owned
+file bytes. Exact equality with the retained validated bytes proves the prior
+stored-identity/context validation still applies; unretained or changed bytes
+use the existing digest/semantic validation path. This replaces hashing on every
+small-record cache hit with a stronger exact-byte comparison, not metadata-only
+freshness or reuse of a cached compiler result. Oversized records retain the
+existing bounded digest facts. Do not change record hashes, serialization, public
+results, observations, filesystem durability, or the history-test workload.
+
+Add focused controls for the byte budget, byte-proof eviction with retained
+digest facts, oversized/zero-budget records, changed bytes and incorrect stored
+identities. Retain every existing same-mtime, corruption, context, recency and
+owner-lifetime control. Repeat complete matched history timing and complete
+ordinary-driver/editor/CLI qualification on the revised candidate before review.
+The original prototype remains a rejected performance experiment.
+
+#### D4 opened-payload consolidation (under qualification)
+
+Candidate `138a714aa403075951e780e5ecc747550adfe91f` passes the unchanged
+4,097-publication test in 105.862s (39.10% below baseline), so adoption remains
+rejected. User CPU falls to 31.67s; system CPU is 28.47s. All nine local validator
+controls pass. The dependent ordinary-driver/editor/CLI sequence did not start.
+A corrected independently bounded observer passes its session guard: the real
+129-publication control passes, with 323 user samples and no lost samples;
+SHA-256 accounts for 19.20%. A separate syscall diagnostic passes and records
+79,306 metadata queries and 20,042 opens. Instrumented durations are not timing
+qualification. These observations justify consolidating repeated payload reads.
+
+The next candidate checks the actual opened Unix file's ownership, permissions
+and regular-file type, avoiding the redundant pathname metadata check before
+opening it. The parent directory remains checked on every read; final symlinks
+are forbidden. Nonblocking open permits rejecting FIFOs without hanging. Windows
+retains its existing ACL/reparse checks. The history reader reads the bounded
+header and expected payload together, then verifies the header before returning
+bytes. No durability operation, retained-history bound, record hash, publication
+count, lease or corruption assertion is removed. Three direct opened-object
+controls and all six bundle controls pass locally. Repeat the unchanged complete
+history comparison before accepting this candidate; the 50% threshold remains.
+
+#### D4 single immutable commit authority (prospective)
+
+Candidate `ec70ed8f93683711086e5590ac60aeeda2f04d64` passes in101.492s
+(41.61% below the173.822s baseline), still below adoption. User/system CPU are
+31.01s/25.15s. Do not repeat it unchanged. The syscall control establishes four
+fsyncs per publication: durable bundle and directory, then durable pointer and
+directory. The next design removes the separate mutable cache pointer, rather
+than relaxing either committed data durability or fresh-byte validation.
+
+Use a writer-serialized monotonic sequence plus manifest digest as the committed
+bundle name. The shared driver/editor reader selects the highest committed name;
+its sequence, digest, context and complete current payloads must validate. A
+corrupt highest commit is a miss, never implicit reuse of a lower generation.
+Staging/prepared names are outside the committed index. Flush the complete staged
+bundle, validate it, then atomically rename and synchronize the commit directory.
+That rename is the visibility point; successful directory synchronization is the
+durability boundary. Keep the workspace hint advisory. Old committed bundles
+remain independently discoverable after an interrupted publication. No database,
+mutable append log, metadata freshness shortcut, or compatibility reader is added.
+
+Preserve the existing process-death controls at precommit preparation boundaries,
+and add death after durable commit, sequence/digest mismatch, overflow, ambiguous
+head and malformed-name controls. GC must retain an invalid highest commit and
+all ambiguous references, preserve live readers, and never let pruning roll back
+the valid head. Preserve every existing 4,097 publication, current-byte, bounds,
+read-only, reader-admission, low-descriptor and CLI assertion, adapting only
+representation-specific operations. Enumerating commit names adds work
+proportional to unpruned directory entries; measure this explicitly with4,097
+unpruned names and bound memory to one selected head. Do not claim constant-time
+head discovery. The existing >=50% complete-history adoption criterion, full
+ordinary-driver contribution, affected qualification and independent review remain.
+
+The local integrated cache sweep executes61 tests:58 pass, two inject publication
+failure into the now-obsolete pointer parent, and the known missing `/bin/true`
+process helper remains unavailable. Move both permission failures to the actual
+`generations` publication directory; their original diagnostic/status assertions
+then pass. The three commit-index controls pass, including4,097 unpruned names.
+The first new commit controls cover successful durable publication before hint
+creation and rejection/preservation of a corrupt or sequence-mismatched head.
+The latest broad local diagnostic is not a full pass.
+
+The new protocol also makes its Unix initialization dependencies explicit:
+synchronize newly created directory entries, the immutable namespace owner, and
+the stable namespace/context/generation lease directory entries before a commit
+can be returned. Empty ownership inodes must survive restart alongside the
+payload. Do not remove those barriers to win the timing comparison. Precommit
+process-death hooks now name stage validation and commit readiness; they still
+assert that interrupted private work is undiscoverable and safely reclaimable.
+The removed mutable-pointer failure injection is replaced with corruption of the
+actual committed head in the real CLI recovery contract.

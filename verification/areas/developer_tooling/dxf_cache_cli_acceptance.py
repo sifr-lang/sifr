@@ -33,7 +33,7 @@ def qualify(binary, output, identity, *, environment):
     binary, output = binary.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     workspace = output / "workspace"
-    workspace.mkdir()
+    workspace.mkdir(mode=0o700)
     source = workspace / "main.sifr"
     cache = output / "cache"
     native = cache / "native" / "artifacts"
@@ -65,9 +65,20 @@ def qualify(binary, output, identity, *, environment):
         ["cache", "inspect", "--json", "--isolated", "--no-incremental"],
     ]):
         inspected = json.loads(invoke(f"global-{placement}", arguments).stdout)
-        assert inspected == {"root": str(native), "entries": [], "protected_roots": []}
+        assert set(inspected) == {"root", "entries", "protected_roots", "owners"}
+        assert inspected["root"] == str(cache)
+        assert inspected["entries"] == [] and inspected["protected_roots"] == []
+        owner_paths = {Path(row["path"]).relative_to(cache).as_posix() for row in inspected["owners"]}
+        assert owner_paths == {"native/artifacts", "native/artifacts/cargo_resolution",
+                               "native/artifacts/rust_bridge_probes", "native/families",
+                               "native/publications", "metadata", "projects", "projects-v3", "test-fixtures"}
+        by_path = {Path(row["path"]).relative_to(cache).as_posix(): row for row in inspected["owners"]}
+        assert by_path["projects"]["policy"] == "legacy owner namespace; protected"
+        assert by_path["projects-v3"]["policy"] == "cache prune-project owns exact workspace"
     text = invoke("inspect-text", ["cache", "inspect"]).stdout
-    assert text == f"cache: {native}\n"
+    expected = f"cache: {cache}\n" + "".join(
+        f"{row['path']} owner={row['owner']} policy={row['policy']}\n" for row in inspected["owners"])
+    assert text == expected
     for index, arguments in enumerate([
         ["cache"], ["cache", "bogus"], ["cache", "inspect", "--reserve-bytes", "1"],
         ["cache", "prune", "--json"], ["cache", "prune-project"],
@@ -97,10 +108,11 @@ def qualify(binary, output, identity, *, environment):
     for number in [1, 2]:
         source.write_text(f"def main() -> None:\n    value: int = {number}\n")
         invoke(f"seed-{number}", ["check", str(source)])
-    generations = sorted(cache.glob("projects/**/generations/*"))
-    generations = [path for path in generations if path.is_dir() and path.name != ".locks"]
+    def published_generations():
+        return sorted(path for path in cache.glob("projects-v3/**/generations/*") if path.is_file())
+
+    generations = published_generations()
     assert len(generations) == 2, generations
-    before = {str(path): path.read_bytes() for path in cache.rglob("*") if path.is_file()}
     count_keys = {"examined_entries", "eligible_entries", "deleted_entries",
                   "eligible_generations", "deleted_generations"}
 
@@ -117,16 +129,30 @@ def qualify(binary, output, identity, *, environment):
         value = project(label, options)
         assert value["reserve_bytes"] == 0 and not value["pressure"] and not value["dry_run"]
         assert all(count == 0 for count in value["cache"].values())
-    # Two publication staging locks plus the older generation are eligible.
+    # A referenced predecessor owns a live payload and cannot be reclaimed.
+    retained = project("project-retained", ["--dry-run", "--reserve-bytes", maximum])
+    assert retained["cache"]["eligible_generations"] == 0
+    assert all(path.exists() for path in generations)
+    # Corrupt the authoritative highest commit, then recover through a real
+    # frontend publication. The abandoned histories become unreferenced.
+    # Bounded-history eviction itself is exercised by all 4,097 publications.
+    head = max(generations, key=lambda path: path.name)
+    head.write_bytes(b"corrupt committed history")
+    (workspace / ".sifrbuildinfo").unlink()
+    invoke("seed-after-head-corruption", ["check", str(source)])
+    generations = published_generations()
+    assert len(generations) == 3
+    before = {str(path): path.read_bytes() for path in cache.rglob("*") if path.is_file()}
+    # Three staging locks and two abandoned generations are eligible.
     dry = project("project-dry", ["--dry-run", "--reserve-bytes", maximum])
     assert dry["dry_run"] and dry["pressure"]
-    assert dry["cache"] == dict(examined_entries=4, eligible_entries=3, deleted_entries=0,
-                                eligible_generations=1, deleted_generations=0)
+    assert dry["cache"] == dict(examined_entries=6, eligible_entries=5, deleted_entries=0,
+                                eligible_generations=2, deleted_generations=0)
     assert before == {str(path): path.read_bytes() for path in cache.rglob("*") if path.is_file()}
     deleted = project("project-delete", ["--reserve-bytes", maximum])
     assert not deleted["dry_run"] and deleted["pressure"]
-    assert deleted["cache"] == dict(examined_entries=4, eligible_entries=3, deleted_entries=3,
-                                    eligible_generations=1, deleted_generations=1)
+    assert deleted["cache"] == dict(examined_entries=6, eligible_entries=5, deleted_entries=5,
+                                    eligible_generations=2, deleted_generations=2)
     assert sum(path.exists() for path in generations) == 1
     again = project("project-idempotent", ["--reserve-bytes", maximum])
     assert again["cache"] == dict(examined_entries=1, eligible_entries=0, deleted_entries=0,
