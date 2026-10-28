@@ -1,6 +1,7 @@
-//! Immutable project bundles. Lock order: writer, then generation lease.
-//! Readers take only a shared generation lease; GC takes writer then exclusive
-//! generation leases. Namespace leases outlive stores through their readers.
+//! Immutable project bundles. Readers take shared admission, acquire their
+//! generation lease, then release admission. GC takes writer, pins the latest
+//! generation, then holds exclusive admission while probing/reclaiming entries.
+//! Namespace leases outlive stores through their readers.
 //! Generation and namespace lock inodes remain stable while reachable.
 use super::record_validation::RecordValidation;
 use crate::cache_storage as storage;
