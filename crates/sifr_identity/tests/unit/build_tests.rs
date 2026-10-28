@@ -1,4 +1,4 @@
-use super::{IdentityEncoder, hash_tree};
+use super::{IdentityEncoder, input_tree::hash_tree, production_inputs::visit_package};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -35,13 +35,76 @@ impl Drop for Scratch {
 }
 
 #[test]
-fn directory_watch_refactor_preserves_hash_framing_order_and_exclusions() {
+fn production_ownership_requires_complete_valid_explicit_roots() {
+    let tree = Scratch::new();
+    tree.write("src/lib.rs", "production");
+    let hash = || {
+        let mut encoder = IdentityEncoder::new("ownership-test");
+        visit_package(&tree.0, &tree.0, &mut encoder).map(|()| encoder.finish())
+    };
+    for manifest in [
+        "[package]\nname='probe'\n",
+        "[package.metadata.sifr]\nproduction-inputs=['../outside']\n",
+        "[package.metadata.sifr]\nproduction-inputs=['/outside']\n",
+        "[package.metadata.sifr]\nproduction-inputs=['src','src/lib.rs']\n",
+        "[package.metadata.sifr]\nproduction-inputs=['src','missing.asset']\n",
+        "[package.metadata.sifr]\nproduction-inputs=['src',false]\n",
+        "[package.metadata.sifr]\nproduction-inputs=['Cargo.toml','src']\n",
+        "[package.metadata.sifr]\nproduction-inputs=[]\n",
+    ] {
+        tree.write("Cargo.toml", manifest);
+        assert!(hash().is_err(), "accepted invalid ownership: {manifest}");
+    }
+    tree.write(
+        "Cargo.toml",
+        "[package.metadata.sifr]\nproduction-inputs=['src']\n",
+    );
+    let before = hash().unwrap();
+    tree.write("tests/unit/assertions.rs", "private assertion");
+    assert_eq!(before, hash().unwrap());
+    tree.write("build.rs", "fn main() {} ");
+    assert!(hash().is_err(), "an undeclared build script is not safe");
+    tree.write(
+        "Cargo.toml",
+        "[package.metadata.sifr]\nproduction-inputs=['src','build.rs']\n",
+    );
+    assert_ne!(before, hash().unwrap());
+}
+
+#[test]
+fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
+    let tree = Scratch::new();
+    tree.write("crates/owner/src/lib.rs", "production");
+    tree.write("shared/asset.md", "embedded");
+    for inputs in [
+        "false",
+        "['missing']",
+        "['../escape']",
+        "['shared','shared']",
+        "['crates/owner']",
+    ] {
+        tree.write("crates/owner/Cargo.toml", &format!(
+            "[package.metadata.sifr]\nproduction-inputs=['src']\nproduction-workspace-inputs={inputs}\n"
+        ));
+        let mut hash = IdentityEncoder::new("workspace-ownership-test");
+        assert!(
+            visit_package(&tree.0, &tree.0.join("crates/owner"), &mut hash).is_err(),
+            "accepted invalid workspace ownership: {inputs}"
+        );
+    }
+    tree.write("crates/owner/Cargo.toml", "[package.metadata.sifr]\nproduction-inputs=['src']\nproduction-workspace-inputs=['shared']\n");
+    let mut hash = IdentityEncoder::new("workspace-ownership-test");
+    visit_package(&tree.0, &tree.0.join("crates/owner"), &mut hash).unwrap();
+}
+
+#[test]
+fn directory_watches_preserve_framing_order_and_own_embedded_assets() {
     let tree = Scratch::new();
     for (name, bytes) in [
         ("inputs/z.rs", "last"),
         ("inputs/a/deep.rs", "first"),
-        ("inputs/readme.md", "excluded"),
-        ("inputs/note.mdx", "excluded"),
+        ("inputs/readme.md", "embedded"),
+        ("inputs/note.mdx", "embedded"),
         ("inputs/.git/state", "excluded"),
         ("inputs/target/obj", "excluded"),
         ("inputs/__pycache__/x", "excluded"),
@@ -54,6 +117,14 @@ fn directory_watch_refactor_preserves_hash_framing_order_and_exclusions() {
     expected.field(
         &["inputs", "a", "deep.rs"].join(std::path::MAIN_SEPARATOR_STR),
         b"first",
+    );
+    expected.field(
+        &["inputs", "note.mdx"].join(std::path::MAIN_SEPARATOR_STR),
+        b"embedded",
+    );
+    expected.field(
+        &["inputs", "readme.md"].join(std::path::MAIN_SEPARATOR_STR),
+        b"embedded",
     );
     expected.field(
         &["inputs", "z.rs"].join(std::path::MAIN_SEPARATOR_STR),
@@ -86,7 +157,7 @@ impl CargoProbe {
         );
         tree.write("src/main.rs", "fn main() { assert_eq!(env!(\"TRACKED_HASH\"), std::env::var(\"EXPECTED_HASH\").unwrap()); println!(\"input-verified\"); }\n");
         tree.write("build.rs", "use sifr_identity::IdentityEncoder;\n#[allow(dead_code)] mod inventory;\nfn main() { let root=std::path::PathBuf::from(std::env::var_os(\"CARGO_MANIFEST_DIR\").unwrap()); println!(\"cargo:rustc-env=TRACKED_HASH={}\", inventory::probe(&root).unwrap()); }\n");
-        let source = fs::read_to_string(identity.join("src/build.rs")).unwrap();
+        let source = fs::read_to_string(identity.join("src/input_tree.rs")).unwrap();
         tree.write("inventory.rs", &(source + "\npub fn probe(root: &Path) -> io::Result<String> { let mut hash = IdentityEncoder::new(\"watch-test\"); visit(root, &root.join(\"inputs\"), &mut hash)?; visit(root, &root.join(\"config.txt\"), &mut hash)?; Ok(hash.finish()) }\n"));
         tree.write("inputs/nested/deep/value.txt", "before");
         tree.write("config.txt", "configuration");
@@ -205,6 +276,7 @@ fn product_source_identity_tracks_sources_independently_of_configuration() {
         "crates/probe/Cargo.toml",
         &format!(
             "[package]\nname='product_identity_probe'\nversion='0.0.0'\nedition='2024'\n\
+             [package.metadata.sifr]\nproduction-inputs=['src','build.rs','semantic-input.txt']\nproduction-workspace-inputs=['shared']\n\
              [features]\nalternate=[]\n[build-dependencies]\n\
              sifr_identity={{path={:?},features=['build']}}\n",
             identity.to_str().unwrap()
@@ -216,22 +288,35 @@ fn product_source_identity_tracks_sources_independently_of_configuration() {
     );
     tree.write(
         "crates/probe/src/main.rs",
-        "fn main() { println!(\"{} {}\", env!(\"SIFR_COMPILER_SOURCE_ID\"), env!(\"SIFR_COMPILER_BUILD_ID\")); }\n",
+        "fn main() { assert_eq!(include_str!(\"../../../shared/embedded.md\"), std::env::var(\"EXPECTED_ASSET\").unwrap()); println!(\"{} {}\", env!(\"SIFR_COMPILER_SOURCE_ID\"), env!(\"SIFR_COMPILER_BUILD_ID\")); }\n",
     );
     tree.write("crates/probe/semantic-input.txt", "initial");
+    tree.write("shared/embedded.md", "embedded-before");
+    tree.write("crates/probe/tests/unit/assertions.rs", "assertion before");
+    tree.write(".cargo/config.toml", "");
+    tree.write("third_party/owned.txt", "third party input");
+    tree.write(
+        "rust-toolchain.toml",
+        &fs::read_to_string(identity.join("../../rust-toolchain.toml")).unwrap(),
+    );
     let run =
-        |alternate: bool| {
+        |alternate: bool, fresh: Option<bool>| {
             let mut cargo = Command::new(env!("CARGO"));
             cargo
                 .current_dir(&tree.0)
                 .args([
                     "run",
                     "--quiet",
+                    "--message-format=json",
                     "--offline",
                     "-p",
                     "product_identity_probe",
                 ])
-                .env("CARGO_TARGET_DIR", tree.0.join("target"));
+                .env("CARGO_TARGET_DIR", tree.0.join("target"))
+                .env(
+                    "EXPECTED_ASSET",
+                    fs::read_to_string(tree.0.join("shared/embedded.md")).unwrap(),
+                );
             if alternate {
                 cargo.args(["--features", "alternate"]);
             }
@@ -259,31 +344,81 @@ fn product_source_identity_tracks_sources_independently_of_configuration() {
                 String::from_utf8_lossy(&output.stderr)
             );
             let stdout = String::from_utf8(output.stdout).unwrap();
-            let fields: Vec<_> = stdout.split_whitespace().map(str::to_string).collect();
+            if let Some(expected) = fresh {
+                let artifacts: Vec<_> = stdout
+                    .lines()
+                    .filter(|line| line.contains("\"reason\":\"compiler-artifact\""))
+                    .collect();
+                assert!(!artifacts.is_empty(), "missing Cargo freshness evidence");
+                assert_eq!(
+                    artifacts.iter().all(|line| line.contains("\"fresh\":true")),
+                    expected,
+                    "{stdout}"
+                );
+            }
+            let fields: Vec<_> = stdout
+                .lines()
+                .last()
+                .unwrap()
+                .split_whitespace()
+                .map(str::to_string)
+                .collect();
             assert_eq!(fields.len(), 2, "{stdout}");
             assert!(fields.iter().all(
                 |value| value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
             ));
             (fields[0].clone(), fields[1].clone())
         };
-    let initial = run(false);
-    let configured = run(true);
+    let initial = run(false, Some(false));
+    let configured = run(true, None);
     assert_eq!(initial.0, configured.0, "same source, different features");
     assert_ne!(
         initial.1, configured.1,
         "configured identity remains distinct"
     );
+    assert_eq!(
+        configured,
+        run(true, Some(true)),
+        "unchanged build is fresh"
+    );
+    tree.write("crates/probe/tests/unit/assertions.rs", "assertion after");
+    assert_eq!(
+        configured,
+        run(true, Some(true)),
+        "private assertions are not production inputs"
+    );
+    tree.write("crates/probe/tests/unit/support.rs", "new private support");
+    assert_eq!(
+        configured,
+        run(true, Some(true)),
+        "new private support preserves production"
+    );
     tree.write(".git/HEAD", "new-revision-with-the-same-sources");
     assert_eq!(
         configured,
-        run(true),
+        run(true, None),
         "revision labels are not source inputs"
     );
     tree.write("crates/probe/semantic-input.txt", "edited");
-    let edited = run(true);
+    let edited = run(true, Some(false));
     assert_ne!(configured.0, edited.0, "semantic inputs invalidate pairing");
     assert_ne!(
         configured.1, edited.1,
         "configured identity still tracks source"
+    );
+    tree.write("crates/probe/src/embedded.md", "new production asset");
+    let added = run(true, Some(false));
+    assert_ne!(edited, added, "new source assets invalidate");
+    fs::remove_file(tree.0.join("crates/probe/src/embedded.md")).unwrap();
+    assert_eq!(
+        edited,
+        run(true, Some(false)),
+        "removed source assets invalidate and restore identity"
+    );
+    tree.write("shared/embedded.md", "embedded-after");
+    assert_ne!(
+        edited,
+        run(true, Some(false)),
+        "declared external assets reach the actual consumer"
     );
 }

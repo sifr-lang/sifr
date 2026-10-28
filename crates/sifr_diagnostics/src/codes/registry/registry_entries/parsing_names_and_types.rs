@@ -385,7 +385,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "TYPE",
         "Reveal the inferred static type of an expression.",
         Severity::Note,
-        "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
+        "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
         "revealed type is {revealed_type}",
         "sifr_lowering::lower::builtin_calls",
         [arg!("revealed_type")],

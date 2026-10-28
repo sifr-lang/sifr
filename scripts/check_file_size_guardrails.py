@@ -31,7 +31,7 @@ LEGACY_DRIVER_GUARDRAIL_PATHS = (
     "crates/sifr_driver/src/lib.rs",
     "crates/sifr_driver/src/project/mod.rs",
     "crates/sifr_driver/src/project/build.rs",
-    "crates/sifr_driver/src/tests/project_graph.rs",
+    "crates/sifr_driver/tests/unit/project_graph.rs",
 )
 
 EXTERNAL_CORPUS_PREFIXES = (

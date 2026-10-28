@@ -22,3 +22,7 @@ workspace = true
 
 [build-dependencies]
 sifr_identity = { workspace = true, features = ["build"] }
+
+[package.metadata.sifr]
+production-inputs = ["src", "build.rs", "error_page_examples"]
+production-workspace-inputs = ["third_party/ruff"]

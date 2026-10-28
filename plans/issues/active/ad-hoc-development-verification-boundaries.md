@@ -1139,3 +1139,35 @@ This item does not yet remove root manifest/lock invalidation or qualify the
 SQL provenance repair. Do not update existing component producer receipts without
 rebuilding their artifacts. Full phase gates, complete coverage/invalidation and
 repeated480-second qualification remain open.
+
+#### D6 implementation checkpoint
+
+Baseline at3a9fd838: canonical production CLI build plus the same focused parser
+test took1.315s unchanged,16.476s after an assertion-only edit,13.548s after restoring
+it. The production binary hash changed for the assertion edit and returned exactly
+on restoration. Separate initial preparation took22.126s. These are narrow edit
+cycles, not full gate timings; raw results remain `dev-verify-d6-baseline-*`.
+
+The prototype declares positive package-relative production roots in first-party
+Cargo manifests, plus explicit workspace-relative roots for parser/vendor inputs
+and generated/embedded assets. Both local and aggregate identities use this
+authority; build-script extra-input lists move into the same manifest ownership.
+The aggregate enumerates explicit production workspace members instead of watching
+the entire crates directory. Global Cargo/lock/toolchain inputs remain conservative.
+Identity framing advances to v2; no old-identity fallback is introduced.
+
+All56 files in the driver's central private test module tree are relocated
+byte-for-byte to tests/unit at the same depth. Identity tests are likewise outside
+src. Existing module names/privacy remain intact. Other crates' inline/private
+test content remains conservatively owned until separately migrated; this is not
+a claim that every assertion in the workspace is already separated.
+
+Independent include inspection found standard-library sources embedded by
+sifr_stdlib_manifest outside its package directory. Their workspace root is now
+explicitly declared. Declared embedded Markdown must be hashed like any other
+asset; the prior extension exclusion is removed. Source-archive Cargo controls
+prove unchanged/private-test freshness, feature separation, asset addition/removal
+and external embedded-asset invalidation with actual consumer execution. Nine
+identity controls are being qualified; complete-driver comparison and independent
+review remain pending. The metadata consumer audit now includes private tests/unit
+sources and has a regression preventing their silent disappearance after relocation.

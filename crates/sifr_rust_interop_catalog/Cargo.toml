@@ -63,3 +63,6 @@ prost-build-generated-output = "deterministic"
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src"]

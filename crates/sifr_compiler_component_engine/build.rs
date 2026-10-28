@@ -14,13 +14,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parent()
         .and_then(std::path::Path::parent)
         .ok_or("component engine has no workspace root")?;
-    let mut extra_inputs = Vec::new();
     let mut unique = BTreeMap::new();
     let mut input_count = 0;
     for provider in PROVIDERS {
         let directory = root.join("crates").join(provider);
-        extra_inputs.push(format!("crates/{provider}/components"));
-        extra_inputs.push(format!("crates/{provider}/component-artifacts.json"));
         let manifest: serde_json::Value =
             serde_json::from_slice(&fs::read(directory.join("component-artifacts.json"))?)?;
         let artifacts = manifest["artifacts"]
@@ -50,8 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             input_count += 1;
         }
     }
-    let inputs = extra_inputs.iter().map(String::as_str).collect::<Vec<_>>();
-    sifr_identity::build::emit_local_token(&inputs)?;
+    sifr_identity::build::emit_local_token()?;
     let out = PathBuf::from(env::var("OUT_DIR")?);
     let image_dir = out.join("images");
     fs::create_dir_all(&image_dir)?;

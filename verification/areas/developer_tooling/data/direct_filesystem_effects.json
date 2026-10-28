@@ -11629,6 +11629,55 @@
       "classification": "semantic-input"
     },
     {
+      "path": "crates/sifr_identity/src/production_inputs.rs",
+      "symbol": "manifest",
+      "operation": "read_to_string",
+      "site": "toml::from_str(&fs::read_to_string(path)?).map_err(io::Error::other)",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_identity/src/production_inputs.rs",
+      "symbol": "package_inputs",
+      "operation": "exists",
+      "site": "if !package.join(path).exists() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_identity/src/production_inputs.rs",
+      "symbol": "package_inputs",
+      "operation": "exists",
+      "site": "|| (package.join(\"build.rs\").exists() && !paths.contains(&Path::new(\"build.rs\")))",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_identity/src/production_inputs.rs",
+      "symbol": "package_inputs",
+      "operation": "exists",
+      "site": "if !paths.insert(path) || !root.join(path).exists() {",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
+      "symbol": "product_source_identity_tracks_sources_independently_of_configuration",
+      "operation": "read_to_string",
+      "site": "&fs::read_to_string(identity.join(\"../../rust-toolchain.toml\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
+      "symbol": "product_source_identity_tracks_sources_independently_of_configuration",
+      "operation": "remove_file",
+      "site": "fs::remove_file(tree.0.join(\"crates/probe/src/embedded.md\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
+      "symbol": "product_source_identity_tracks_sources_independently_of_configuration",
+      "operation": "read_to_string",
+      "site": "fs::read_to_string(tree.0.join(\"shared/embedded.md\")).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
       "path": "verification/tools/corpus_oracle/src/lib.rs",
       "symbol": "full_corpus_exact_emission",
       "operation": "read_dir",
@@ -13771,3276 +13820,3276 @@
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/async_python_error_channel_native.rs",
+      "path": "crates/sifr_driver/tests/unit/async_python_error_channel_native.rs",
       "symbol": "async_python_error_channel_native_local_and_transitive_conversions",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/async_python_error_channel_native.rs",
+      "path": "crates/sifr_driver/tests/unit/async_python_error_channel_native.rs",
       "symbol": "async_python_error_channel_native_stdlib_nominal_collisions",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/async_python_error_channel_native.rs",
+      "path": "crates/sifr_driver/tests/unit/async_python_error_channel_native.rs",
       "symbol": "async_python_error_channel_native_project_aliases_and_collisions",
       "operation": "write",
       "site": "std::fs::write(dir.join(format!(\"{name}.sifr\")), source).expect(\"write source\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/async_python_error_channel_native.rs",
+      "path": "crates/sifr_driver/tests/unit/async_python_error_channel_native.rs",
       "symbol": "async_python_error_channel_native_project_aliases_and_collisions",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"facade.sifr\"), \"type Adapter[T] = T\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"models.sifr\"), \"class Model:\\n value: int\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "read_to_string",
       "site": "let generated = std::fs::read_to_string(build_out.join(\"sifr_output/src/main.rs\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/attached_api_aliases.rs",
+      "path": "crates/sifr_driver/tests/unit/attached_api_aliases.rs",
       "symbol": "imported_generic_type_alias_is_erased_before_rust_codegen",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_create_invocation_workspace_returns_unique_paths",
       "operation": "exists",
       "site": "assert!(first.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_create_invocation_workspace_returns_unique_paths",
       "operation": "exists",
       "site": "assert!(second.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_create_invocation_workspace_returns_unique_paths",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(first);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_create_invocation_workspace_returns_unique_paths",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(second);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_discover_test_root_modules_is_deterministic",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_discover_test_root_modules_is_deterministic",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"z_test.sifr\"), \"def test_z():\\n assert True\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_discover_test_root_modules_is_deterministic",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"test_a.sifr\"), \"def test_a():\\n assert True\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_discover_test_root_modules_is_deterministic",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_discover_test_root_modules_is_deterministic",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"project dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"shared.sifr\"), \"BASE: int = 42\\n\").expect(\"shared should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"unrelated_bad.sifr\"), \"def unrelated(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_share_import_closure_membership",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"project dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"helper.sifr\"), \"def value(:\\n\").expect(\"helper should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_project_and_test_discovery_parity_reports_reachable_parse_errors",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&source_dir).expect(\"source dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "write",
       "site": "std::fs::write(entry_dir.join(\"main.sifr\"), \"from helper import value\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "write",
       "site": "std::fs::write(entry_dir.join(\"helper.sifr\"), \"ENTRY: int = 1\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "write",
       "site": "std::fs::write(source_dir.join(\"helper.sifr\"), \"WORKSPACE: int = 2\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_entry_parent_over_workspace_sources",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_finds_declared_source_root_and_dotted_paths",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_finds_declared_source_root_and_dotted_paths",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&helper_dir).expect(\"helper dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_finds_declared_source_root_and_dotted_paths",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_finds_declared_source_root_and_dotted_paths",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_finds_declared_source_root_and_dotted_paths",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reports_unresolved_tried_paths",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reports_unresolved_tried_paths",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reports_unresolved_tried_paths",
       "operation": "write",
       "site": "std::fs::write(entry_dir.join(\"main.sifr\"), \"from missing import value\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reports_unresolved_tried_paths",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_renders_missing_root_with_unknown_location",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_renders_missing_root_with_unknown_location",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_renders_missing_root_with_unknown_location",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import",
       "operation": "write",
       "site": "std::fs::write(entry_dir.join(\"main.sifr\"), \"from math import sqrt\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match",
       "operation": "write",
       "site": "std::fs::write(entry_dir.join(\"main.sifr\"), \"from math import sqrt\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&entry_dir).expect(\"entry dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helper dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"lib/helpers.sifr\"), \"VALUE: int = 1\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "path": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "symbol": "test_workspace_resolver_rejects_namespace_file_collision",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "nested_optional_generic_parent_is_rejected_before_rust_codegen",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "nested_optional_generic_parent_is_rejected_before_rust_codegen",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "transitive_nested_generic_union_parent_is_rejected_before_rust_codegen",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "transitive_nested_generic_union_parent_is_rejected_before_rust_codegen",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "union_bearing_generic_parent_accepts_a_topology_preserving_argument",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "union_bearing_generic_parent_accepts_a_topology_preserving_argument",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "consumer_class_identity_survives_imported_generic_parent_substitution",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "consumer_class_identity_survives_imported_generic_parent_substitution",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/generic_adapter_representation.rs",
+      "path": "crates/sifr_driver/tests/unit/generic_adapter_representation.rs",
       "symbol": "consumer_class_identity_survives_imported_generic_parent_substitution",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "path": "crates/sifr_driver/tests/unit/guided_target_replay.rs",
       "symbol": "diagnostic_renderer",
       "operation": "read",
       "site": "let bytes = std::fs::read(corpus.join(seed)).expect(\"pinned diagnostic seed exists\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "path": "crates/sifr_driver/tests/unit/guided_target_replay.rs",
       "symbol": "project_graph",
       "operation": "read",
       "site": "let input = std::fs::read(corpus.join(seed)).expect(\"pinned project seed exists\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "path": "crates/sifr_driver/tests/unit/guided_target_replay.rs",
       "symbol": "project_graph",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(exported.path().join(relative)).expect(\"exported file\"),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/guided_target_replay.rs",
+      "path": "crates/sifr_driver/tests/unit/guided_target_replay.rs",
       "symbol": "project_graph",
       "operation": "read",
       "site": "let minimized = std::fs::read(corpus.join(\"cycle\")).expect(\"cycle seed exists\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "production_package_version",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(root.join(\"src\")).expect(\"package src dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "production_package_version",
       "operation": "write",
       "site": "std::fs::write(root.join(\"src/lib.rs\"), \"\").expect(\"pure marker should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "production_package_version",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "production_package_version",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "backend_rust_package",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(root.join(\"src\")).expect(\"backend src dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "backend_rust_package",
       "operation": "write",
       "site": "std::fs::write(root.join(\"src/lib.rs\"), \"\").expect(\"backend marker should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "backend_rust_package",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "write_manifest_dependency_alias",
       "operation": "read_to_string",
       "site": "let mut source = std::fs::read_to_string(&manifest).expect(\"manifest should be readable\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "write_manifest_dependency_alias",
       "operation": "write",
       "site": "std::fs::write(manifest, source).expect(\"manifest should be updated\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "write_package_source",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(parent).expect(\"source parent should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "write_package_source",
       "operation": "write",
       "site": "std::fs::write(path, source).expect(\"package source should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_check_package_project_resolves_public_namespace_reexports",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "package_source_cannot_declare_compiler_intrinsics",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "package_python_bridge_target_activates_only_for_owning_package",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_cached_package_project_materializes_namespace_roots",
       "operation": "exists",
       "site": "!generated_project_root.join(\".cargo/config.toml\").exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_cached_package_project_materializes_namespace_roots",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "generated_project_root",
       "operation": "is_file",
       "site": "root.join(\"Cargo.toml\").is_file(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_const_specialization_without_structural_runtime",
       "operation": "read_to_string",
       "site": "let generated = std::fs::read_to_string(generated_project_root(&artifact).join(\"src/main.rs\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_const_specialization_without_structural_runtime",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_cached_package_project_links_direct_rust_interop_dependency",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_cached_package_project_links_direct_rust_interop_dependency",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_cached_package_project_links_direct_rust_interop_dependency",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_build_package_keeps_runtime_and_source_python_error_identities_distinct",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_check_package_project_uses_sifr_manifest_dependency_aliases",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
       "symbol": "test_check_package_project_namespaces_transitive_package_versions",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "compiler_owned_nominal_paths_and_unions_build_beside_source_collisions",
       "operation": "exists",
       "site": "assert!(artifact.binary_path().exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "compiler_owned_nominal_paths_and_unions_build_beside_source_collisions",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "unrelated_project_union_keeps_module_local_native_file_handle",
       "operation": "exists",
       "site": "assert!(artifact.binary_path().exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "unrelated_project_union_keeps_module_local_native_file_handle",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "canonical_open_handles_build_beside_local_same_basename_classes",
       "operation": "exists",
       "site": "assert!(artifact.binary_path().exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "canonical_open_handles_build_beside_local_same_basename_classes",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "source_spellable_object_names_build_beside_the_sealed_python_handle",
       "operation": "exists",
       "site": "assert!(artifact.binary_path().exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "source_spellable_object_names_build_beside_the_sealed_python_handle",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_async_runtime_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_async_runtime_tests.rs",
       "symbol": "raw_coroutine_api_builds_and_runs_on_the_owned_loop",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "is_file",
       "site": ".is_file()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(&app.root).expect(\"source checkout should be removed before build\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(installed_app.root.join(\"src/python_bridges\"))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&run_root).expect(\"run root should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "set_permissions",
       "site": "std::fs::set_permissions(&run_root, std::fs::Permissions::from_mode(0o555))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "write",
       "site": "std::fs::write(marker_file, &output.stdout)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "read_dir",
       "site": "std::fs::read_dir(&run_root)",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "set_permissions",
       "site": "std::fs::set_permissions(&run_root, std::fs::Permissions::from_mode(0o755))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "archived_biip_bridge_builds_and_runs_without_checkout_or_extraction",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "two_packages_can_execute_the_same_bridge_module_path_without_collision",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(app.root.join(\"src/python_bridges\"))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "two_packages_can_execute_the_same_bridge_module_path_without_collision",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(library.root.join(\"src/python_bridges\"))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "two_packages_can_execute_the_same_bridge_module_path_without_collision",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "append_python_trust",
       "operation": "read_to_string",
       "site": "let mut source = std::fs::read_to_string(&manifest).expect(\"manifest should be readable\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "append_python_trust",
       "operation": "write",
       "site": "std::fs::write(manifest, source).expect(\"manifest trust should be updated\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_bridge_archive_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_bridge_archive_tests.rs",
       "symbol": "package_and_unpack",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&install_root).expect(\"install root should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_python_raw_api_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_python_raw_api_tests.rs",
       "symbol": "typed_raw_api_builds_runs_and_releases_ordinary_objects",
       "operation": "remove_dir_all",
       "site": "let _ignored = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_backend_ecosystem_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_backend_ecosystem_support.rs",
       "symbol": "test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(&query_path).expect(\"SQLx query cache should be readable\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_backend_ecosystem_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_backend_ecosystem_support.rs",
       "symbol": "test_check_missing_and_stale_sqlx_offline_metadata_rejected_before_network",
       "operation": "remove_file",
       "site": "std::fs::remove_file(&query_path).expect(\"SQLx query cache should be removed\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "test_build_native_build_script_trusted_artifacts",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(first_target);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "test_build_native_build_script_trusted_artifacts",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(second_target);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "assert_untrusted_native_build_rejected",
       "operation": "exists",
       "site": "assert!(!sentinel.exists(), \"sentinel must start absent\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "assert_untrusted_native_build_rejected",
       "operation": "exists",
       "site": "!sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "assert_armed_build_script_writes_sentinel",
       "operation": "exists",
       "site": "assert!(!sentinel.exists(), \"sentinel must start absent\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "assert_armed_build_script_writes_sentinel",
       "operation": "exists",
       "site": "sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "assert_armed_build_script_writes_sentinel",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(target_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "collect_evidence_files",
       "operation": "read_dir",
       "site": "for entry in std::fs::read_dir(path).expect(\"artifact directory should be readable\") {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "collect_evidence_files",
       "operation": "is_dir",
       "site": "if entry_path.is_dir() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "collect_evidence_files",
       "operation": "read",
       "site": "let contents = std::fs::read(&entry_path).expect(\"evidence file should be readable\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "dx9_trust_revocation_after_real_native_cache_hit",
       "operation": "read_to_string",
       "site": "let manifest = std::fs::read_to_string(&manifest_path).expect(\"manifest\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs",
       "symbol": "dx9_trust_revocation_after_real_native_cache_hit",
       "operation": "write",
       "site": "std::fs::write(&manifest_path, revoked).expect(\"revoke trust\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "test_build_trusted_proc_macro_and_deterministic_codegen",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(first_target);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "test_build_trusted_proc_macro_and_deterministic_codegen",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(second_target);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_armed_build_time_dependencies_write_sentinels",
       "operation": "exists",
       "site": "assert!(!proc_macro_sentinel.exists() && !build_script_sentinel.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_armed_build_time_dependencies_write_sentinels",
       "operation": "exists",
       "site": "assert!(!proc_macro_sentinel.exists() && !build_script_sentinel.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_armed_build_time_dependencies_write_sentinels",
       "operation": "exists",
       "site": "proc_macro_sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_armed_build_time_dependencies_write_sentinels",
       "operation": "exists",
       "site": "build_script_sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_armed_build_time_dependencies_write_sentinels",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(target_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_untrusted_build_time_dependency_rejected",
       "operation": "exists",
       "site": "!proc_macro_sentinel.exists() && !build_script_sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "assert_untrusted_build_time_dependency_rejected",
       "operation": "exists",
       "site": "!proc_macro_sentinel.exists() && !build_script_sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "collect_generated_files",
       "operation": "read_dir",
       "site": "for entry in std::fs::read_dir(path).expect(\"artifact directory should be readable\") {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "collect_generated_files",
       "operation": "is_dir",
       "site": "if entry_path.is_dir() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
       "symbol": "collect_generated_files",
       "operation": "read",
       "site": "let contents = std::fs::read(&entry_path).expect(\"generated file should be readable\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "symlink_metadata",
       "site": "let metadata = fs::symlink_metadata(path)?;",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_symlink",
       "site": "if metadata.file_type().is_symlink() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_dir",
       "site": "if metadata.is_dir() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(path)? {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_file",
       "site": "} else if metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "open",
       "site": "File::open(path)?",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "symlink_metadata",
       "site": "let metadata = fs::symlink_metadata(path)?;",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_dir",
       "site": "if !metadata.is_dir() && !metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_file",
       "site": "if !metadata.is_dir() && !metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_file",
       "site": "if metadata.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_dir",
       "site": "if metadata.is_dir() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(path)? {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "visit",
       "operation": "is_dir",
       "site": "rows.push((path.to_owned(), metadata.is_dir()));",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "reconcile",
       "operation": "remove_dir",
       "site": "fs::remove_dir(path)?;",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs",
       "symbol": "reconcile",
       "operation": "remove_file",
       "site": "fs::remove_file(path)?;",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "wait_ready",
       "operation": "exists",
       "site": "while !path.exists() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(format!(\"{role}-ready\")), \"ready\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(\"owner-started\"), \"ready\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(format!(\"{label}-pid\")), child.id().to_string()).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "child_role",
       "operation": "write",
       "site": "fs::write(path.join(\"owner-ready\"), \"ready\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
       "operation": "read_to_string",
       "site": "fs::read_to_string(temp.path().join(format!(\"{label}-pid\")))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "intended_fixture_child_survives_parent_death_without_unrelated_inheritance",
       "operation": "read_to_string",
       "site": "let root = PathBuf::from(fs::read_to_string(temp.path().join(\"fixture-root\")).unwrap());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "owned_children_are_cleaned_up_when_readiness_unwinds",
       "operation": "exists",
       "site": "assert!(!temp.path().join(\"owner-ready\").exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs",
       "symbol": "owned_children_are_cleaned_up_when_readiness_unwinds",
       "operation": "read_to_string",
       "site": "let root = PathBuf::from(fs::read_to_string(temp.path().join(\"fixture-root\")).unwrap());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_permissions_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_permissions_tests.rs",
       "symbol": "recreated_inputs_and_cargo_sentinels_remain_private_and_reusable",
       "operation": "exists",
       "site": "!sentinel.exists(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_permissions_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_permissions_tests.rs",
       "symbol": "recreated_inputs_and_cargo_sentinels_remain_private_and_reusable",
       "operation": "read_to_string",
       "site": "assert_eq!(fs::read_to_string(&sentinel).unwrap(), \"executed\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_permissions_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_permissions_tests.rs",
       "symbol": "recreated_inputs_and_cargo_sentinels_remain_private_and_reusable",
       "operation": "metadata",
       "site": "fs::metadata(&sentinel).unwrap().permissions().mode() & 0o077,",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_permissions_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_permissions_tests.rs",
       "symbol": "recreated_inputs_and_cargo_sentinels_remain_private_and_reusable",
       "operation": "remove_file",
       "site": "fs::remove_file(&query).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_permissions_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_permissions_tests.rs",
       "symbol": "recreated_inputs_and_cargo_sentinels_remain_private_and_reusable",
       "operation": "read",
       "site": "assert_eq!(fs::read(&query).unwrap(), b\"stale metadata\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "private_root",
       "operation": "set_permissions",
       "site": "fs::set_permissions(root.path(), fs::Permissions::from_mode(0o700)).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "open-write",
       "site": ".open(root.join(path))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "set_times",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "set_modified",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "is_dir",
       "site": "root.is_dir(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "read",
       "site": "assert_eq!(fs::read(root.join(path)).unwrap(), *bytes);",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "metadata",
       "site": "fs::metadata(root.join(path)).unwrap().modified().unwrap(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "write",
       "site": "fs::write(root.join(\"Cargo.toml\"), \"altered authority\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "remove_file",
       "site": "fs::remove_file(root.join(\"src/main.sifr\")).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "assert_reconciliation",
       "operation": "exists",
       "site": "assert!(!root.join(\"stale\").exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged",
       "operation": "open-write",
       "site": ".open(&manifest)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged",
       "operation": "set_times",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged",
       "operation": "set_modified",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "final_overlay_is_reconciled_once_and_canonical_source_stays_unchanged",
       "operation": "metadata",
       "site": "assert_eq!(fs::metadata(&manifest).unwrap().modified().unwrap(), stamp);",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "input_limits_and_invalid_layout_fail_before_retained_input_mutation",
       "operation": "create_dir",
       "site": "fs::create_dir(&sparse).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "input_limits_and_invalid_layout_fail_before_retained_input_mutation",
       "operation": "create",
       "site": "File::create(sparse.join(\"huge\"))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "input_limits_and_invalid_layout_fail_before_retained_input_mutation",
       "operation": "set_len",
       "site": ".set_len((MAX_BYTES + 1) as u64)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "input_limits_and_invalid_layout_fail_before_retained_input_mutation",
       "operation": "exists",
       "site": "assert!(!temp.path().join(\"escape\").exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "write",
       "site": "fs::write(&outside, \"untouched\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "set_permissions",
       "site": "fs::set_permissions(&outside, fs::Permissions::from_mode(0o600)).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "create_dir",
       "site": "fs::create_dir(&source).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "symlink",
       "site": "symlink(&outside, source.join(\"alias\")).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "remove_file",
       "site": "fs::remove_file(&manifest).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "symlink",
       "site": "symlink(&outside, &manifest).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "read_to_string",
       "site": "assert_eq!(fs::read_to_string(&outside).unwrap(), \"untouched\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "remove_file",
       "site": "fs::remove_file(&manifest).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "hard_link",
       "site": "fs::hard_link(&outside, &manifest).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "read_to_string",
       "site": "assert_eq!(fs::read_to_string(&outside).unwrap(), \"untouched\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "remove_file",
       "site": "fs::remove_file(&manifest).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "symlink",
       "site": "symlink(&source, root.join(\"stale-alias\")).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "source_and_retained_aliases_are_rejected_without_touching_their_targets",
       "operation": "is_symlink",
       "site": "assert!(source.join(\"alias\").is_symlink());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_reusable_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_tests.rs",
       "symbol": "variants_are_isolated_and_current_inputs_replace_each_authority_kind",
       "operation": "write",
       "site": "fs::write(other.root.join(\"src/main.sifr\"), \"other variant mutation\").unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_scenario_inputs.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_scenario_inputs.rs",
       "symbol": "finish",
       "operation": "canonicalize",
       "site": ".canonicalize()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_scenario_inputs.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_scenario_inputs.rs",
       "symbol": "builder_applies_final_overlays_without_rewriting_unchanged_inputs",
       "operation": "open-write",
       "site": ".open(root.join(path))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_scenario_inputs.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_scenario_inputs.rs",
       "symbol": "builder_applies_final_overlays_without_rewriting_unchanged_inputs",
       "operation": "set_times",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_scenario_inputs.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_scenario_inputs.rs",
       "symbol": "builder_applies_final_overlays_without_rewriting_unchanged_inputs",
       "operation": "set_modified",
       "site": ".set_times(fs::FileTimes::new().set_modified(stamp))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_scenario_inputs.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_scenario_inputs.rs",
       "symbol": "builder_applies_final_overlays_without_rewriting_unchanged_inputs",
       "operation": "metadata",
       "site": "fs::metadata(root.join(path)).unwrap().modified().unwrap(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs",
       "symbol": "generated_main_source",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(artifact.generated_project_root().join(\"src/main.rs\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs",
+      "path": "crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs",
       "symbol": "install_evidence_source",
       "operation": "write",
       "site": "std::fs::write(package_root.join(\"src/main.sifr\"), source)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_visibility_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_visibility_tests.rs",
       "symbol": "test_check_package_project_rejects_private_dependency_module",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_visibility_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_visibility_tests.rs",
       "symbol": "test_check_package_project_reclassifies_unresolved_bare_stdlib_import",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_visibility_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_visibility_tests.rs",
       "symbol": "test_check_package_project_rejects_transitive_dependency_import",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/package_visibility_tests.rs",
+      "path": "crates/sifr_driver/tests/unit/package_visibility_tests.rs",
       "symbol": "test_check_package_project_reports_internal_reexport_cycles",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_borrowed_value.rs",
+      "path": "crates/sifr_driver/tests/unit/project_borrowed_value.rs",
       "symbol": "exported_borrowed_value_calls_build_across_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_borrowed_value.rs",
+      "path": "crates/sifr_driver/tests/unit/project_borrowed_value.rs",
       "symbol": "exported_borrowed_value_calls_build_across_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_borrowed_value.rs",
+      "path": "crates/sifr_driver/tests/unit/project_borrowed_value.rs",
       "symbol": "exported_borrowed_value_calls_build_across_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "mktemp_dir",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"temp dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "build_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "build_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "build_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "build_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_valid_local_imports",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_valid_local_imports",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_valid_local_imports",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_primary_span_for_ranged_hir_diagnostic",
       "operation": "write",
       "site": "std::fs::write(&main_file, \"def main() -> None:\\n if 1:\\n pass\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_primary_span_for_ranged_hir_diagnostic",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib\")).expect(\"lib dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_resolves_workspace_source_import_for_non_main_entry",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helpers dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "read_to_string",
       "site": "let main_rs = std::fs::read_to_string(src_dir.join(\"main.rs\")).expect(\"main.rs should exist\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(src_dir.join(\"helpers/mod.rs\")).expect(\"helpers mod should exist\");",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "is_file",
       "site": "assert!(src_dir.join(\"helpers/value.rs\").is_file());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_materializes_dotted_workspace_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helpers dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_preserves_imported_class_constructors_and_signatures",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helpers dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_keeps_aliased_same_name_generic_classes_distinct",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_preserves_aliased_import_ancestry",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_preserves_aliased_import_ancestry",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_preserves_aliased_import_ancestry",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"roots.sifr\"), \"from helper import Root\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_preserves_aliased_import_ancestry",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"children.sifr\"), \"from helper import Child\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_preserves_aliased_import_ancestry",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_cross_reexported_same_name_classes",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_reexported_generic_method_bound_violation",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_reexported_generic_method_bound_violation",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_reexported_generic_method_bound_violation",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_rejects_reexported_generic_method_bound_violation",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helpers dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_emit_project_includes_workspace_support_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"cases\")).expect(\"cases dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(dir.join(\"lib/helpers\")).expect(\"helpers dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"sifr.toml\"), \"[source]\\nroot = \\\"lib\\\"\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "write",
       "site": "std::fs::write(&helper_file, \"def answer() -> int:\\n return 10\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "write",
       "site": "std::fs::write(&helper_file, \"def answer() -> int:\\n return 11\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_cached_project_invalidates_when_workspace_helper_changes",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_ignores_unrelated_non_closure_parse_errors",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"project dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"unrelated_bad.sifr\"), \"def unrelated(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_ignores_unrelated_non_closure_parse_errors",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_reachable_parse_errors_in_import_closure",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"project dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_reachable_parse_errors_in_import_closure",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_reachable_parse_errors_in_import_closure",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"helper.sifr\"), \"def value(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_reachable_parse_errors_in_import_closure",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_reports_reachable_parse_errors_in_import_closure",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_error_messages_match_build_project",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&dir).expect(\"project dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_error_messages_match_build_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_error_messages_match_build_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_check_project_error_messages_match_build_project",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest",
       "operation": "read_to_string",
       "site": "let cargo_toml = std::fs::read_to_string(build_out.join(\"sifr_output\").join(\"Cargo.toml\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "read_to_string",
       "site": "let cargo_toml = std::fs::read_to_string(build_out.join(\"sifr_output\").join(\"Cargo.toml\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "path": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "symbol": "test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "write_aliased_error_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "write_aliased_error_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "write_aliased_error_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_check_project_preserves_aliased_error_status_through_facade",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_build_project_preserves_aliased_error_status_through_facade",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_check_project_does_not_leak_error_status_between_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_check_project_does_not_leak_error_status_between_modules",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"data.sifr\"), \"class Record:\\n value: int\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_check_project_does_not_leak_error_status_between_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_error_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/project_error_exports.rs",
       "symbol": "test_check_project_does_not_leak_error_status_between_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_imports_generic_function_metadata_through_facade",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_imports_generic_function_metadata_through_facade",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_shares_union_identity_across_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_centralizes_stdlib_nominal_union_payload",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_centralizes_stdlib_nominal_union_payload",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_centralizes_stdlib_nominal_union_payload",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_isolates_union_prelude_imports",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_isolates_union_prelude_imports",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_isolates_union_prelude_imports",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"left.sifr\"), provider(1, 11))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"right.sifr\"), provider(2, 22))",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_enum_and_newtype_unions_distinct",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_keeps_same_basename_protocol_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"left.sifr\"), provider).expect(\"left provider should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_keeps_same_basename_protocol_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"right.sifr\"), provider).expect(\"right provider should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_keeps_same_basename_protocol_unions_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_keeps_same_basename_protocol_unions_distinct",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_single_file_consumes_three_level_class_upcast",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"left.sifr\"), provider(1)).expect(\"left provider should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"right.sifr\"), provider(2)).expect(\"right provider should be written\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_keeps_same_basename_union_identities_distinct",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_imported_generic_function_bounds",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_imported_generic_function_bounds",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_imported_generic_function_bounds",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_imported_generic_function_bounds",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_same_basename_affine_capabilities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_same_basename_affine_capabilities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_same_basename_affine_capabilities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_preserves_same_basename_affine_capabilities",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "write_split_ancestry_project",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"base.sifr\"), \"class Root:\\n value: int\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "write_split_ancestry_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "write_split_ancestry_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "write_split_ancestry_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "write_split_ancestry_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_check_project_canonicalizes_imported_parent_ancestry",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_canonicalizes_imported_parent_ancestry",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_canonicalizes_imported_parent_ancestry",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_specializes_zero_argument_generic_return",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_specializes_zero_argument_generic_return",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_consumes_transitive_class_upcasts",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_consumes_transitive_class_upcasts",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_crate_roots_non_main_transitive_upcasts",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_crate_roots_non_main_transitive_upcasts",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_crate_roots_non_main_transitive_upcasts",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_crate_roots_non_main_transitive_upcasts",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_remaps_structural_consuming_upcasts",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_remaps_structural_consuming_upcasts",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "write",
       "site": "std::fs::write(dir.join(\"base.sifr\"), \"class Root:\\n value: int\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_prefers_exact_same_basename_ancestor",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_specializes_inferred_generic_returns",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_specializes_inferred_generic_returns",
       "operation": "exists",
       "site": "assert!(binary.exists());",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_generic_identity.rs",
+      "path": "crates/sifr_driver/tests/unit/project_generic_identity.rs",
       "symbol": "test_build_project_specializes_inferred_generic_returns",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_python_class_metadata.rs",
+      "path": "crates/sifr_driver/tests/unit/project_python_class_metadata.rs",
       "symbol": "test_check_project_preserves_imported_affine_class_call_metadata",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_python_class_metadata.rs",
+      "path": "crates/sifr_driver/tests/unit/project_python_class_metadata.rs",
       "symbol": "test_check_project_preserves_imported_affine_class_call_metadata",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/project_python_class_metadata.rs",
+      "path": "crates/sifr_driver/tests/unit/project_python_class_metadata.rs",
       "symbol": "test_check_project_preserves_imported_affine_class_call_metadata",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_native_default_custom_and_inherited",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_native_project_and_test_project_identities",
       "operation": "write",
       "site": "std::fs::write(dir.join(format!(\"{name}.sifr\")), source).expect(\"write owned test fixture\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_native_project_and_test_project_identities",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_imported_constructor_rejects_missing_message",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_imported_constructor_rejects_missing_message",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message.rs",
       "symbol": "required_error_message_imported_constructor_rejects_missing_message",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/required_error_message_python.rs",
+      "path": "crates/sifr_driver/tests/unit/required_error_message_python.rs",
       "symbol": "required_error_message_python_native_five_field_contract",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/stdlib_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/stdlib_exports.rs",
       "symbol": "compiled_stdlib_exports_match_public_reference",
       "operation": "write",
       "site": "std::fs::write(&reference_path, &rendered).expect(\"public API reference should update\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/stdlib_exports.rs",
+      "path": "crates/sifr_driver/tests/unit/stdlib_exports.rs",
       "symbol": "compiled_stdlib_exports_match_public_reference",
       "operation": "read_to_string",
       "site": "std::fs::read_to_string(reference_path).expect(\"public API reference should be readable\")",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_project_preserves_module_scoped_builtin_error_shadow_identities",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_local_imports_and_constants",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_local_imports_and_constants",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_local_imports_and_constants",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_local_imports_and_constants",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_dotted_local_support_modules",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(test_dir.join(\"helpers\")).expect(\"test helper dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_dotted_local_support_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_dotted_local_support_modules",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_resolves_dotted_local_support_modules",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_support_module_named_main_imports_root_owned_unions",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_support_module_named_main_imports_root_owned_unions",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_support_module_named_main_imports_root_owned_unions",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_support_module_named_main_imports_root_owned_unions",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_support_module_named_main_imports_root_owned_unions",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reuses_cached_workspace_for_unchanged_project",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reuses_cached_workspace_for_unchanged_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reuses_cached_workspace_for_unchanged_project",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reuses_cached_workspace_for_unchanged_project",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "write",
       "site": "std::fs::write(&helper, \"def value() -> int:\\n return 3\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "write",
       "site": "std::fs::write(&helper, \"def value() -> int:\\n return 4\\n\").expect(\"helper should update\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_invalidates_cached_workspace_when_sources_change",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "make_test_dir",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "make_test_dir",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "make_test_dir",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "make_test_dir",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&first_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "make_test_dir",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&second_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_ignores_unrelated_non_closure_parse_errors",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_ignores_unrelated_non_closure_parse_errors",
       "operation": "write",
       "site": "std::fs::write(test_dir.join(\"unrelated_bad.sifr\"), \"def unrelated(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_ignores_unrelated_non_closure_parse_errors",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reports_deterministic_parse_error_order",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reports_deterministic_parse_error_order",
       "operation": "write",
       "site": "std::fs::write(test_dir.join(\"test_z_bad.sifr\"), \"def z(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reports_deterministic_parse_error_order",
       "operation": "write",
       "site": "std::fs::write(test_dir.join(\"test_a_bad.sifr\"), \"def a(:\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_reports_deterministic_parse_error_order",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_frontend_type_errors_use_single_path_prefix",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&test_dir).expect(\"test dir should be created\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_frontend_type_errors_use_single_path_prefix",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_frontend_type_errors_use_single_path_prefix",
       "operation": "write",
       "site": "std::fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_driver/src/tests/test_runner.rs",
+      "path": "crates/sifr_driver/tests/unit/test_runner.rs",
       "symbol": "test_run_tests_frontend_type_errors_use_single_path_prefix",
       "operation": "remove_dir_all",
       "site": "let _ = std::fs::remove_dir_all(&test_dir);",
@@ -18013,112 +18062,112 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build.rs",
+      "path": "crates/sifr_identity/src/input_tree.rs",
       "symbol": "hash_tree",
       "operation": "is_dir",
       "site": "if path.is_dir() {",
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_identity/src/build.rs",
+      "path": "crates/sifr_identity/src/input_tree.rs",
       "symbol": "hash_tree",
       "operation": "read_dir",
       "site": "let mut children = fs::read_dir(path)?",
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_identity/src/build.rs",
+      "path": "crates/sifr_identity/src/input_tree.rs",
       "symbol": "hash_tree",
       "operation": "is_file",
       "site": "} else if path.is_file() {",
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_identity/src/build.rs",
+      "path": "crates/sifr_identity/src/input_tree.rs",
       "symbol": "hash_tree",
       "operation": "read",
       "site": "hash.field(name, &fs::read(path)?);",
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "new",
       "operation": "create_dir",
       "site": "fs::create_dir(&path).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "write",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(path.parent().unwrap()).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "write",
       "operation": "write",
       "site": "fs::write(path, bytes).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "drop",
       "operation": "remove_dir_all",
       "site": "let _ = fs::remove_dir_all(&self.0);",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "new",
       "operation": "read_to_string",
-      "site": "let source = fs::read_to_string(identity.join(\"src/build.rs\")).unwrap();",
+      "site": "let source = fs::read_to_string(identity.join(\"src/input_tree.rs\")).unwrap();",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "run",
       "operation": "exists",
       "site": "if tree.0.join(\"Cargo.lock\").exists() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "rename",
       "site": "fs::rename(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "remove_file",
       "site": "fs::remove_file(tree.0.join(\"inputs/new/deeper/renamed.txt\")).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(tree.0.join(\"inputs/new\")).unwrap();",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "symlink",
       "site": "symlink(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "symlink",
       "site": "symlink(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "cargo_directory_watches_track_the_hashed_inventory",
       "operation": "remove_file",
       "site": "fs::remove_file(tree.0.join(\"outside/directory/deep/new.txt\")).unwrap();",
@@ -24810,7 +24859,7 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_identity/src/build_tests.rs",
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
       "symbol": "product_source_identity_tracks_sources_independently_of_configuration",
       "operation": "exists",
       "site": "if tree.0.join(\"Cargo.lock\").exists() {",

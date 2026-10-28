@@ -11,7 +11,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs",
         "test_name": "test_corrupt_static_program_envelope_rejected"
       }
     },
@@ -24,7 +24,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs",
         "test_name": "test_static_program_constructs_and_projects_arena"
       }
     }

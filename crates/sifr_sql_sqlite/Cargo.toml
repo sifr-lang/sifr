@@ -36,3 +36,6 @@ rusqlite = { workspace = true, features = ["bundled"] }
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src", "component-artifacts.json", "components"]

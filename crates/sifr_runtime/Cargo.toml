@@ -83,3 +83,6 @@ required-features = ["http"]
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src", "third_party"]

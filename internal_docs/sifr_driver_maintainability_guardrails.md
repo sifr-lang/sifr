@@ -46,7 +46,7 @@ Use these placement rules when changing the driver:
 
 - [ ] New driver logic is placed in the correct module subtree.
 - [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only.
-- [ ] Test coverage lives in focused `crates/sifr_driver/src/tests/` modules or beside the extracted concern.
+- [ ] Test coverage lives in focused `crates/sifr_driver/tests/unit/` modules or beside the extracted concern.
 - [ ] Shared helpers were extracted only when they represent a real boundary, not a dumping ground.
 - [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`).
 - [ ] Guardrail script still passes locally (`python3 scripts/check_sifr_driver_maintainability_guardrails.py`).

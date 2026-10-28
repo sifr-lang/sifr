@@ -100,14 +100,14 @@ The public `CompileError` abstraction and the transitional `CompilerDiagnostic` 
 | `crates/sifr_driver/src/test_runner/orchestrator.rs` | 2 | test orchestration failure and frontend error forwarding | `BUILD-*` for orchestration; forwarded frontend diagnostics retain original identity. |
 | `crates/sifr/src/main.rs` | 1 | CLI panic boundary carries `SIFR-INTERNAL-0001` | CLI should render diagnostics from driver; direct construction should disappear. |
 
-The former test-only `CompileError` construction sites in `crates/sifr_driver/src/tests/diagnostics.rs` now exercise canonical rendered diagnostic recovery-limit behavior. They should be rewritten or deleted with the legacy driver renderer rather than treated as runtime emission sites.
+The former test-only `CompileError` construction sites in `crates/sifr_driver/tests/unit/diagnostics.rs` now exercise canonical rendered diagnostic recovery-limit behavior. They should be rewritten or deleted with the legacy driver renderer rather than treated as runtime emission sites.
 
 CLI and renderer tests also manually construct canonical `RenderedDiagnostic` values. These are test-only surfaces but must be updated in `diagnostic harness and renderer cleanup` when the harness and renderer rules stop accepting stage-bucket and pseudo-code strings:
 
 | File | Manual `RenderedDiagnostic` sites | Current hard-coded identities | Migration owner |
 | --- | ---: | --- | --- |
 | `crates/sifr/src/main.rs` | 9 | Active `SIFR-*` code strings and `[E2507]`-style message content in compact-renderer tests | `diagnostic harness and renderer cleanup` test harness/renderer rules cleanup |
-| `crates/sifr_driver/src/tests/diagnostics.rs` | 2 | Active `SIFR-*` recovery-limit fixtures | `diagnostic harness and renderer cleanup` or residual legacy diagnostic cleanup |
+| `crates/sifr_driver/tests/unit/diagnostics.rs` | 2 | Active `SIFR-*` recovery-limit fixtures | `diagnostic harness and renderer cleanup` or residual legacy diagnostic cleanup |
 
 Current public-code mechanisms to remove:
 

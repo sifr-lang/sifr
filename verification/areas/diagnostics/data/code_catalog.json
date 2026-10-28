@@ -123,7 +123,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -139,7 +139,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -155,7 +155,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -171,7 +171,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -187,7 +187,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -793,7 +793,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning",
+      "representative_fixture": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_unreachable_statement_as_structured_warning",
       "severity": "Warning",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1033,7 +1033,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/panic_boundary.rs::test_run_codegen_with_boundary_reports_string_panic_as_internal_compiler_panic",
+      "representative_fixture": "crates/sifr_driver/tests/unit/panic_boundary.rs::test_run_codegen_with_boundary_reports_string_panic_as_internal_compiler_panic",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -1049,7 +1049,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics",
+      "representative_fixture": "crates/sifr_driver/tests/unit/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics",
       "severity": "Note",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2877,7 +2877,7 @@
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": ["human", "json", "compact"],
-      "representative_fixture": "crates/sifr_driver/src/tests/handler_descriptors.rs::owned_handler_requires_exact_self_output_at_the_descriptor",
+      "representative_fixture": "crates/sifr_driver/tests/unit/handler_descriptors.rs::owned_handler_requires_exact_self_output_at_the_descriptor",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2913,7 +2913,7 @@
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": ["human", "json", "compact"],
-      "representative_fixture": "crates/sifr_driver/src/tests/package_rust_interop_method_slots.rs::test_method_slot_lifetime_thread_and_shared_context_rejections",
+      "representative_fixture": "crates/sifr_driver/tests/unit/package_rust_interop_method_slots.rs::test_method_slot_lifetime_thread_and_shared_context_rejections",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3073,7 +3073,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/stdlib_exports.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/stdlib_exports.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3089,7 +3089,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/project_build_check.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/project_build_check.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3265,7 +3265,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
+      "representative_fixture": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_reveal_type_as_structured_note",
       "severity": "Note",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3297,7 +3297,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3313,7 +3313,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3329,7 +3329,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_driver/src/tests/discovery_and_workspace.rs",
+      "representative_fixture": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

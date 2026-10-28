@@ -215,13 +215,13 @@ active_entry!("{entry_code}", "TYPE", "summary", Severity::Error,
             with self.subTest(fixture=fixture):
                 self.assertTrue(code_coverage.fixture_file_exists(fixture))
         self.assertFalse(code_coverage.fixture_file_exists(
-            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+            "crates/sifr_driver/tests/unit/panic_boundary.rs::planned_internal_0001"
         ))
         self.assertIn(
             "SIFR-TYPE-0002: representative fixture does not exist: "
-            "crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001",
+            "crates/sifr_driver/tests/unit/panic_boundary.rs::planned_internal_0001",
             code_coverage.registry_integrity_errors(self.registry(
-                fixture="crates/sifr_driver/src/tests/panic_boundary.rs::planned_internal_0001"
+                fixture="crates/sifr_driver/tests/unit/panic_boundary.rs::planned_internal_0001"
             )),
         )
 

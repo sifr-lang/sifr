@@ -24,7 +24,7 @@ REQUIRED_CHECKLIST_SNIPPETS = [
     "## Validation Checklist",
     "- [ ] New driver logic is placed in the correct module subtree",
     "- [ ] `crates/sifr_driver/src/lib.rs` stays crate wiring plus re-exports only",
-    "- [ ] Test coverage lives in focused `crates/sifr_driver/src/tests/` modules or beside the extracted concern",
+    "- [ ] Test coverage lives in focused `crates/sifr_driver/tests/unit/` modules or beside the extracted concern",
     "- [ ] Unified file-size guardrail passes locally (`python3 scripts/check_file_size_guardrails.py`)",
     "- [ ] Guardrail script still passes locally (`python3 scripts/check_sifr_driver_maintainability_guardrails.py`)",
 ]

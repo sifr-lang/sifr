@@ -18,3 +18,7 @@ sifr_identity = { workspace = true, features = ["build"] }
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src", "build.rs"]
+production-workspace-inputs = ["crates/sifr_sql_mysql/components", "crates/sifr_sql_mysql/component-artifacts.json", "crates/sifr_sql_postgresql/components", "crates/sifr_sql_postgresql/component-artifacts.json", "crates/sifr_sql_sqlite/components", "crates/sifr_sql_sqlite/component-artifacts.json"]

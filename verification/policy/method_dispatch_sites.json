@@ -57696,7 +57696,7 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/test_runner/execution.rs::test_runner_cargo_modes_use_build_resolution_and_trace_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters::literal-match::1",
       "fingerprint": "647f89cefc389f0d5ab68dbf953ab0f8de86b2d690b6d976ad8399ffe27c53c3",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57704,11 +57704,11 @@
       "inputs": "fn required_const_and_factory_defaults_finalize_constructor_parameters ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters::literal-comparison::1",
       "fingerprint": "17b3ba0412ec55239e32d45908389b51892e725cb44455e1f243853baeb7437a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57716,11 +57716,11 @@
       "inputs": "fn required_const_and_factory_defaults_finalize_constructor_parameters ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/adapter_defaults.rs::required_const_and_factory_defaults_finalize_constructor_parameters enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors::literal-comparison::1",
       "fingerprint": "1aeea749bd8d1f979358018ddb46aecd54d3dd9b7b9a9be25de7bc4f65433725",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57728,11 +57728,11 @@
       "inputs": "fn checked_default_factories_support_functions_static_methods_and_constructors ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/adapter_defaults.rs::checked_default_factories_support_functions_static_methods_and_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output::literal-comparison::1",
       "fingerprint": "004c2d595c39c3c54c22f1eb99a4ad80e0b7bc9b2a8eea56785b3f7fbc70f245",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57740,11 +57740,11 @@
       "inputs": "fn adapted_factory_defaults_retain_static_specialization_output ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/adapter_defaults.rs::adapted_factory_defaults_retain_static_specialization_output enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/attached_api_codegen.rs::package_entrypoint::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/attached_api_codegen.rs::package_entrypoint::literal-comparison::1",
       "fingerprint": "6d3720c5bfc229c782d130c539986499e4ac51c574d427bd537eeecc853b32a5",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57752,11 +57752,11 @@
       "inputs": "fn package_entrypoint ( package_root : & Path )",
       "outputs": "PackageEntrypoint",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/attached_api_codegen.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/attached_api_codegen.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/attached_api_codegen.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/attached_api_codegen.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/attached_api_codegen.rs::type_parameter_bounds::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/attached_api_codegen.rs::type_parameter_bounds::literal-comparison::1",
       "fingerprint": "41093b9721b675c617f48e468c6a78edebdcd5f95f9d16b8dfd2377f9328b03a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57764,11 +57764,11 @@
       "inputs": "fn type_parameter_bounds ( file : & syn :: File , function : & str , parameter : & str )",
       "outputs": "Vec < String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/attached_api_codegen.rs::type_parameter_bounds enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/attached_api_codegen.rs::type_parameter_bounds enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/attached_api_codegen.rs::type_parameter_bounds enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/attached_api_codegen.rs::type_parameter_bounds enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics::literal-comparison::1",
       "fingerprint": "c07cdba76c035188a9610a6ea0eb49453c9b27e62cce2a2c03020754d4908cde",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57776,11 +57776,11 @@
       "inputs": "fn test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/diagnostics.rs::test_apply_diagnostic_recovery_limits_summarizes_similar_diagnostics enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors::literal-comparison::1",
       "fingerprint": "442d8fa34bd135c692c0940a8ef4639b1754b7871caf91e0affbbffaf010f28d",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57788,11 +57788,11 @@
       "inputs": "fn test_project_and_test_discovery_parity_reports_reachable_parse_errors ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors::literal-comparison::2",
       "fingerprint": "442d8fa34bd135c692c0940a8ef4639b1754b7871caf91e0affbbffaf010f28d",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57800,11 +57800,11 @@
       "inputs": "fn test_project_and_test_discovery_parity_reports_reachable_parse_errors ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/discovery_and_workspace.rs::test_project_and_test_discovery_parity_reports_reachable_parse_errors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::1",
       "fingerprint": "8d983b7774e3886e95d49f63f355575b79327fe7e05239945e2335eb8a2d636e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57812,11 +57812,11 @@
       "inputs": "fn erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::2",
       "fingerprint": "b27e25eeec348a7c400971b7b8db1891c7525250174ef69b3e5b1c8e4059c710",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57824,11 +57824,11 @@
       "inputs": "fn erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::3",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost::literal-comparison::3",
       "fingerprint": "9574e70473c35bfd0344661ffac46ccbd0f8bb7e9c73453b72b559e21e861012",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57836,11 +57836,11 @@
       "inputs": "fn erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set::literal-comparison::1",
       "fingerprint": "7deef1af856a21353a29716aa3ad61dedbddc9e11ff8a67f0d15efb504cabd8e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57848,11 +57848,11 @@
       "inputs": "fn adapter_plan_retains_selected_attached_api_set ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set::literal-match::1",
       "fingerprint": "5e15e43e3e43d82461d3f8e4ea2174f6416566a7f04a9c8040eb2fe39e01ac50",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57860,11 +57860,11 @@
       "inputs": "fn adapter_plan_retains_selected_attached_api_set ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::adapter_plan_retains_selected_attached_api_set enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature::literal-comparison::1",
       "fingerprint": "c78abbff06ccdc0ea440037b337444b6c24d37a04a898f851fb6de135cca6eba",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57872,11 +57872,11 @@
       "inputs": "fn concrete_generic_adapted_child_receives_concrete_attached_signature ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::concrete_generic_adapted_child_receives_concrete_attached_signature enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports::literal-comparison::1",
       "fingerprint": "b30423e51ee1c8b96dddc047c832c98cc026b8f5c5729d64d07870bf6783e201",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57884,11 +57884,11 @@
       "inputs": "fn marker_reexports_keep_canonical_selection_but_not_runtime_imports ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::marker_reexports_keep_canonical_selection_but_not_runtime_imports enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::1",
       "fingerprint": "91f1c4544b4d3b3b2e5c18823e8a3d55136d72bc2266c37dcbf1c6e6ff4d94a7",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57896,11 +57896,11 @@
       "inputs": "fn marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::2",
       "fingerprint": "de36bc7cddbce100831dbfbea4d563d47235762413ddd7669bfc8faa004eea20",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57908,11 +57908,11 @@
       "inputs": "fn marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::3",
+      "site": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity::literal-comparison::3",
       "fingerprint": "d4420343496b6e718b74f84d12f038ba725a59e7834edd9b769e55f8852ce5f1",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57920,11 +57920,11 @@
       "inputs": "fn marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/early_adapters.rs::marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer::literal-comparison::1",
       "fingerprint": "a316e664c5fcd0719a01a7b53e766f9d73d299d752aea56875def560e7537c35",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57932,11 +57932,11 @@
       "inputs": "fn diagnostic_renderer ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer::literal-comparison::2",
       "fingerprint": "73c2046c4fa2736ac84e2922a31841c7605a4b6f3b30e1bd30ae950b5d83e66c",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57944,11 +57944,11 @@
       "inputs": "fn diagnostic_renderer ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/guided_target_replay.rs::diagnostic_renderer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically::literal-comparison::1",
       "fingerprint": "f97b0cc5992cffc322cd5568d4673acf4911bb6ebd2484aa766f1dea4d877ddf",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57956,11 +57956,11 @@
       "inputs": "fn inherited_handlers_precede_local_handlers_deterministically ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/handler_descriptors.rs::inherited_handlers_precede_local_handlers_deterministically enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner::literal-comparison::1",
       "fingerprint": "a55035477d0b5d8773a543883f364639deca5f44c70cc14caf7294613b238d65",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57968,11 +57968,11 @@
       "inputs": "fn imported_inherited_handler_keeps_its_checked_owner ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/handler_descriptors.rs::imported_inherited_handler_keeps_its_checked_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization::literal-comparison::1",
       "fingerprint": "298d8183e1f962a84d1e7549888658749b16082dc6f23eb5e8e42ee698e45712",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57980,11 +57980,11 @@
       "inputs": "fn self_annotation_keeps_the_current_generic_specialization ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/handler_descriptors.rs::self_annotation_keeps_the_current_generic_specialization enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-comparison::1",
       "fingerprint": "9e3e18f82138a28cc1188fdfd0a810a17b8990199224e15767d592a868bf7f52",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -57992,11 +57992,11 @@
       "inputs": "fn imported_parent_defaults_are_flattened_into_child_hir ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-match::1",
       "fingerprint": "36f8f8a435f01f2b2f452fd820b915390bb3e76c87b3f167b7b249a699a2e56d",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58004,11 +58004,11 @@
       "inputs": "fn imported_parent_defaults_are_flattened_into_child_hir ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir::literal-comparison::2",
       "fingerprint": "89cd1d2d6e46c7867b82a2f6b9620ae74eae6109d2cb3d6c024629a4b2ee557f",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58016,11 +58016,11 @@
       "inputs": "fn imported_parent_defaults_are_flattened_into_child_hir ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/inheritance_metadata.rs::imported_parent_defaults_are_flattened_into_child_hir enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph::literal-comparison::1",
       "fingerprint": "84f3b61c847e10c7e5202d5a14e7545e3ab03978a584382d22663b585ba46884",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58028,11 +58028,11 @@
       "inputs": "fn package_graph ( workspace : & Path , packages : & [ & TestPackage ] , edges : & [ TestEdge ] , )",
       "outputs": "sifr_package :: SifrPackageGraph",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph::literal-comparison::2",
       "fingerprint": "84f3b61c847e10c7e5202d5a14e7545e3ab03978a584382d22663b585ba46884",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58040,11 +58040,11 @@
       "inputs": "fn package_graph ( workspace : & Path , packages : & [ & TestPackage ] , edges : & [ TestEdge ] , )",
       "outputs": "sifr_package :: SifrPackageGraph",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_project_build_check.rs::package_graph enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_entrypoint::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_entrypoint::literal-comparison::1",
       "fingerprint": "1c53d15ad7bdb0c2478ae82787e716c93dd47d33181f67bcb629a6814ea53af9",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58052,11 +58052,11 @@
       "inputs": "fn package_entrypoint ( graph : & sifr_package :: SifrPackageGraph , source_map : & sifr_package :: PackageSourceMap , package : & TestPackage , main_file : PathBuf , )",
       "outputs": "PackageEntrypoint",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_project_build_check.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_project_build_check.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_project_build_check.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_project_build_check.rs::package_entrypoint enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts::literal-comparison::1",
       "fingerprint": "d4c656060f9daae6d6b2bdc38fd9bf95513818f339bcccb768e40c9bc683443e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58064,11 +58064,11 @@
       "inputs": "fn test_build_native_build_script_trusted_artifacts ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::test_build_native_build_script_trusted_artifacts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::1",
       "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58076,11 +58076,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::1",
       "fingerprint": "c0bc7f05be96e9768e1c6e4e37801024c0fa8c728985e4c2d24b9e339c448816",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58088,11 +58088,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::2",
       "fingerprint": "4b364d17633ff0200e85a5e0e6cb75e2c87486c8c4c78066def69f0c1bb33daf",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58100,11 +58100,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::3",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::3",
       "fingerprint": "83659d25f3b4ae44c4f6751779538a0c2adb507dcf011139a5921c252b6580c4",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58112,11 +58112,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::4",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-comparison::4",
       "fingerprint": "ab3d887a3f373a645834837df4f262b3143e5a5d5a2203c26adc9726c166ada2",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58124,11 +58124,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::2",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit::literal-match::2",
       "fingerprint": "d233002882b7c2b6e1ccb51ff404ac0726b5741ca9b7aaaa3a4d222eab5f299e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58136,11 +58136,11 @@
       "inputs": "fn dx9_trust_revocation_after_real_native_cache_hit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_native_build_support.rs::dx9_trust_revocation_after_real_native_cache_hit enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected::literal-comparison::1",
       "fingerprint": "a50e65996b6c6e91f1b2a819da7c2cd029e45d197d2956fa780b03d0c3db9541",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58148,11 +58148,11 @@
       "inputs": "fn test_package_resource_alias_use_after_close_rejected ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_package_resource_support.rs::test_package_resource_alias_use_after_close_rejected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs::static_program_identity::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs::static_program_identity::literal-match::1",
       "fingerprint": "4e996a448ff68159dc930b52f2be1ab24553715bc173a2e1b864ba22ee7796f2",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58160,11 +58160,11 @@
       "inputs": "fn static_program_identity ( source : & str )",
       "outputs": "[ u8 ; 3 2 ]",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_static_program_support.rs::static_program_identity enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::observed_resource_state::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::observed_resource_state::literal-match::1",
       "fingerprint": "30880dec16f0ba020ce149281b09d7f11f27a248b36ed8954d416a96b7bb2ad6",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58172,11 +58172,11 @@
       "inputs": "fn observed_resource_state ( output : & std :: process :: Output )",
       "outputs": "ObservedRuntimeState",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::observed_resource_state enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::observed_resource_state enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::observed_resource_state enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::observed_resource_state enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic::literal-comparison::1",
       "fingerprint": "676b2071de93c7aa239e008f459d5780a1264bc8c9d3d1c018d3518a594f64f0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58184,11 +58184,11 @@
       "inputs": "fn test_check_project_reports_primary_span_for_ranged_hir_diagnostic ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure::literal-comparison::1",
       "fingerprint": "5399d3006048ef1e5c0a73a528f3f168362f297e42115a505500ac08da7af6a0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58196,11 +58196,11 @@
       "inputs": "fn test_check_project_reports_reachable_parse_errors_in_import_closure ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure::literal-comparison::2",
       "fingerprint": "bf7f0b07412aeead977772432c0f0b9a7f0aec65638830b59371de9ae3574ab6",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58208,11 +58208,11 @@
       "inputs": "fn test_check_project_reports_reachable_parse_errors_in_import_closure ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/project_build_check.rs::test_check_project_reports_reachable_parse_errors_in_import_closure enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/project_graph.rs::test_collect_project_modules_cycle_reports_error::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/project_graph.rs::test_collect_project_modules_cycle_reports_error::literal-comparison::1",
       "fingerprint": "b5d3e0bb47056175bdf73fe5492ff8503eba96c00490ab3825c5a19aa94d633c",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58220,11 +58220,11 @@
       "inputs": "fn test_collect_project_modules_cycle_reports_error ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/project_graph.rs::test_collect_project_modules_cycle_reports_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/project_graph.rs::test_collect_project_modules_cycle_reports_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/project_graph.rs::test_collect_project_modules_cycle_reports_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/project_graph.rs::test_collect_project_modules_cycle_reports_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants::literal-comparison::1",
       "fingerprint": "d4b5db9ae83833aba71662a16669f98dd649e4782b35873bb608be07b5851770",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58232,11 +58232,11 @@
       "inputs": "fn test_project_lowering_fits_imported_integer_constants ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/project_graph_constants.rs::test_project_lowering_fits_imported_integer_constants enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan::literal-comparison::1",
       "fingerprint": "77f9fca723638cd605537a49f3fed178308790bf1c99ef1eb1cd4bd891da19b9",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58244,11 +58244,11 @@
       "inputs": "fn generated_rust_production_preserves_deferred_sysroot_probe_plan ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::generated_rust_production_preserves_deferred_sysroot_probe_plan enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic::literal-comparison::1",
       "fingerprint": "3273fb62dc4e0977f2a0748252bb3ac42a4e4ba5a40189372f0d9cf8aead7c65",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58256,11 +58256,11 @@
       "inputs": "fn test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic::literal-match::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic::literal-match::1",
       "fingerprint": "1793227444c34996398c82303d7deb39061ecfbf584c5f9d99efbfcf2f9d131e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58268,11 +58268,11 @@
       "inputs": "fn test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error::literal-comparison::1",
       "fingerprint": "7ebe4d8fdd62dc82b8e4ebb0260666417e437aca4534910765aca0176cb55e09",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58280,11 +58280,11 @@
       "inputs": "fn test_type_check_source_surfaces_blocking_io_direct_call_error ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_type_check_source_surfaces_blocking_io_direct_call_error enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins::literal-comparison::1",
       "fingerprint": "197873e844843b87374cd45a05446faa332cd9daea4d93fc4c841a97fdd7d983",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58292,11 +58292,11 @@
       "inputs": "fn test_compile_metadata_reports_generated_source_map_origins ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins::literal-comparison::2",
       "fingerprint": "5cd3a15f96132a904524cb0440f1087402d2bc251494f4d23bef1d7b0acd341a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58304,11 +58304,11 @@
       "inputs": "fn test_compile_metadata_reports_generated_source_map_origins ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_compile_metadata_reports_generated_source_map_origins enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic::literal-comparison::1",
       "fingerprint": "b81916d2c206f0fd5619661314311675562cb72cf1cff181fc1a2859b7ca4974",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58316,11 +58316,11 @@
       "inputs": "fn test_check_reports_primary_span_for_ranged_hir_diagnostic ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/single_file_frontend.rs::test_check_reports_primary_span_for_ranged_hir_diagnostic enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers::literal-comparison::1",
       "fingerprint": "0605738699b2f5031eb5500e04f14dfa1c6b2b1a07d4d8b1edf6a86028f1a0e6",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58328,11 +58328,11 @@
       "inputs": "fn stdlib_integer_constants_fold_in_project_fixed_width_initializers ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/stdlib_exports.rs::stdlib_integer_constants_fold_in_project_fixed_width_initializers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix::literal-comparison::1",
       "fingerprint": "371fbe60e1fcee95d53d55d94ebbe2dce01ac46e7f570b5e1c0f7cc0fb668287",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58340,11 +58340,11 @@
       "inputs": "fn test_run_tests_frontend_type_errors_use_single_path_prefix ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/test_runner.rs::test_run_tests_frontend_type_errors_use_single_path_prefix enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity::literal-comparison::1",
       "fingerprint": "1573be53326576ee75be52e9350aaa247f4e15a18cb4e6f44e880128efecf2b4",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58352,11 +58352,11 @@
       "inputs": "fn typed_descriptor_project_preserves_all_kinds_and_callable_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity::literal-comparison::2",
       "fingerprint": "8ed2e5cee5e0550d058b3144b1653bab5689f6d8d729b0710e584b0712f9e292",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58364,11 +58364,11 @@
       "inputs": "fn typed_descriptor_project_preserves_all_kinds_and_callable_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::typed_descriptor_project_preserves_all_kinds_and_callable_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs::literal-comparison::1",
       "fingerprint": "f74910d036ed3093f2a4b5629f6118f7910dfd0975ee91c0cc345ee437e4bd95",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58376,11 +58376,11 @@
       "inputs": "fn nested_annotated_descriptors_flatten_inner_to_outer_before_rhs ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::nested_annotated_descriptors_flatten_inner_to_outer_before_rhs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors::literal-comparison::1",
       "fingerprint": "7134fd86de1065bed4e4dee562e2f56839de8508774e72a0e309ed67e2f99b62",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58388,11 +58388,11 @@
       "inputs": "fn callable_identities_support_static_methods_and_type_constructors ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::callable_identities_support_static_methods_and_type_constructors enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members::literal-comparison::1",
       "fingerprint": "86b3acb1ffe05fb7a74a0f4ce08f85aa756e5b8641a81bdb92e1deb4d12c4530",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58400,11 +58400,11 @@
       "inputs": "fn provider_descriptor_union_accepts_assignable_record_members ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members::literal-comparison::2",
       "fingerprint": "017f48bbe484ed3d3fd5e9773d42e78c6f3b2b0c25a90af8a9982beec172ccf7",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -58412,8 +58412,8 @@
       "inputs": "fn provider_descriptor_union_accepts_assignable_record_members ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/typed_descriptors.rs::provider_descriptor_union_accepts_assignable_record_members enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_driver/src/workspace/mod.rs::parse_manifest::literal-comparison::1",
@@ -60514,30 +60514,6 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_frontend/src/typed_descriptors.rs::static_value_expected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_frontend/src/typed_descriptors.rs::static_value_expected enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_identity/src/build.rs::hash_tree::literal-match::1",
-      "fingerprint": "fa5e8a5c94f2bf9004a5bd0788a50e268b2b33f364e6491dac9486e969e730b9",
-      "classification": "compiler-policy",
-      "owner": "compiler-owner",
-      "operation": "matches ! ( name , \".git\" | \"target\" | \"__pycache__\" )",
-      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
-      "outputs": "io :: Result < ( ) >",
-      "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
-    },
-    {
-      "site": "crates/sifr_identity/src/build.rs::hash_tree::literal-match::2",
-      "fingerprint": "7454a24da5ced3507f38e0bd8a9d4c23a9dc76c931a59b59e941086f05e755ec",
-      "classification": "compiler-policy",
-      "owner": "compiler-owner",
-      "operation": "matches ! ( extension , \"md\" | \"mdx\" )",
-      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
-      "outputs": "io :: Result < ( ) >",
-      "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/build.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_identity/src/build.rs::configuration::literal-match::1",
@@ -85104,7 +85080,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_type_system/src/types/type_rendering.rs::contains_element_type enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs::visit::literal-comparison::1",
       "fingerprint": "d525d8270f190e0463c4abbfddcdfde8e2fd3cc763dfb7623cdd9543574b34f4",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85112,11 +85088,11 @@
       "inputs": "fn visit ( root : & Path , path : & Path , inputs : & mut Inputs , size : & mut usize , entries : & mut usize , )",
       "outputs": "io :: Result < ( ) >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_reusable.rs::visit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::package_entrypoint_with_leases::literal-comparison::1",
       "fingerprint": "7938484b59ac6ea680120fe5261db69337fa0b38435f057b31c365495816ffc9",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85124,11 +85100,11 @@
       "inputs": "fn package_entrypoint_with_leases ( package_root : & Path , sifr_package_name : & str , leases : & crate :: build :: native_child_leases :: NativeChildLeases , )",
       "outputs": "PackageEntrypoint",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_test_support.rs::package_entrypoint_with_leases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::1",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::1",
       "fingerprint": "1ab6b510f26d300259f798b25fb346d04615787aba6a1ac30290903b19c261ba",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85136,11 +85112,11 @@
       "inputs": "fn child_role ( path : & Path )",
       "outputs": "!",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::2",
+      "site": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role::literal-comparison::2",
       "fingerprint": "4026b9dc9259f9a0ff021a5a61eb744fabb4984b7f8c8aa60c02f3e4f7cf8d6a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85148,11 +85124,11 @@
       "inputs": "fn child_role ( path : & Path )",
       "outputs": "!",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/src/tests/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_driver/tests/unit/package_rust_interop_reusable_child_tests.rs::child_role enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/build_tests.rs::run::literal-match::1",
+      "site": "crates/sifr_identity/tests/unit/build_tests.rs::run::literal-match::1",
       "fingerprint": "8c3278cc5fca72eca801fc98c1aab29819737c824c9a032f5226859405301458",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85160,11 +85136,11 @@
       "inputs": "fn run ( & self , label : & str , fresh : bool )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/tests/unit/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/tests/unit/build_tests.rs::run enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/build_tests.rs::run::literal-comparison::1",
+      "site": "crates/sifr_identity/tests/unit/build_tests.rs::run::literal-comparison::1",
       "fingerprint": "bb56ccdacf710992bc731e7e8065085f642042c456267cd8f214c095603443a3",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -85172,8 +85148,8 @@
       "inputs": "fn run ( & self , label : & str , fresh : bool )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/src/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/tests/unit/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/tests/unit/build_tests.rs::run enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_lsp/src/session/tests/sysroot_request_tests.rs::remove_parent_package_context::literal-match::1",
@@ -85392,16 +85368,16 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr/src/sql_compiler_inputs.rs::verify enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration::literal-match::1",
-      "fingerprint": "2dd2516205be030600134cf6a239ba7f3705cbe02eda00c7efeeb813ed891343",
+      "site": "crates/sifr_identity/tests/unit/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration::literal-match::1",
+      "fingerprint": "40b7d2fdc68a2fcb74dafd48ef26aab5818d591ceddabdf5cfe7447d92626eec",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( name_text . as_ref ( ) , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
       "inputs": "fn product_source_identity_tracks_sources_independently_of_configuration ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_identity/src/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/src/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/tests/unit/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_identity/tests/unit/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_sql_tool/src/compiler_protocol/tests.rs::handshake_rejects_source_version_schema_and_frame_limit_mismatches::literal-match::1",
@@ -85585,7 +85561,7 @@
     },
     {
       "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::1",
-      "fingerprint": "949bef763bf436149c87239199868d6182abc8181b7107a141d0cf752f4e0250",
+      "fingerprint": "61a2b3dd09a5656573b4ed91a542aab36700c2dfcfa6c2a730e2a6981cdbeec3",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "relative . extension ( ) . and_then ( | value | value . to_str ( ) ) != Some ( \"wasm\" )",
@@ -85597,7 +85573,7 @@
     },
     {
       "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::2",
-      "fingerprint": "b8c6134bef81504de0602bbf315b89135efad6dac2b9d355df56ec0afc1f1644",
+      "fingerprint": "5f601bfe9a27f9a84bb686c96dc0d85210ad6c575ced1726defc44e5f2cdb324",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let native = env :: var ( \"HOST\" ) ? == env :: var ( \"TARGET\" ) ?",
@@ -85609,7 +85585,7 @@
     },
     {
       "site": "crates/sifr_compiler_component_engine/build.rs::main::literal-comparison::3",
-      "fingerprint": "49d136d77dfc0f805fad683bc1a2a642dcef6f24693a8305a59951884a5866d7",
+      "fingerprint": "aac6daf26a891d0e3723150c47911e1cbd6c9a920f1f76e823f16322b3628598",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if name != format ! ( \"component-{index:03}.cwasm\" )",
@@ -85666,6 +85642,30 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_identity/src/input_tree.rs::hash_tree::literal-match::1",
+      "fingerprint": "8febbe6d34ee648d2c7ee3641cb21dae229a63d0b4669aeab187912f789e168d",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "matches ! ( name , \".git\" | \"target\" | \"__pycache__\" )",
+      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
+      "outputs": "io :: Result < ( ) >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_identity/src/input_tree.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/input_tree.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_identity/src/production_inputs.rs::package_inputs::literal-comparison::1",
+      "fingerprint": "f8695c751c46476fe50948128aa31caa337cd7f754db2a86bb84b81faf091a4f",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "path == Path :: new ( \"Cargo.toml\" )",
+      "inputs": "fn package_inputs ( root : & Path , package : & Path , hash : & mut IdentityEncoder , active : & mut BTreeSet < PathBuf > , )",
+      "outputs": "io :: Result < ( ) >",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "crates/sifr_identity/src/production_inputs.rs::package_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/production_inputs.rs::package_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

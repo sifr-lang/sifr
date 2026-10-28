@@ -17,3 +17,6 @@ static_assertions = { workspace = true }
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src"]

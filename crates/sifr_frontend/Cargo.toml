@@ -34,3 +34,7 @@ sifr_sql_runtime = { workspace = true }
 
 [build-dependencies]
 sifr_identity = { workspace = true, features = ["build"] }
+
+[package.metadata.sifr]
+production-inputs = ["src", "build.rs"]
+production-workspace-inputs = ["crates/sifr_structural_identity", "third_party/ruff"]

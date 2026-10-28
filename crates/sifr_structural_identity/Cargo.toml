@@ -11,3 +11,6 @@ sha2 = { workspace = true }
 
 [lints]
 workspace = true
+
+[package.metadata.sifr]
+production-inputs = ["src"]
