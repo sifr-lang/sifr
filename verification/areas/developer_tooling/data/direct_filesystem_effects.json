@@ -25830,6 +25830,48 @@
       "operation": "read",
       "site": "assert_eq!(fs::read(legacy.join(\"latest\")).unwrap(), b\"legacy sentinel\");",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(path.exists());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "read",
+      "site": "let original = fs::read(&reader.path).unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "write",
+      "site": "fs::write(&reader.path, damaged_index).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(retained.iter().all(|(_, path, _)| path.exists()));",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "write",
+      "site": "fs::write(&reader.path, original).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_driver/src/project_cache/bundle_tests.rs",
+      "symbol": "detached_history_keeps_inherited_payload_owners_until_reader_release",
+      "operation": "exists",
+      "site": "assert!(retained.iter().all(|(_, path, _)| !path.exists()));",
+      "classification": "tooling-input"
     }
   ]
 }

@@ -113,6 +113,52 @@ fn legacy_namespace_is_neither_consumed_nor_reclaimed() {
 }
 
 #[test]
+fn detached_history_keeps_inherited_payload_owners_until_reader_release() {
+    let (_root, file, cache) = tests::fixture();
+    let store = tests::store(&cache, &file);
+    tests::publish_variants(&store, &file, 2);
+    let reader = store.latest().unwrap();
+    let retained: Vec<_> = reader
+        .manifest
+        .records
+        .iter()
+        .map(|id| {
+            (
+                id.clone(),
+                reader.record_path(id).unwrap(),
+                reader.read_record(id).unwrap(),
+            )
+        })
+        .collect();
+    assert_ne!(retained[0].1, reader.path);
+    tests::publish_variants(&store, &file, storage::RECORD_COUNT + 2);
+    let latest = store.latest().unwrap();
+    assert!(
+        retained
+            .iter()
+            .all(|(id, _, _)| !latest.manifest.records.contains(id))
+    );
+    store.prune(true, false).unwrap();
+    for (id, path, bytes) in &retained {
+        assert!(path.exists());
+        assert_eq!(reader.read_record(id).unwrap(), *bytes);
+    }
+    // An active predecessor whose index cannot be decoded supplies no safe
+    // reachability proof. Preserve its payload owners and all ambiguous history.
+    let original = fs::read(&reader.path).unwrap();
+    let mut damaged_index = original.clone();
+    *damaged_index.last_mut().unwrap() = b'!';
+    fs::write(&reader.path, damaged_index).unwrap();
+    assert_eq!(store.prune(true, false).unwrap().deleted_generations, 0);
+    assert!(retained.iter().all(|(_, path, _)| path.exists()));
+    fs::write(&reader.path, original).unwrap();
+    drop(reader);
+    store.prune(true, false).unwrap();
+    assert!(retained.iter().all(|(_, path, _)| !path.exists()));
+    assert!(latest.records().all(|record| record.is_ok()));
+}
+
+#[test]
 fn reader_admission_blocks_new_readers_but_preserves_existing_readers() {
     let (_root, file, cache) = tests::fixture();
     let store = tests::store(&cache, &file);
