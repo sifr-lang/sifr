@@ -19793,3 +19793,33 @@ assertions, generator invalidation/provenance, exact selected profiles, and the
 canonical component rebuilds required by a root-manifest change; keep optimized
 generated programs and product behavior intact. Register that bounded production
 scope only after feasibility. Complete phase gates/repeated V5 remain OPEN.
+
+### V1ct rejected — insufficient complete-build gain
+
+The generator-only override linked all three tools in236.174s/884.352CPU versus
+245.342s/927.947CPU. Whole-build improvement3.737% misses the predeclared15%
+screen. LALRPOP55.37s to13.23s does not transfer to the complete critical path.
+Both191385-byte generated parsers have SHA256
+b13346bef9e66f8c81a3a7c7d5e779dec950cf6da6a8b07432c0b7d09cb06e24.
+Cargo profiles/features/versions match except the generator optimization override.
+Reject adoption and further qualification; production manifests remain unchanged.
+Evidence: v1cs-sql-clean-unit-diagnostic, v1ct-sql-clean-unit-diagnostic,
+v1ct-screen-result.json and both guard directories. These instrumented single
+clean-A builds are attribution, not full-protocol acceptance.
+
+### V1cu prospective diagnostic — native fixture preparation versus execution
+
+R3 advanced-data preparation29.388s was followed by its runtime assertion124.839s;
+backend loopback161.217s is another large native case. Reusable fixture isolation
+already exists, so do not presume the historical temporary-directory cache bug.
+Execute current exact preparation, advanced-data runtime assertion and backend
+runtime assertion sequentially, retaining targets and all assertions. Add libtest
+nocapture only; record command wall/CPU and emitted cache/build diagnostics.
+Use the actual driver Cargo graph, two Cargo/Rayon jobs per native worker,
+one test thread, no other heavy work,1750s per-command cap and20GiB disk/2GiB
+memory reserves. Check source ownership/capacity before and after. No production
+edits or cache deletion; separate warmed isolated evidence from integrated R3.
+Good enough: determine whether retained preparation is reused and locate the
+dominant compiler/native-build/runtime work before selecting a macro repair.
+If timing alone cannot attribute it, instrument one representative case only.
+No full-gate rerun is warranted by this diagnostic; all phase/V5 requirements remain.
