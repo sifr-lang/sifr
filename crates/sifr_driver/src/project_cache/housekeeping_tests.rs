@@ -130,7 +130,7 @@ fn orphan_prune_requires_owner_and_inactivity() {
     let unknown = root.path().join("unknown-owner");
     fs::create_dir(&unknown).unwrap();
     let unknown_id = identity("project-workspace-v1", &unknown.canonicalize().unwrap()).unwrap();
-    let unknown_namespace = cache.join("projects").join(unknown_id);
+    let unknown_namespace = cache.join(storage::PROJECTS).join(unknown_id);
     cache_storage::directory(&unknown_namespace).unwrap();
     fs::write(unknown_namespace.join("unclaimed"), "preserve").unwrap();
     assert!(storage::Store::open(&cache, &unknown, &tests::context().identity().unwrap()).is_err());

@@ -1,5 +1,8 @@
 //! Read-only access to complete driver-published check generations.
-use crate::CompilerContext;
+use crate::{
+    CompilerContext,
+    project_history::{Manifest, PROJECTS, key},
+};
 use serde::Deserialize;
 use sifr_cache_storage::ProcessLease;
 use sifr_frontend::{
@@ -7,16 +10,11 @@ use sifr_frontend::{
     persistence::{CompletedCheck, SemanticInputs, identity},
 };
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fs::{self, File},
     io::{self, Read},
     path::{Path, PathBuf},
 };
-
-const RECORD_LIMIT: u64 = 16 * 1024 * 1024;
-const MANIFEST_LIMIT: u64 = 1024 * 1024;
-const HISTORY_BYTES: u64 = 64 * 1024 * 1024;
-const RECORD_COUNT: usize = 128;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -35,24 +33,12 @@ struct Hint {
     context: String,
     generation: String,
 }
-#[derive(Deserialize, serde::Serialize)]
-#[serde(deny_unknown_fields)]
-struct Manifest {
-    schema: u32,
-    workspace: String,
-    context: String,
-    records: Vec<String>,
-}
-
 pub(super) struct Generation {
     records: Vec<CompletedCheck>,
     _namespace_lease: ProcessLease,
     _generation_lease: ProcessLease,
 }
 
-fn key(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
-}
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
@@ -95,7 +81,7 @@ fn file_identity(path: &Path) -> io::Result<(u64, u64)> {
     sifr_cache_storage::windows_storage_security::path_identity(path)
 }
 fn check_owner(cache: &Path, workspace: &Path, id: &str) -> io::Result<ProcessLease> {
-    let projects = cache.join("projects");
+    let projects = cache.join(PROJECTS);
     let lease = ProcessLease::shared(existing_lease(&projects, id)?)?;
     let namespace = projects.join(id);
     let owner: Owner = serde_json::from_slice(&read(&namespace, "owner.json", 16 * 1024)?)?;
@@ -126,7 +112,7 @@ pub(super) fn load_generation(
     let workspace = workspace.canonicalize()?;
     let workspace_id = stamp("project-workspace-v1", &workspace)?;
     let namespace_lease = check_owner(cache, &workspace, &workspace_id)?;
-    let root = cache.join("projects").join(&workspace_id).join(context);
+    let root = cache.join(PROJECTS).join(&workspace_id).join(context);
     let pointer = read(&root, "latest", 4096)
         .ok()
         .and_then(|bytes| serde_json::from_slice::<Hint>(&bytes).ok());
@@ -168,29 +154,12 @@ pub(super) fn read_complete_generation(
     context: &str,
     generation: &str,
 ) -> io::Result<Vec<CompletedCheck>> {
-    let manifest: Manifest = serde_json::from_slice(&read(path, "manifest.json", MANIFEST_LIMIT)?)?;
-    if manifest.schema != 2
-        || manifest.workspace != workspace
-        || manifest.context != context
-        || manifest.records.len() > RECORD_COUNT
-        || manifest.records.iter().collect::<BTreeSet<_>>().len() != manifest.records.len()
-        || stamp("project-generation-v1", &manifest)? != generation
-    {
-        return Err(invalid("incompatible project generation"));
-    }
+    let manifest = Manifest::read(path, workspace, context, generation)?;
     let mut records = Vec::new();
-    let mut total_bytes = 0;
     for record_id in manifest.records.iter().rev() {
-        if !key(record_id) {
-            return Err(invalid("invalid record reference"));
-        }
-        let bytes = read(path, record_id, RECORD_LIMIT)?;
+        let bytes = manifest.read_record(path, record_id)?;
         if stamp("project-record-v1", &bytes)? != *record_id {
             return Err(invalid("corrupt project record"));
-        }
-        total_bytes += bytes.len() as u64;
-        if total_bytes > HISTORY_BYTES {
-            return Err(invalid("project history byte limit"));
         }
         let record: CompletedCheck = serde_json::from_slice(&bytes)?;
         if record.schema != 1

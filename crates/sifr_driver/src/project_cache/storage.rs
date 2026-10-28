@@ -1,4 +1,4 @@
-//! Immutable project generations. Lock order: writer, then generation lease.
+//! Immutable project bundles. Lock order: writer, then generation lease.
 //! Readers take only a shared generation lease; GC takes writer then exclusive
 //! generation leases. Namespace leases outlive stores through their readers.
 //! Generation and namespace lock inodes remain stable while reachable.
@@ -6,28 +6,19 @@ use super::record_validation::RecordValidation;
 use crate::cache_storage as storage;
 use serde::{Deserialize, Serialize};
 use sifr_cache_storage::ProcessLease;
+#[cfg(test)]
+pub(super) use sifr_compiler_services::project_history::MANIFEST_LIMIT;
+pub(super) use sifr_compiler_services::project_history::{
+    HISTORY_BYTES, Manifest, PROJECTS, Payload, RECORD_COUNT, RECORD_LIMIT, key,
+};
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
-    collections::BTreeSet,
+    collections::BTreeMap,
     fs,
     io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
 };
-const RECORD_LIMIT: u64 = 16 * 1024 * 1024;
-const MANIFEST_LIMIT: u64 = 1024 * 1024;
-// Per-generation publication history. Old generations remain under explicit prune.
-pub(super) const RECORD_COUNT: usize = 128;
-const HISTORY_BYTES: u64 = 64 * 1024 * 1024;
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct Manifest {
-    schema: u32,
-    workspace: String,
-    context: String,
-    pub(super) records: Vec<String>,
-}
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Hint {
@@ -58,9 +49,6 @@ pub(super) fn invalid(message: &str) -> io::Error {
 pub(super) fn stamp<T: Serialize>(domain: &str, value: &T) -> io::Result<String> {
     identity(domain, value).map_err(io::Error::other)
 }
-pub(super) fn key(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
-}
 pub(super) fn read(root: &Path, name: &str, limit: u64) -> io::Result<Vec<u8>> {
     storage::payload(root, Path::new(name))?;
     let file = storage::read_private_file(&root.join(name))?;
@@ -88,16 +76,6 @@ fn read_bounded(reader: impl Read, expected: u64, limit: u64) -> io::Result<Vec<
 }
 pub(super) fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let mut file = storage::new_private_file(path)?;
-    #[cfg(test)]
-    if std::env::var_os("SIFR_DX13_STORAGE_FULL").is_some()
-        && path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .is_some_and(key)
-    {
-        file.write_all(&bytes[..bytes.len().min(8)])?;
-        return Err(io::Error::other("injected storage full"));
-    }
     file.write_all(bytes)?;
     file.sync_all()
 }
@@ -127,12 +105,12 @@ impl Store {
             return Err(invalid("invalid context identity"));
         }
         storage::directory(cache)?;
-        storage::directory(&cache.join("projects"))?;
+        storage::directory(&cache.join(PROJECTS))?;
         let workspace_root = workspace_root.canonicalize()?;
         let workspace = stamp("project-workspace-v1", &workspace_root)?;
         let namespace_lease =
             super::housekeeping::open_namespace(cache, &workspace_root, &workspace)?;
-        let root = cache.join("projects").join(&workspace).join(context);
+        let root = cache.join(PROJECTS).join(&workspace).join(context);
         storage::directory(&root)?;
         storage::directory(&root.join("generations"))?;
         Ok(Self {
@@ -167,6 +145,17 @@ impl Store {
         }
         None
     }
+    pub(super) fn generation_manifest(&self, id: &str) -> io::Result<Manifest> {
+        if !key(id) {
+            return Err(invalid("invalid generation identity"));
+        }
+        Manifest::read(
+            &self.root.join("generations").join(id),
+            &self.workspace,
+            &self.context,
+            id,
+        )
+    }
     fn generation(&self, id: &str) -> io::Result<Generation> {
         if !key(id) {
             return Err(invalid("invalid generation identity"));
@@ -174,37 +163,20 @@ impl Store {
         let parent = self.root.join("generations");
         let lease = ProcessLease::shared(super::housekeeping::existing_lease(&parent, id)?)?;
         let path = parent.join(id);
-        let bytes = read(&path, "manifest.json", MANIFEST_LIMIT)?;
-        let manifest: Manifest = serde_json::from_slice(&bytes)?;
-        if manifest.schema != 2
-            || manifest.workspace != self.workspace
-            || manifest.context != self.context
-            || manifest.records.len() > RECORD_COUNT
-            || manifest.records.iter().collect::<BTreeSet<_>>().len() != manifest.records.len()
-            || stamp("project-generation-v1", &manifest)? != id
-        {
-            return Err(invalid("incompatible project generation"));
-        }
-        let mut total_bytes = 0;
-        for record in &manifest.records {
-            if !key(record) {
-                return Err(invalid("invalid record reference"));
-            }
-            let bytes = read(&path, record, RECORD_LIMIT)?;
-            total_bytes += bytes.len() as u64;
-            if total_bytes > HISTORY_BYTES {
-                return Err(invalid("project history byte limit"));
-            }
-            self.validation
-                .validate(record, &bytes, "corrupt project record")?;
-        }
-        Ok(Generation {
+        let manifest = self.generation_manifest(id)?;
+        let generation = Generation {
             path,
             manifest,
             _lease: lease,
             _namespace_lease: self.namespace_lease.clone(),
             validation: self.validation.clone(),
-        })
+        };
+        for record in &generation.manifest.records {
+            let bytes = generation.read_record(record)?;
+            self.validation
+                .validate(record, &bytes, "corrupt project record")?;
+        }
+        Ok(generation)
     }
     pub(super) fn publish(&self, bytes: &[u8], cancel: &AtomicBool) -> io::Result<String> {
         cancelled(cancel)?;
@@ -214,6 +186,8 @@ impl Store {
             return Err(invalid("project result exceeds limit"));
         }
         let record_id = stamp("project-record-v1", &bytes)?;
+        self.validation
+            .validate(&record_id, bytes, "invalid project publication")?;
         let mut records = previous
             .as_ref()
             .map(|old| old.manifest.records.clone())
@@ -223,29 +197,42 @@ impl Store {
         records.push(record_id.clone());
         let mut retained_bytes = bytes.len() as u64;
         let mut retained = vec![record_id.clone()];
+        let mut payloads = BTreeMap::from([(
+            record_id.clone(),
+            Payload {
+                owner: None,
+                length: bytes.len() as u64,
+            },
+        )]);
         if let Some(previous) = &previous {
             for id in records[..records.len() - 1].iter().rev() {
-                let size = fs::metadata(previous.path.join(id))?.len();
+                let mut payload = previous.manifest.payloads[id].clone();
+                let size = payload.length;
                 if retained.len() == RECORD_COUNT || retained_bytes + size > HISTORY_BYTES {
                     break;
                 }
                 retained_bytes += size;
                 retained.push(id.clone());
+                if payload.owner.is_none() {
+                    payload.owner = Some(previous.id()?.to_owned());
+                }
+                payloads.insert(id.clone(), payload);
             }
         }
         retained.reverse();
         records = retained;
         let manifest = Manifest {
-            schema: 2,
+            schema: sifr_compiler_services::project_history::SCHEMA,
             workspace: self.workspace.clone(),
             context: self.context.clone(),
             records,
+            payloads,
         };
-        let generation_id = stamp("project-generation-v1", &manifest)?;
+        let generation_id = manifest.identity()?;
         let parent = self.root.join("generations");
         let destination = parent.join(&generation_id);
         if destination.exists() {
-            // Never trust a directory-exists winner; validate all references.
+            // Never trust an existing publication winner; validate all references.
             let _winner = self.generation(&generation_id)?;
             self.point(&generation_id)?;
             return Ok(generation_id);
@@ -256,31 +243,13 @@ impl Store {
         let _stage_lease =
             ProcessLease::exclusive(storage::process_entry_lock(&parent, &stage_name)?)?;
         let stage = parent.join(&stage_name);
-        storage::directory(&stage)?;
         let result = (|| {
-            if let Some(previous) = &previous {
-                for inherited in &manifest.records {
-                    if inherited == &record_id {
-                        continue;
-                    }
-                    cancelled(cancel)?;
-                    // A link is immutable. Never open an inherited destination
-                    // for truncation, including when the new result is identical.
-                    let source = previous.path.join(inherited);
-                    let target = stage.join(inherited);
-                    if fs::hard_link(&source, &target).is_err() {
-                        write_new(&target, &read(&previous.path, inherited, RECORD_LIMIT)?)?;
-                    }
-                }
+            #[cfg(test)]
+            if std::env::var_os("SIFR_DX13_STORAGE_FULL").is_some() {
+                storage::new_private_file(&stage)?.write_all(b"partial")?;
+                return Err(io::Error::other("injected storage full"));
             }
-            if !stage.join(&record_id).exists() {
-                write_new(&stage.join(&record_id), bytes)?;
-            }
-            write_new(
-                &stage.join("manifest.json"),
-                &serde_json::to_vec(&manifest)?,
-            )?;
-            storage::sync_stage(&stage)?;
+            sifr_compiler_services::project_history::write(&stage, &manifest, bytes)?;
             #[cfg(test)]
             super::tests::pause("before-rename");
             cancelled(cancel)?;
@@ -293,7 +262,7 @@ impl Store {
             Ok(generation_id.clone())
         })();
         if stage.exists() {
-            let _ = fs::remove_dir_all(stage);
+            let _ = fs::remove_file(stage);
         }
         result
     }
@@ -313,8 +282,8 @@ impl Store {
         let scratch = self
             .workspace_root
             .join(format!(".sifrbuildinfo.stage-{}", token()));
-        if write_new(&scratch, &hint).is_ok() {
-            let _ = storage::publish(&scratch, &self.workspace_root.join(".sifrbuildinfo"));
+        if write_advisory_hint(&scratch, &hint).is_ok() {
+            let _ = fs::rename(&scratch, self.workspace_root.join(".sifrbuildinfo"));
             let _ = fs::remove_file(&scratch);
         }
         Ok(())
@@ -330,14 +299,34 @@ impl Store {
     }
 }
 impl Generation {
+    fn id(&self) -> io::Result<&str> {
+        self.path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .filter(|name| key(name))
+            .ok_or_else(|| invalid("invalid generation identity"))
+    }
+    #[cfg(test)]
+    pub(super) fn record_path(&self, record: &str) -> io::Result<PathBuf> {
+        self.manifest.record_path(&self.path, record)
+    }
+    pub(super) fn read_record(&self, record: &str) -> io::Result<Vec<u8>> {
+        self.manifest.read_record(&self.path, record)
+    }
     pub(super) fn records(&self) -> impl Iterator<Item = io::Result<CompletedCheck>> + '_ {
         self.manifest.records.iter().rev().map(|record| {
-            let bytes = read(&self.path, record, RECORD_LIMIT)?;
+            let bytes = self.read_record(record)?;
             self.validation
                 .validate(record, &bytes, "changed immutable record")?;
             serde_json::from_slice(&bytes).map_err(io::Error::other)
         })
     }
+}
+
+fn write_advisory_hint(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    // This optional discovery hint cannot strengthen the committed cache
+    // pointer. Atomic visibility is sufficient; loss after a crash is a miss.
+    storage::new_private_file(path)?.write_all(bytes)
 }
 
 #[cfg(test)]

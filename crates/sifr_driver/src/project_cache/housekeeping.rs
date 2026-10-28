@@ -1,10 +1,11 @@
 //! Explicit owner-scoped cleanup. The stable namespace lock is outside the
 //! namespace; stores and detached readers hold it shared, orphan GC exclusively.
-use super::storage::{Hint, Store, invalid, key, read, stamp, write_new};
+use super::storage::{Hint, PROJECTS, Store, invalid, key, read, stamp, write_new};
 use crate::cache_storage;
 use serde::{Deserialize, Serialize};
 use sifr_cache_storage::ProcessLease;
 use std::{
+    collections::BTreeSet,
     fs::{self, File},
     io,
     path::{Component, Path, PathBuf},
@@ -71,7 +72,7 @@ pub(super) fn open_namespace(
     workspace: &Path,
     id: &str,
 ) -> io::Result<Arc<ProcessLease>> {
-    let projects = cache.join("projects");
+    let projects = cache.join(PROJECTS);
     let lease = ProcessLease::shared(cache_storage::process_entry_lock(&projects, id)?)?;
     let namespace = projects.join(id);
     cache_storage::directory(&namespace)?;
@@ -206,6 +207,19 @@ pub(super) fn prune_store(
     if !safe_path(&parent) {
         return Ok(report);
     }
+    let mut protected = BTreeSet::new();
+    if let Some(latest) = &latest {
+        protected.insert(latest.path.clone());
+        protected.extend(
+            latest
+                .manifest
+                .payloads
+                .values()
+                .filter_map(|payload| payload.owner.as_ref().map(|owner| parent.join(owner))),
+        );
+    }
+    let mut candidates = Vec::new();
+    let mut ambiguous = latest.is_none() && store.root.join("latest").symlink_metadata().is_ok();
     for entry in fs::read_dir(&parent)? {
         let entry = entry?;
         let name = entry.file_name();
@@ -220,22 +234,42 @@ pub(super) fn prune_store(
         {
             continue;
         }
-        // If the latest pointer exists but cannot be validated, ownership of
-        // current history is ambiguous. Staging can still be reclaimed safely.
-        if key(name) && latest.is_none() && store.root.join("latest").symlink_metadata().is_ok() {
-            continue;
-        }
         if !safe_tree(&entry.path()) {
+            ambiguous |= key(name);
             continue;
         }
         let Ok(lease) = existing_lease(&parent, name) else {
+            ambiguous |= key(name);
             continue;
         };
-        let Ok(_lease) = ProcessLease::exclusive(lease) else {
-            continue;
+        match ProcessLease::exclusive(lease) {
+            Ok(lease) => candidates.push((entry.path(), key(name), lease)),
+            Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                if key(name) {
+                    // A detached reader pins its history and every direct
+                    // payload owner, even when that owner has no reader itself.
+                    match store.generation_manifest(name) {
+                        Ok(manifest) => {
+                            protected.extend(manifest.payloads.values().filter_map(|payload| {
+                                payload.owner.as_ref().map(|owner| parent.join(owner))
+                            }))
+                        }
+                        Err(_) => ambiguous = true,
+                    }
+                }
+            }
+            Err(error) => return Err(error),
         };
-        report.reclaim(&entry.path(), key(name), dry_run)?;
     }
+    // Hold all admitted exclusive leases until marking and deletion complete.
+    // No reader can acquire a previously idle generation after its references
+    // were inspected. Failure to acquire resources above performs no deletion.
+    for (path, generation, _lease) in &candidates {
+        if !protected.contains(path) && (!generation || !ambiguous) {
+            report.reclaim(path, *generation, dry_run)?;
+        }
+    }
+    drop(candidates);
     // Only writer-serialized staging locks are ephemeral. Generation locks
     // remain permanent because readers may open them without the writer lock.
     let locks = parent.join(".locks");
@@ -366,7 +400,7 @@ pub(super) fn prune_workspace(
         workspace.canonicalize()?
     };
     let id = stamp("project-workspace-v1", &workspace)?;
-    let projects = cache.join("projects");
+    let projects = cache.join(PROJECTS);
     let namespace = projects.join(&id);
     if !safe_path(cache) || !safe_path(&projects) || !safe_path(&namespace) {
         return Ok(report);

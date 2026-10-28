@@ -118,13 +118,16 @@ fn warm_facts_reject_same_length_same_mtime_corruption_and_recover() {
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
     let store = fixtures::store(&cache, &file);
     let generation = store.latest().unwrap();
-    let path = generation.path.join(&generation.manifest.records[0]);
+    let path = generation
+        .record_path(&generation.manifest.records[0])
+        .unwrap();
     let original = fs::read(&path).unwrap();
     let modified = fs::metadata(&path).unwrap().modified().unwrap();
     generation.records().next().unwrap().unwrap();
     assert_eq!(store.validation.stats(), (1, 1, 1));
     let mut changed = original.clone();
-    changed[0] = b'[';
+    // Corrupt the payload, preserving the envelope, file size and mtime.
+    changed[16] = b'[';
     fs::write(&path, &changed).unwrap();
     File::options()
         .write(true)
@@ -158,7 +161,9 @@ fn warm_facts_still_check_permissions_and_symlink_substitution() {
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
     let store = fixtures::store(&cache, &file);
     let generation = store.latest().unwrap();
-    let path = generation.path.join(&generation.manifest.records[0]);
+    let path = generation
+        .record_path(&generation.manifest.records[0])
+        .unwrap();
     generation.records().next().unwrap().unwrap();
     fs::set_permissions(&path, fs::Permissions::from_mode(0o666)).unwrap();
     assert!(store.latest().is_none());

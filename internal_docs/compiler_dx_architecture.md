@@ -376,7 +376,7 @@ The logical layout is:
 ```text
 <cache-root>/
   metadata/<compiler-id>/<target-id>/<stdlib-inputs-id>/
-  projects/<workspace-id>/<compiler-id>/generations/<generation-id>/
+  projects-v3/<workspace-id>/<context-id>/generations/<generation-id>
   native/roots/<root-identity>/
   native/targets/<compatible-family-id>/
   native/artifacts/<native-build-id>/
@@ -397,15 +397,22 @@ DX.6 adds per-key dev-metadata ensure and conservative reader protection; DX.8 a
 
 Only DX.13 introduces the full **project** generation protocol below, alongside its first persisted semantic results. Do not implement hard-link inheritance, a graph of shared project records or project-generation garbage collection as an unused DX.3 framework. Share already-proven atomic/locking primitives, not a new cache service. [R3]
 
-1. A writer acquires an OS-backed ownership lock and creates a unique working directory under the destination parent.
-2. It opens a compatible finalized generation with a reader lease, revalidates its inputs, and retains still-needed complete records by immutable reference or hard-link/copy.
-3. Changed records are written as new files. A hard-linked file is never truncated or modified in place.
-4. Record payloads and the complete generation manifest are flushed; directory durability is handled by the supported local filesystem adapter.
-5. The writer finalizes by a same-filesystem atomic publication. A `latest`/workspace pointer is updated separately and is only a hint.
-6. Concurrent completed generations are independently valid only for their recorded inputs. A winner is not trusted merely because its directory exists: validate its manifest, required paths and identity before reuse.
+1. A writer acquires an OS-backed ownership lock and creates a unique private staging file under the destination parent.
+2. It opens a compatible finalized generation with a reader lease, revalidates its current payload bytes, and retains a bounded recent history of complete records.
+3. Each publication contains one new record and its complete history manifest in one immutable bundle. Inherited records name their direct payload-owning bundle; readers never follow a chain of historical manifests. The shared `sifr_compiler_services::project_history` module owns the format and bounds for both driver and editor.
+4. The new payload and manifest are flushed together. Same-filesystem atomic publication and parent-directory durability use the supported storage adapter. The 128-record, 64 MiB history bound and 16 MiB per-record limit remain enforced.
+5. The writer durably replaces the user-cache `latest` pointer only after the bundle is published and validated. The workspace `.sifrbuildinfo` remains an optional atomic discovery hint; it does not require a second durability barrier.
+6. Concurrent completed generations are independently valid only for their recorded inputs. An existing publication is not trusted merely because its path exists: validate its manifest, current payload hashes, ownership and semantic completion before reuse.
 7. The next run ignores incomplete working state. Cleanup removes it only after proving it has no live owner.
 
 Readers keep a lease while they require an entry, including metadata or executables with dependent side files. GC requires exclusive ownership. A lease is a real lock/reference held through the relevant operation, not a PID string or a lock file's mere existence. Define lock ordering and test process death, contention and interrupted acquisition.
+
+Project-history GC holds the writer lease, then takes exclusive leases on idle
+generation candidates before marking references. It retains every payload owner
+named by the latest generation or an actively leased predecessor. An unreadable
+live manifest makes reclamation ambiguous and preserves generation candidates.
+Only after this complete mark may unreferenced candidates be removed. Old
+`projects` namespaces are neither consumed nor reclaimed by the v3 owner.
 
 The supported persistence contract is for qualified local filesystems with working lock/atomic-publication semantics. Arbitrary shared/network filesystem behavior is not guaranteed. Failure to obtain safe project-cache persistence leaves normal uncached semantic computation available with a clear cache status. Required artifact preparation/materialization failures remain actionable errors. These are explicit supported behaviors, not alternative semantic implementations.
 
