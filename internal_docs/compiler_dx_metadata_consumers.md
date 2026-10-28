@@ -648,8 +648,8 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_driver/src/project/package_discovery.rs:172` `package_import_source_diagnostic` | read | layered view + demanded record handles | 191, 192, 194, 195 |
 | `crates/sifr_driver/src/project/package_discovery.rs:242` `package_bare_stdlib_source_diagnostic` | read | layered view + demanded record handles | 242, 243, 253, 257, 294 |
 | `crates/sifr_driver/src/project_cache/interface_reuse.rs:32` `restore` | read, enumerate | layered view + demanded record handles | 38 |
-| `crates/sifr_driver/src/project_cache/mod.rs:69` `check_saved_sources` | read, enumerate | layered view + demanded record handles | 163 |
-| `crates/sifr_driver/src/project_cache/mod.rs:185` `check` | read, enumerate | layered view + demanded record handles | 193 |
+| `crates/sifr_driver/src/project_cache/mod.rs:74` `check_saved_sources` | read, enumerate | layered view + demanded record handles | 168 |
+| `crates/sifr_driver/src/project_cache/mod.rs:190` `check` | read, enumerate | layered view + demanded record handles | 198 |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:31` `compile_stdlib` | read, borrow/retain | layered view + demanded record handles | 31, 35, 39, 40 |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:51` `compile_stdlib_uncached` | read | layered view + demanded record handles | 51, 52 |
 | `crates/sifr_driver/src/stdlib/bootstrap.rs:56` `compile_stdlib_for_context` | read | layered view + demanded record handles | 56, 60, 66 |

@@ -830,3 +830,11 @@ Use the resulting complete cost/failure picture to choose the next macro repair.
 Do not treat separate preparation recovery or D4 acceptance as a full-gate pass.
 Complete phase correctness, coverage, invalidation and repeated timing qualification
 remain required; the480-second complete ordinary gate is still unproven.
+
+The first integrated continuation at25a9d8361 stopped after22.694s before
+preparation because DX.5 consumer documentation retained two stale line anchors
+in `project_cache/mod.rs`. Review of the generated diff confirms only line
+numbers changed; symbols, operations, classifications and payload fields are
+unchanged. Refresh those two documentation rows and run the inventory checker
+and its13 self-tests before retrying. The failed sweep, lane report and all
+blocked categories remain preserved; no main test execution is claimed.
