@@ -25,6 +25,22 @@ from architecture_policy_test_fixtures import (
 
 
 class PolicyFoundationTests(unittest.TestCase):
+    def test_workspace_verification_sources_remain_policy_inputs(self):
+        from rust_policy_sites import rust_sources
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Cargo.toml").write_text(
+                '[workspace]\nmembers = ["verification/tools/contracts"]\n')
+            paths = ("crates/compiler/src/lib.rs",
+                     "verification/tools/contracts/tests/audit.rs",
+                     "verification/tools/contracts/tests/new_audit.rs")
+            for relative in (*paths, "verification/tools/unowned/src/lib.rs",
+                             "verification/tools/contracts/target/generated.rs"):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fn example() {}")
+            self.assertEqual({source.path for source in rust_sources(root)}, set(paths))
+
     def test_binding_patterns_follow_changed_safety_evidence_with_same_fingerprint(self):
         from unsafe_policy_contracts import normalized_obligations
 

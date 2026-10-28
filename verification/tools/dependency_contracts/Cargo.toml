@@ -1,0 +1,17 @@
+[package]
+name = "sifr_dependency_contracts"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dev-dependencies]
+sifr_stdlib_manifest = { workspace = true }
+sifr_sysroot = { workspace = true }
+itertools = { workspace = true }
+serde_json = { workspace = true }
+toml = { workspace = true }
+
+[lints]
+workspace = true

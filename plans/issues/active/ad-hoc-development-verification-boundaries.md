@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: planned; implementation not started
+- Status: in progress; D1 verification test ownership
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -282,3 +282,46 @@ The work is complete when the accepted gate repeatedly meets its target, all req
 - [Verification contracts](/Users/yaseralnajjar/work/sifr/codebase/verification/README.md)
 
 **This is the complete recommended direction: repair the boundaries that create unnecessary work, preserve the guarantees, simplify ownership, and prove the result across real development scenarios.** The remaining uncertainty concerns the final measured runtime and which architectural changes earn their place—not whether the objective warrants substantial work.
+
+## Execution record — 2026-10-28
+
+The user authorized implementation through completion and coherent batches before
+expensive final validation. Intermediate candidates retain affected tests and
+independent review; complete final correctness, coverage and timing qualification
+remain required. This sequencing does not accept the proposed ordinary/expanded
+qualification split in section 11 or waive LOCAL-GATE invalidation scenarios.
+
+### D1 — dependency contract ownership (in progress)
+
+Move the 17 repository dependency integration targets, support code and evidence
+from the production manifest crate to `verification/tools/dependency_contracts`.
+Retain all assertions, private production unit tests, profile enrollment, and
+shared additive compiler configuration. Update policy ownership inventories.
+Do not add path exclusions to production identity hashing.
+
+Acceptance: discover and execute every relocated test; compare emitted profiles;
+show that an audit assertion edit rebuilds its test without recompiling production
+libraries or CLI, while a production input edit still invalidates its consumers.
+Measure complete affected preparation plus execution and CPU, with a target of
+at least 50% lower test-edit cycle cost. Cold reconstruction after confirmed
+cleanup is reported separately and is not an ordinary-cycle speedup.
+
+The retained diagnostic remains failed/incomplete. Its 125-file evidence archive
+was recovered and SHA-256 verified; recovery does not change the test outcomes.
+A separate eight-command Cargo publication probe confirmed that split-filesystem
+outputs cause a fresh Cargo invocation to copy the executable again. A consistent
+filesystem layout retained hardlinks without rewriting fresh executable bytes.
+The cleaned compiler target will therefore be rebuilt as a whole target layout.
+
+
+D1 focused evidence (candidate still under qualification): all 17 relocated targets
+plus the production manifest unit tests passed, 108 tests total with zero ignored
+or failed tests; the retained-target invocation took 4.378 seconds. Cold initial
+compilation took 40.58 seconds but that first invocation failed on a stale owner
+record. A second discovery run exposed the separate manifest-count record; both
+records were corrected without removing assertions. The failed attempts remain
+preserved. All eight delivery profile/mode combinations preserve prior commands
+and configuration counts. The new suite joins the existing additive group.
+Profile validation and 12 crate execution checks passed with pinned tools.
+Rebuild controls, complete affected policy checks and independent review are
+pending; these focused results are not a passing full gate or a measured speedup.

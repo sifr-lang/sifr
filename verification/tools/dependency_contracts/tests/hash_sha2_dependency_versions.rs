@@ -2,9 +2,10 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const RUST_INTEROP_CATALOG: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
+const RUST_INTEROP_CATALOG: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
 
 #[test]
 fn sha2_direct_dependencies_use_one_canonical_stable_release() {

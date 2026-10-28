@@ -2,34 +2,37 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const CATALOG_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
 const ASYNC_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.toml"
 );
 const OPAQUE_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
 );
 const DEMO_HTTP_MANIFEST: &str = include_str!(
-    "../../../verification/areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.toml"
+    "../../../areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.toml"
 );
 
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const ASYNC_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/async_runtime_reqwest/examples/reqwest_loopback_runtime/Cargo.lock"
 );
 const OPAQUE_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
 );
 const DEMO_HTTP_LOCK: &str = include_str!(
-    "../../../verification/areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.lock"
+    "../../../areas/package_management/corpora/demo_repositories/sifr-demo-http/Cargo.lock"
 );
 const DEMO_APP_LOCK: &str = include_str!(
-    "../../../verification/areas/package_management/corpora/demo_repositories/sifr-demo-app/Cargo.lock"
+    "../../../areas/package_management/corpora/demo_repositories/sifr-demo-app/Cargo.lock"
 );
 
-const VENDOR_MANIFEST: &str = include_str!("../../../vendor/reqwest-0.13.5/Cargo.toml");
-const VENDOR_CHECKSUM: &str = include_str!("../../../vendor/reqwest-0.13.5/.cargo-checksum.json");
-const VENDOR_VCS_INFO: &str = include_str!("../../../vendor/reqwest-0.13.5/.cargo_vcs_info.json");
+const VENDOR_MANIFEST: &str = include_str!("../../../../vendor/reqwest-0.13.5/Cargo.toml");
+const VENDOR_CHECKSUM: &str =
+    include_str!("../../../../vendor/reqwest-0.13.5/.cargo-checksum.json");
+const VENDOR_VCS_INFO: &str =
+    include_str!("../../../../vendor/reqwest-0.13.5/.cargo_vcs_info.json");
 
 const REQWEST_VERSION: &str = "0.13.5";
 const REQWEST_PACKAGE_HASH: &str =
@@ -203,7 +206,7 @@ fn approved_transitive_base64_feature_keeps_authenticated_basic_auth_scalar() {
     assert_eq!(dependency["version"].as_str(), Some("0.23"));
     assert!(dependency.get("default-features").is_none());
 
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
     for (path, expected) in [
         (
             "vendor/reqwest-0.13.5/src/util.rs",
@@ -228,7 +231,7 @@ fn approved_transitive_base64_feature_keeps_authenticated_basic_auth_scalar() {
             "{path}: re-evaluate the bounded transitive feature approval"
         );
     }
-    let base64: toml::Value = toml::from_str(include_str!("../../../vendor/base64/Cargo.toml"))
+    let base64: toml::Value = toml::from_str(include_str!("../../../../vendor/base64/Cargo.toml"))
         .test_unwrap("Base64 manifest");
     let defaults = base64["features"]["default"]
         .as_array()

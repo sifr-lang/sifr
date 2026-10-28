@@ -21,17 +21,17 @@ const TRANSITIVE_ITERTOOLS_VERSION: &str = "0.14.0";
 const TRANSITIVE_ITERTOOLS_PACKAGE_HASH: &str =
     "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285";
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const STDLIB_MANIFEST: &str = include_str!("../Cargo.toml");
-const RUFF_MANIFEST: &str = include_str!("../../../third_party/ruff/Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const ITERTOOLS_VENDOR_MANIFEST: &str = include_str!("../../../vendor/itertools/Cargo.toml");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const CONTRACT_MANIFEST: &str = include_str!("../Cargo.toml");
+const RUFF_MANIFEST: &str = include_str!("../../../../third_party/ruff/Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
+const ITERTOOLS_VENDOR_MANIFEST: &str = include_str!("../../../../vendor/itertools/Cargo.toml");
 const ITERTOOLS_VENDOR_CHECKSUM: &str =
-    include_str!("../../../vendor/itertools/.cargo-checksum.json");
+    include_str!("../../../../vendor/itertools/.cargo-checksum.json");
 const TRANSITIVE_ITERTOOLS_VENDOR_MANIFEST: &str =
-    include_str!("../../../vendor/itertools-0.14.0/Cargo.toml");
+    include_str!("../../../../vendor/itertools-0.14.0/Cargo.toml");
 const TRANSITIVE_ITERTOOLS_VENDOR_CHECKSUM: &str =
-    include_str!("../../../vendor/itertools-0.14.0/.cargo-checksum.json");
+    include_str!("../../../../vendor/itertools-0.14.0/.cargo-checksum.json");
 
 #[test]
 fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
@@ -54,14 +54,14 @@ fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
     );
     assert_eq!(string_array(dependency, "features"), ["use_std"]);
 
-    let stdlib: toml::Value =
-        toml::from_str(STDLIB_MANIFEST).test_unwrap("stdlib manifest must parse");
-    let stdlib_dependency = stdlib
+    let contract: toml::Value =
+        toml::from_str(CONTRACT_MANIFEST).test_unwrap("contract manifest must parse");
+    let contract_dependency = contract
         .get("dev-dependencies")
         .and_then(|dependencies| dependencies.get("itertools"))
-        .test_unwrap("stdlib certification must inherit Itertools");
+        .test_unwrap("dependency certification must inherit Itertools");
     assert_eq!(
-        stdlib_dependency
+        contract_dependency
             .get("workspace")
             .and_then(toml::Value::as_bool),
         Some(true)
@@ -182,7 +182,7 @@ fn first_party_lock_edges_use_itertools_0_15() {
         .collect::<Vec<_>>();
     assert_eq!(
         first_party_edges,
-        [("sifr_stdlib_manifest", "itertools 0.15.0")]
+        [("sifr_dependency_contracts", "itertools 0.15.0")]
     );
 }
 

@@ -6,11 +6,10 @@ use serde_json::Value;
 use sifr_stdlib_manifest::{StdlibFeature, try_generated_cargo_dependencies};
 use std::collections::HashSet;
 
-const SNAPSHOT_JSON: &str = include_str!(
-    "../../../verification/areas/stdlib_parity/data/network_http_dependency_snapshots.json"
-);
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const SNAPSHOT_JSON: &str =
+    include_str!("../../../areas/stdlib_parity/data/network_http_dependency_snapshots.json");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 
 fn normalize_sysroot_paths(dependency: String) -> String {
     normalize_path_dependency(

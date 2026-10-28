@@ -2111,12 +2111,12 @@ The optional dependencies in
 retain the certification graph in the workspace lock without enabling it in
 ordinary compiler builds. The standalone Reqwest release anchor is
 [`vendor/reqwest-0.13.4`](../vendor/reqwest-0.13.4/Cargo.toml).
-[`reqwest_dependency_version`](../crates/sifr_stdlib_manifest/tests/reqwest_dependency_version.rs)
+[`reqwest_dependency_version`](../verification/tools/dependency_contracts/tests/reqwest_dependency_version.rs)
 checks that package's version, registry checksum field, upstream commit
 metadata, and canonical provider feature graph, alongside maintained
 declarations and selected locks. It does not build a standalone Reqwest
 runtime or verify every vendored file against its checksum. The separate
-[`rusqlite_dependency_version`](../crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs)
+[`rusqlite_dependency_version`](../verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs)
 check inspects declarations, locks, fixture source, and native-trust entries;
 execution evidence for the savepoint behavior belongs to the opaque-resource
 runtime certification described above.

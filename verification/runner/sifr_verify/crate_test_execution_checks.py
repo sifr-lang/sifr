@@ -81,6 +81,16 @@ class CrateExecutionTests(unittest.TestCase):
             self.assertEqual(call.args[0], [*original[:2], "--no-fail-fast", *original[2:]])
             self.assertIs(call.kwargs["env"], runner.env)
 
+    def test_dependency_contracts_share_the_manifest_configuration(self):
+        for profile in ("create-pr", "merge", "nightly", "release"):
+            for mode in ("smoke", "full"):
+                with self.subTest(profile=profile, mode=mode):
+                    groups = configuration_plan(load_profile(profile), mode)
+                    owner = [g for g in groups if "sifr_stdlib_manifest" in g.ids]
+                    self.assertEqual(len(owner), 1)
+                    self.assertIn("sifr_dependency_contracts", owner[0].ids)
+                    self.assertEqual(sum("sifr_dependency_contracts" in g.ids for g in groups), 1)
+
     def test_every_canonical_plan_preserves_selection_and_native_dispatch(self):
         for profile in ("create-pr", "merge", "nightly", "release"):
             for mode in ("smoke", "full"):

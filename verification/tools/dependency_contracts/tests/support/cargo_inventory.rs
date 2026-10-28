@@ -12,7 +12,7 @@ pub(crate) const REGISTRY: &str = "registry+https://github.com/rust-lang/crates.
 
 pub(crate) fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
+        .join("../../..")
         .canonicalize()
         .unwrap_or_else(|error| panic!("workspace root: {error}"))
 }

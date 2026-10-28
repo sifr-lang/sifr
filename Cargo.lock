@@ -7595,6 +7595,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sifr_dependency_contracts"
+version = "0.0.0"
+dependencies = [
+ "itertools 0.15.0",
+ "serde_json",
+ "sifr_stdlib_manifest",
+ "sifr_sysroot",
+ "toml",
+]
+
+[[package]]
 name = "sifr_diagnostics"
 version = "0.0.0"
 dependencies = [
@@ -8224,8 +8235,6 @@ dependencies = [
 name = "sifr_stdlib_manifest"
 version = "0.0.0"
 dependencies = [
- "itertools 0.15.0",
- "serde_json",
  "sifr_identity",
  "sifr_sysroot",
  "toml",

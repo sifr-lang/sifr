@@ -8,27 +8,29 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
-const SQLITE_RUNTIME_MANIFEST: &str = include_str!("../../sifr_sql_sqlite_runtime/Cargo.toml");
-const SQL_LOCK_MANIFEST: &str = include_str!("../../sifr_sql_dependency_lock/Cargo.toml");
+const CATALOG_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
+const SQLITE_RUNTIME_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_sql_sqlite_runtime/Cargo.toml");
+const SQL_LOCK_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_sql_dependency_lock/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
 );
-const FIXTURE_POLICY: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/fixture.json"
-);
+const FIXTURE_POLICY: &str =
+    include_str!("../../../areas/rust_interop/fixtures/opaque_resource_matrix/fixture.json");
 const MATRIX_POLICY: &str =
-    include_str!("../../../verification/areas/rust_interop/data/rust_interop_fixture_matrix.json");
+    include_str!("../../../areas/rust_interop/data/rust_interop_fixture_matrix.json");
 const FIXTURE_SOURCE: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/src/bridges/resources.rs"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/src/bridges/resources.rs"
 );
 const FIXTURE_TRUST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/sifr.toml"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/sifr.toml"
 );
 
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const FIXTURE_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
 );
 
 const RUSQLITE_VERSION: &str = "0.40.2";
@@ -156,8 +158,8 @@ fn maintained_lock_edges_use_rusqlite_0_40_2() {
             libsqlite.get("checksum").is_none(),
             "a patched path package must not claim the upstream archive checksum"
         );
-        let root: toml::Value =
-            toml::from_str(include_str!("../../../Cargo.toml")).test_unwrap("root Cargo manifest");
+        let root: toml::Value = toml::from_str(include_str!("../../../../Cargo.toml"))
+            .test_unwrap("root Cargo manifest");
         assert_eq!(
             root["patch"]["crates-io"]["libsqlite3-sys"]["path"].as_str(),
             Some("crates/sifr_runtime/third_party/libsqlite3-sys")

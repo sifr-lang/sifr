@@ -23277,175 +23277,175 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(&vendor_root).test_unwrap(\"vendor directory must be readable\") {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "is_dir",
       "site": ".is_dir()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "is_file",
       "site": "if !manifest_path.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "vendored_base64_packages_cover_vendored_and_first_party_lock_edges",
       "operation": "read_to_string",
       "site": "let manifest = fs::read_to_string(&manifest_path).unwrap_or_else(|error| {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "base64_vendor_rejects_extra_versioned_directories_and_authenticates_files",
       "operation": "create_dir_all",
       "site": "fs::create_dir_all(&stale).test_unwrap(\"isolated vendor fixture\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "base64_vendor_rejects_extra_versioned_directories_and_authenticates_files",
       "operation": "write",
       "site": "fs::write(",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs",
+      "path": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs",
       "symbol": "base64_vendor_rejects_extra_versioned_directories_and_authenticates_files",
       "operation": "remove_dir_all",
       "site": "fs::remove_dir_all(&temporary).test_unwrap(\"remove owned synthetic fixture\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs",
+      "path": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs",
       "symbol": "an_extra_untracked_manifest_does_not_enter_live_git_discovery",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&directory).test_unwrap(\"isolated index fixture\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs",
+      "path": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs",
       "symbol": "an_extra_untracked_manifest_does_not_enter_live_git_discovery",
       "operation": "write",
       "site": "std::fs::write(directory.join(\"Cargo.toml\"), \"[workspace]\\n\").test_unwrap(\"tracked manifest\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs",
+      "path": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs",
       "symbol": "an_extra_untracked_manifest_does_not_enter_live_git_discovery",
       "operation": "create_dir",
       "site": "std::fs::create_dir(directory.join(\"untracked\")).test_unwrap(\"untracked directory\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs",
+      "path": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs",
       "symbol": "an_extra_untracked_manifest_does_not_enter_live_git_discovery",
       "operation": "write",
       "site": "std::fs::write(directory.join(\"untracked/Cargo.toml\"), \"[workspace]\\n\")",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs",
+      "path": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs",
       "symbol": "an_extra_untracked_manifest_does_not_enter_live_git_discovery",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(&directory).test_unwrap(\"remove owned index fixture\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs",
       "symbol": "root",
       "operation": "canonicalize",
       "site": ".canonicalize()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs",
       "symbol": "read_toml",
       "operation": "read_to_string",
       "site": "fs::read_to_string(path).unwrap_or_else(|error| panic!(\"{}: {error}\", path.display()));",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs",
       "symbol": "maintained_paths",
       "operation": "is_file",
       "site": "root.join(path).is_file(),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs",
       "symbol": "owner_declares",
       "operation": "is_file",
       "site": "if candidate.is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "selected_release",
       "operation": "read",
       "site": "fs::read(directory.join(\".cargo-checksum.json\")).map_err(|error| error.to_string())?;",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "selected_release",
       "operation": "symlink_metadata",
       "site": "if fs::symlink_metadata(&path)",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "selected_release",
       "operation": "is_symlink",
       "site": ".is_symlink()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "read_dir",
       "site": "for entry in fs::read_dir(root.join(\"vendor\")).map_err(|error| error.to_string())? {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "is_dir",
       "site": ".is_dir()",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs",
       "symbol": "family",
       "operation": "is_file",
       "site": "if !path.join(\"Cargo.toml\").is_file() {",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs",
       "symbol": "inputs",
       "operation": "symlink_metadata",
       "site": "std::fs::symlink_metadata(&absolute)",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs",
       "symbol": "inputs",
       "operation": "is_file",
       "site": ".is_ok_and(|metadata| metadata.file_type().is_file()),",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs",
+      "path": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs",
       "symbol": "inputs",
       "operation": "read",
       "site": "let source = std::fs::read(absolute).unwrap_or_else(|error| panic!(\"{path}: {error}\"));",

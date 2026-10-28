@@ -2,8 +2,8 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 
 #[test]
 fn icu_direct_dependencies_match_latest_stable_versions() {

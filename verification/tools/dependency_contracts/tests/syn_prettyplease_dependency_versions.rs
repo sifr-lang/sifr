@@ -11,34 +11,34 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const CODEGEN_MANIFEST: &str = include_str!("../../sifr_codegen/Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const CODEGEN_MANIFEST: &str = include_str!("../../../../crates/sifr_codegen/Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 
 const VENDORED_RELEASES: &[(&str, &str, &str, &str)] = &[
     (
         "prettyplease",
         "0.3.0",
-        include_str!("../../../vendor/prettyplease/Cargo.toml"),
-        include_str!("../../../vendor/prettyplease/.cargo-checksum.json"),
+        include_str!("../../../../vendor/prettyplease/Cargo.toml"),
+        include_str!("../../../../vendor/prettyplease/.cargo-checksum.json"),
     ),
     (
         "prettyplease",
         "0.2.37",
-        include_str!("../../../vendor/prettyplease-0.2.37/Cargo.toml"),
-        include_str!("../../../vendor/prettyplease-0.2.37/.cargo-checksum.json"),
+        include_str!("../../../../vendor/prettyplease-0.2.37/Cargo.toml"),
+        include_str!("../../../../vendor/prettyplease-0.2.37/.cargo-checksum.json"),
     ),
     (
         "syn",
         "3.0.5",
-        include_str!("../../../vendor/syn/Cargo.toml"),
-        include_str!("../../../vendor/syn/.cargo-checksum.json"),
+        include_str!("../../../../vendor/syn/Cargo.toml"),
+        include_str!("../../../../vendor/syn/.cargo-checksum.json"),
     ),
     (
         "syn",
         "2.0.117",
-        include_str!("../../../vendor/syn-2.0.117/Cargo.toml"),
-        include_str!("../../../vendor/syn-2.0.117/.cargo-checksum.json"),
+        include_str!("../../../../vendor/syn-2.0.117/Cargo.toml"),
+        include_str!("../../../../vendor/syn-2.0.117/.cargo-checksum.json"),
     ),
 ];
 

@@ -10,16 +10,17 @@ const DATAFUSION_VERSION: &str = "55.0.0";
 const DATAFUSION_PACKAGE_HASH: &str =
     "96f76f0167ed0842b29a3d1e41be3c034c0a46409a3a703cc4cc84ee8c24abf4";
 
-const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const CATALOG_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.toml"
 );
 const BRIDGE_SOURCE: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/rust/sifr_arrow_bridge/src/record_batch.rs"
+    "../../../areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/rust/sifr_arrow_bridge/src/record_batch.rs"
 );
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const FIXTURE_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/advanced_data_runtime_matrix/examples/advanced_data_runtime/Cargo.lock"
 );
 
 const ARROW_PACKAGES: &[&str] = &[

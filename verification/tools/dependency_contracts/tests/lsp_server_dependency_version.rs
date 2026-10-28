@@ -2,11 +2,11 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const LSP_MANIFEST: &str = include_str!("../../sifr_lsp/Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const VENDOR_MANIFEST: &str = include_str!("../../../vendor/lsp-server/Cargo.toml");
-const VENDOR_CHECKSUM: &str = include_str!("../../../vendor/lsp-server/.cargo-checksum.json");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const LSP_MANIFEST: &str = include_str!("../../../../crates/sifr_lsp/Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
+const VENDOR_MANIFEST: &str = include_str!("../../../../vendor/lsp-server/Cargo.toml");
+const VENDOR_CHECKSUM: &str = include_str!("../../../../vendor/lsp-server/.cargo-checksum.json");
 
 const LSP_SERVER_VERSION: &str = "0.10.0";
 const LSP_SERVER_PACKAGE_HASH: &str =
