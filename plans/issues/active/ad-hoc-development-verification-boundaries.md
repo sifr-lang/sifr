@@ -953,3 +953,37 @@ four libtest threads, including the subprocess relative-path assertion. Cargo
 preparation took16.73s; total guarded invocation19.492s. Formatting, file-size
 guardrails (4,561 files) and diff checks pass. No concurrency policy is adopted
 yet; whole-category comparison is still required.
+
+#### Integrated discovery and D5 diagnostic checkpoint
+
+The frozen7285 full sweep ended after5253.364s (87m33s), failed/incomplete.
+All17 preparation nodes passed. Ordinary driver execution passed805 tests with
+82 ignored in566.133s; CLI/lowering passed in609.452s. The combined crate category
+hit its1750-second diagnostic cap during generated-driver execution, so its
+remaining cases are incomplete and the final native corpus was blocked. Neither
+is an assertion-failure result. Recover the complete generated-driver category
+and native corpus separately with their own unchanged caps before source sync.
+
+The complete original archive has6663 payloads and SHA-256
+`acf463f3e86d7187e848c425f2116b972cf1ffeca605ef6522264c42a68a96d1`.
+Its creation completed and the execution session was empty with unchanged
+tracked sources. Connectivity failed during transfer; the partial local archive
+is explicitly labeled incomplete and has not passed payload verification.
+
+D5 candidate `a360b871fed11857732dcf583819c47bcf608ad8` completed a local
+four-worker diagnostic in230.43s:797 passed,7 failed,82 ignored. Nested Cargo
+and Rayon each had one worker. Peak sampled process-tree RSS was2.068GiB;
+no reserve violation or remaining child was observed. This is not passing
+qualification or a paired performance comparison. Four failures are existing
+`/bin/true` assumptions in native capture/process-lease tests; one is the native
+snapshot socket fixture exceeding the platform path limit under the diagnostic
+TMPDIR. Owners: those existing test fixtures; no portability repair is included
+in D5. The other two failures are missing local preparation: the attached-API
+fixture's locked `autocfg1.5.1` package and the pinned Python environment.
+Owner: diagnostic environment preparation. Preserve all failures; do not silently
+skip them or substitute this run for the prepared-environment qualification.
+
+Next restore connectivity, verify the full archive locally, finish the controlled
+same-binary CLI probe and capped missing-category recovery at7285, then synchronize
+D5 and run its same-candidate serial/concurrent comparison. Scheduling policy,
+SQL provenance, final gates and480-second timing acceptance remain open.
