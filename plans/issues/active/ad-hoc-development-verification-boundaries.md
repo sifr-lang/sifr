@@ -2,6 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
+- Latest delivery: D5 bounded ordinary driver concurrency; D6 production-input ownership next
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1081,3 +1082,60 @@ Full phase correctness, coverage, invalidation and repeated480-second timing
 qualification remain open. The SQL511.420s independent-clean protocol and native
 build allocation remain macro priorities; do not sum gains across different
 candidates or call these separate category runs an integrated gate pass.
+
+#### D5 closure
+
+Merged [PR #4517](https://github.com/sifr-lang/sifr/pull/4517). Qualified and reviewed
+final candidate `3a9fd8388c622b22ce35fb3047c21b55efa6066a`; normal merge
+`7ae4903dce3531c547c5dbb7bb0e847c6692b04a`. Final input binding passed after canonical
+Cargo preparation, which remained fresh. All3,735 filesystem ownership sites pass.
+The first binding helper failed before tests because its external import path
+omitted the repository; the corrected invocation passes and both are retained.
+
+Independent read-only Claude Opus review: **SATISFIED, no blocking findings**,
+`dev-verify-d5-review-76_kg5dr/response.md`. Evidence archive
+`dev-verify-d5-qualified-evidence.tar.gz` has SHA-256
+`c0a28fc9503db26c27f4bd6092c57a92c4ac21c338869ffff5bc282992c442c7`;
+all52 payloads verified after transfer. All12 local documentation destinations
+resolve. CI is not claimed passing. Follow-ups: ad hoc execution without prior
+preparation compiles the driver with the nested job allocation; document that
+preparation assumption if exposing such an entry point. The child test's libtest
+summary check fails closed if Rust changes its human-readable output format.
+
+### D6 — explicit production inputs and private test ownership (prospective)
+
+The current local-token producer hashes the complete package, and the executable
+aggregate hashes every file under crates. Consequently private assertion edits
+can change production identities and invalidate downstream products even when
+Rust excludes those assertions from production compilation. D1 removed one
+verification-only crate from that namespace; it did not repair this general
+ownership boundary.
+
+Establish positive production input roots for first-party packages using their
+manifests as the ownership authority. Include manifests, build scripts, generated
+source inputs and declared embedded assets. Keep the existing conservative
+toolchain/configuration/dependency identities. Do not derive identity from a
+previous build's dep-info, a Git-only file list, or a blanket test-name exclusion.
+Missing or invalid ownership must fail closed. Source archives must work.
+
+Move private test modules outside production roots while preserving Rust module
+privacy, discovery IDs, assertions, fixtures and snapshot order. Begin with the
+driver and identity ownership boundary, then expand only through verified module
+ownership. Keep distinct build configurations and required native semantics.
+Do not introduce many integration crates or replace native execution with mocks.
+Reconcile the affected policy inventories without changing classifications.
+
+Acceptance requires actual Cargo builds and consumer execution, not just stable
+digests: assertion/shared-test-support and fixture edits rebuild the correct test
+products without changing production identity; production implementation/assets,
+input addition/deletion, features and toolchains still invalidate the required
+products. Compare discovered test identities, all affected focused controls and
+complete driver coverage. Check observed rustc/build-script input paths against
+the declared roots as an independent omission check. Retain cold preparation
+separately from representative edit-cycle timing. Require a material complete
+cycle improvement before adoption, plus exact-candidate independent review.
+
+This item does not yet remove root manifest/lock invalidation or qualify the
+SQL provenance repair. Do not update existing component producer receipts without
+rebuilding their artifacts. Full phase gates, complete coverage/invalidation and
+repeated480-second qualification remain open.
