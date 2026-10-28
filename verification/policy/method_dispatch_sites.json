@@ -57025,7 +57025,7 @@
     },
     {
       "site": "crates/sifr_driver/src/project_cache/dx14_tests.rs::dx14_restored_interface_reports_unavailable_publication::literal-comparison::1",
-      "fingerprint": "829afeaaf7eaee33dff55e8b97308f32f417ae0503f3d49fdca27b9a1b15c11e",
+      "fingerprint": "ae2f47a20a417511a079908aaf872ff94564525a4b9d65d94d13791c10e1d629",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( report . modules . iter ( ) . any ( | module | module . action == \"restored\"",

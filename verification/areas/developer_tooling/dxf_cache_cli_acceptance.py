@@ -133,14 +133,13 @@ def qualify(binary, output, identity, *, environment):
     retained = project("project-retained", ["--dry-run", "--reserve-bytes", maximum])
     assert retained["cache"]["eligible_generations"] == 0
     assert all(path.exists() for path in generations)
-    # Lose both discovery pointers, then recover through a real frontend
-    # publication. The abandoned histories are now genuinely unreferenced.
-    # Bounded-history eviction itself is exercised by the 4,097-publication test.
-    pointers = list(cache.glob("projects-v3/*/*/latest"))
-    assert len(pointers) == 1
-    pointers[0].unlink()
+    # Corrupt the authoritative highest commit, then recover through a real
+    # frontend publication. The abandoned histories become unreferenced.
+    # Bounded-history eviction itself is exercised by all 4,097 publications.
+    head = max(generations, key=lambda path: path.name)
+    head.write_bytes(b"corrupt committed history")
     (workspace / ".sifrbuildinfo").unlink()
-    invoke("seed-after-pointer-loss", ["check", str(source)])
+    invoke("seed-after-head-corruption", ["check", str(source)])
     generations = published_generations()
     assert len(generations) == 3
     before = {str(path): path.read_bytes() for path in cache.rglob("*") if path.is_file()}

@@ -50,6 +50,7 @@ impl Fixture {
         let workspace_id = stamp("project-workspace-v1", &workspace).unwrap();
         let manifest = Manifest {
             schema: crate::project_history::SCHEMA,
+            sequence: 0,
             workspace: workspace_id.clone(),
             context: context.clone(),
             records: vec![record_id.clone()],
@@ -61,7 +62,7 @@ impl Fixture {
                 },
             )]),
         };
-        let generation_id = manifest.identity().unwrap();
+        let generation_id = manifest.generation().unwrap();
         let cache = temp.path().join("cache");
         let projects = cache.join(PROJECTS);
         let namespace = projects.join(&workspace_id);
@@ -90,15 +91,6 @@ impl Fixture {
         )
         .unwrap();
         crate::project_history::write(&generation, &manifest, &bytes).unwrap();
-        write_private(
-            root.join("latest"),
-            serde_json::to_vec(&serde_json::json!({
-                "schema": 1, "workspace": workspace_id,
-                "context": context, "generation": generation_id,
-            }))
-            .unwrap(),
-        )
-        .unwrap();
         Self {
             _temp: temp,
             cache,
@@ -281,20 +273,12 @@ fn saved_reader_loads_inherited_payloads_and_rejects_corruption() {
             length: bytes.len() as u64,
         },
     );
-    let generation_id = manifest.identity().unwrap();
+    manifest.sequence += 1;
+    let generation_id = manifest.generation().unwrap();
     let parent = fixture.generation.parent().unwrap();
     let path = parent.join(&generation_id);
     crate::project_history::write(&path, &manifest, &bytes).unwrap();
     drop(sifr_cache_storage::open_entry_lock(parent, &generation_id, false).unwrap());
-    write_private(
-        parent.parent().unwrap().join("latest"),
-        serde_json::to_vec(&serde_json::json!({
-            "schema": 1, "workspace": fixture.workspace_id, "context": fixture.context,
-            "generation": generation_id,
-        }))
-        .unwrap(),
-    )
-    .unwrap();
     let reader = fixture.load().unwrap();
     assert_eq!(reader.records.len(), 2);
     assert_eq!(

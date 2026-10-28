@@ -65,7 +65,14 @@ pub fn directory(path: &Path) -> io::Result<()> {
                 let mut builder = fs::DirBuilder::new();
                 std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
                 match builder.create(&current) {
-                    Ok(()) => {}
+                    Ok(()) => {
+                        // A durable child publication also needs the newly
+                        // created directory entry to survive in its parent.
+                        let parent = current
+                            .parent()
+                            .ok_or_else(|| invalid("missing directory parent"))?;
+                        File::open(parent)?.sync_all()?;
+                    }
                     Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
                     Err(e) => return Err(e),
                 }

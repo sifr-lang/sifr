@@ -2,6 +2,8 @@
 //! Callers hold the owning generation and namespace leases throughout reads.
 //! This module owns representation/identity bounds, not semantic reuse policy.
 mod bundle;
+mod commit_index;
+pub use commit_index::{generation_key, generation_sequence, latest_generation, next_sequence};
 use serde::{Deserialize, Serialize};
 use sifr_frontend::persistence::identity;
 use std::{
@@ -25,6 +27,7 @@ pub const HISTORY_BYTES: u64 = 64 * 1024 * 1024;
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
     pub schema: u32,
+    pub sequence: u64,
     pub workspace: String,
     pub context: String,
     pub records: Vec<String>,
@@ -52,8 +55,11 @@ impl Manifest {
     pub fn identity(&self) -> io::Result<String> {
         stamp("project-generation-v3", self)
     }
+    pub fn generation(&self) -> io::Result<String> {
+        Ok(format!("{:016x}-{}", self.sequence, self.identity()?))
+    }
     pub fn read(path: &Path, workspace: &str, context: &str, id: &str) -> io::Result<Self> {
-        if !key(id) {
+        if !generation_key(id) {
             return Err(invalid("invalid generation identity"));
         }
         let manifest = bundle::manifest(path)?;
@@ -65,7 +71,7 @@ impl Manifest {
             || manifest.records.iter().collect::<BTreeSet<_>>().len() != manifest.records.len()
             || manifest.payloads.keys().collect::<BTreeSet<_>>()
                 != manifest.records.iter().collect::<BTreeSet<_>>()
-            || manifest.identity()? != id
+            || manifest.generation()? != id
         {
             return Err(invalid("incompatible project generation"));
         }
@@ -76,7 +82,7 @@ impl Manifest {
                 || payload
                     .owner
                     .as_ref()
-                    .is_some_and(|owner| !key(owner) || owner == id)
+                    .is_some_and(|owner| !generation_key(owner) || owner == id)
                 || (payload.owner.is_none() && manifest.records.last() != Some(record))
             {
                 return Err(invalid("invalid project payload reference"));
@@ -95,7 +101,7 @@ impl Manifest {
             .ok_or_else(|| invalid("unknown project record"))?;
         match &payload.owner {
             None => Ok(generation_path.to_path_buf()),
-            Some(owner) if key(owner) => generation_path
+            Some(owner) if generation_key(owner) => generation_path
                 .parent()
                 .map(|parent| parent.join(owner))
                 .ok_or_else(|| invalid("missing generation parent")),
@@ -112,3 +118,6 @@ impl Manifest {
 pub fn write(path: &Path, manifest: &Manifest, bytes: &[u8]) -> io::Result<()> {
     bundle::write(path, manifest, bytes)
 }
+
+#[cfg(test)]
+mod commit_index_tests;

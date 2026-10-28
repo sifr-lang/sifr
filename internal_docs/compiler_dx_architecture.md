@@ -376,7 +376,7 @@ The logical layout is:
 ```text
 <cache-root>/
   metadata/<compiler-id>/<target-id>/<stdlib-inputs-id>/
-  projects-v3/<workspace-id>/<context-id>/generations/<generation-id>
+  projects-v3/<workspace-id>/<context-id>/generations/<sequence>-<manifest-digest>
   native/roots/<root-identity>/
   native/targets/<compatible-family-id>/
   native/artifacts/<native-build-id>/
@@ -400,8 +400,8 @@ Only DX.13 introduces the full **project** generation protocol below, alongside 
 1. A writer acquires an OS-backed ownership lock and creates a unique private staging file under the destination parent.
 2. It opens a compatible finalized generation with a reader lease, revalidates its current payload bytes, and retains a bounded recent history of complete records.
 3. Each publication contains one new record and its complete history manifest in one immutable bundle. Inherited records name their direct payload-owning bundle; readers never follow a chain of historical manifests. The shared `sifr_compiler_services::project_history` module owns the format and bounds for both driver and editor.
-4. The new payload and manifest are flushed together. Same-filesystem atomic publication and parent-directory durability use the supported storage adapter. The 128-record, 64 MiB history bound and 16 MiB per-record limit remain enforced.
-5. The writer durably replaces the user-cache `latest` pointer only after the bundle is published and validated. The workspace `.sifrbuildinfo` remains an optional atomic discovery hint; it does not require a second durability barrier.
+4. The new payload and manifest are flushed together and validated before commit. Same-filesystem atomic rename into the sequence-bearing committed name is the visibility point; parent-directory synchronization completes durability. New Unix directory entries and the immutable namespace owner are synchronized when created. The 128-record, 64 MiB history bound and 16 MiB per-record limit remain enforced.
+5. The immutable bundle is the commit authority; no separate mutable cache pointer is published. Driver and editor select the highest committed sequence, verify its digest/sequence/context and current payloads, and reject an invalid or ambiguous head without rolling back. Head discovery enumerates unpruned directory names with bounded memory. The workspace `.sifrbuildinfo` remains an optional atomic hint and requires no durability barrier.
 6. Concurrent completed generations are independently valid only for their recorded inputs. An existing publication is not trusted merely because its path exists: validate its manifest, current payload hashes, ownership and semantic completion before reuse.
 7. The next run ignores incomplete working state. Cleanup removes it only after proving it has no live owner.
 
@@ -461,10 +461,10 @@ DXF.3 implements explicit project housekeeping under `cache prune-project`.
 A zero reserve (the default), or available bytes meeting the reserve, performs
 no inspection or deletion. Under pressure, cleanup considers recognized entries
 in the exact workspace namespace, preserving its newest valid bounded history,
-leased readers and active writers. An invalid existing latest pointer protects
+leased readers and active writers. An invalid or ambiguous highest committed name protects
 finalized history rather than guessing which generation is current. Only
 writer-serialized stage lock files are reclaimable during live project cleanup;
-generation lock inodes remain permanent. Partial cache pointer scratch is owned
+generation lock inodes remain permanent. Private generation stages are owned
 by that writer. Workspace hint scratch requires a complete matching owner/context
 hint; ambiguous partial hints are preserved.
 

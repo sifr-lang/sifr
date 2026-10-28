@@ -16,6 +16,9 @@ mod package_reuse_tests;
 #[cfg(all(test, unix))]
 mod process_lease;
 mod record_validation;
+
+#[cfg(test)]
+mod commit_tests;
 mod storage;
 #[cfg(test)]
 mod tests;

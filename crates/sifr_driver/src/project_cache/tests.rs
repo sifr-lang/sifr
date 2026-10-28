@@ -148,11 +148,19 @@ fn dx13_c04_unavailable_readonly_and_hintless() {
     assert_eq!(again, fresh);
     fs::set_permissions(file.parent().unwrap(), fs::Permissions::from_mode(0o700)).unwrap();
     let store = store(&cache, &file);
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o500)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o500),
+    )
+    .unwrap();
     fs::write(&file, "def main() -> None:\n    x: int = 2\n").unwrap();
     let (_, report) = run(&cache, &file);
     assert_eq!(report.status, "write-unavailable");
-    fs::set_permissions(&store.root, fs::Permissions::from_mode(0o700)).unwrap();
+    fs::set_permissions(
+        store.root.join("generations"),
+        fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
 }
 #[cfg(unix)]
 #[test]
@@ -357,7 +365,7 @@ fn dx13_process_worker() {
 #[test]
 fn process_death_and_new_process_restore() {
     let (root, file, cache) = fixture();
-    for point in ["before-rename", "after-rename"] {
+    for point in ["before-rename", "after-stage-validation"] {
         let marker = root.path().join(point);
         let mut child = worker(&file, &cache, point, &marker);
         let deadline = Instant::now() + Duration::from_secs(15);
@@ -722,7 +730,9 @@ fn windows_portability_workspace_identity_alias_and_orphan_prune() {
     fs::create_dir(&outside).unwrap();
     fs::write(outside.join("keep"), "intact").unwrap();
 
-    let alias = context.join("latest.stage-10-20");
+    let alias = context
+        .join("generations")
+        .join(format!("0000000000000000-{}.stage-10-20", "b".repeat(64)));
     let status = Command::new("cmd")
         .args(["/C", "mklink", "/J"])
         .arg(&alias)

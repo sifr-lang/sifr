@@ -37,10 +37,10 @@ fn large_records_write_only_the_new_payload_and_bound_retained_history() {
             .sum::<u64>()
             <= 64 * 1024 * 1024
     );
-    let before = fs::read(store.root.join("latest")).unwrap();
+    let before = store.latest().unwrap().path;
     let oversized = vec![b' '; storage::RECORD_LIMIT as usize + 1];
     assert!(store.publish(&oversized, &AtomicBool::new(false)).is_err());
-    assert_eq!(fs::read(store.root.join("latest")).unwrap(), before);
+    assert_eq!(store.latest().unwrap().path, before);
     assert_eq!(store.prune(true, false).unwrap().deleted_generations, 1);
     assert!(latest.records().all(|record| record.is_ok()));
 }

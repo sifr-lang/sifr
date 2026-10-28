@@ -731,3 +731,22 @@ proportional to unpruned directory entries; measure this explicitly with4,097
 unpruned names and bound memory to one selected head. Do not claim constant-time
 head discovery. The existing >=50% complete-history adoption criterion, full
 ordinary-driver contribution, affected qualification and independent review remain.
+
+The local integrated cache sweep executes61 tests:58 pass, two inject publication
+failure into the now-obsolete pointer parent, and the known missing `/bin/true`
+process helper remains unavailable. Move both permission failures to the actual
+`generations` publication directory; their original diagnostic/status assertions
+then pass. The three commit-index controls pass, including4,097 unpruned names.
+The first new commit controls cover successful durable publication before hint
+creation and rejection/preservation of a corrupt or sequence-mismatched head.
+The latest broad local diagnostic is not a full pass.
+
+The new protocol also makes its Unix initialization dependencies explicit:
+synchronize newly created directory entries, the immutable namespace owner, and
+the stable namespace/context/generation lease directory entries before a commit
+can be returned. Empty ownership inodes must survive restart alongside the
+payload. Do not remove those barriers to win the timing comparison. Precommit
+process-death hooks now name stage validation and commit readiness; they still
+assert that interrupted private work is undiscoverable and safely reclaimable.
+The removed mutable-pointer failure injection is replaced with corruption of the
+actual committed head in the real CLI recovery contract.

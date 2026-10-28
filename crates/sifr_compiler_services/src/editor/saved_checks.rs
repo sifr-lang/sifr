@@ -1,7 +1,7 @@
 //! Read-only access to complete driver-published check generations.
 use crate::{
     CompilerContext,
-    project_history::{Manifest, PROJECTS, READER_ADMISSION, key},
+    project_history::{Manifest, PROJECTS, READER_ADMISSION, key, latest_generation},
 };
 use serde::Deserialize;
 use sifr_cache_storage::ProcessLease;
@@ -24,14 +24,6 @@ struct Owner {
     device: u64,
     inode: u64,
     created_ns: u128,
-}
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Hint {
-    schema: u32,
-    workspace: String,
-    context: String,
-    generation: String,
 }
 pub(super) struct Generation {
     records: Vec<CompletedCheck>,
@@ -113,46 +105,25 @@ pub(super) fn load_generation(
     let workspace_id = stamp("project-workspace-v1", &workspace)?;
     let namespace_lease = check_owner(cache, &workspace, &workspace_id)?;
     let root = cache.join(PROJECTS).join(&workspace_id).join(context);
-    let pointer = read(&root, "latest", 4096)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Hint>(&bytes).ok());
-    let hint = read(&workspace, ".sifrbuildinfo", 4096)
-        .ok()
-        .and_then(|bytes| serde_json::from_slice::<Hint>(&bytes).ok());
-    for candidate in pointer.into_iter().chain(hint) {
-        if candidate.schema != 1
-            || candidate.workspace != workspace_id
-            || candidate.context != context
-            || !key(&candidate.generation)
-        {
-            continue;
-        }
-        let parent = root.join("generations");
-        let Ok(admission) = existing_lease(&root, READER_ADMISSION).and_then(ProcessLease::shared)
-        else {
-            continue;
-        };
-        let Ok(generation_lease) = existing_lease(&parent, &candidate.generation) else {
-            continue;
-        };
-        let Ok(generation_lease) = ProcessLease::shared(generation_lease) else {
-            continue;
-        };
-        drop(admission);
-        let path = parent.join(&candidate.generation);
-        let Ok(records) =
-            read_complete_generation(&path, &workspace_id, context, &candidate.generation)
-        else {
-            continue;
-        };
-        return Ok(Generation {
-            records,
-            _namespace_lease: namespace_lease,
-            _generation_lease: generation_lease,
-        });
-    }
-    Err(invalid("no complete project generation"))
+    let parent = root.join("generations");
+    let generation =
+        latest_generation(&parent)?.ok_or_else(|| invalid("no complete project generation"))?;
+    let admission = ProcessLease::shared(existing_lease(&root, READER_ADMISSION)?)?;
+    let generation_lease = ProcessLease::shared(existing_lease(&parent, &generation)?)?;
+    drop(admission);
+    let records = read_complete_generation(
+        &parent.join(&generation),
+        &workspace_id,
+        context,
+        &generation,
+    )?;
+    Ok(Generation {
+        records,
+        _namespace_lease: namespace_lease,
+        _generation_lease: generation_lease,
+    })
 }
+
 pub(super) fn read_complete_generation(
     path: &Path,
     workspace: &str,

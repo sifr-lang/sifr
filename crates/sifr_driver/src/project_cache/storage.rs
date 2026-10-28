@@ -10,7 +10,8 @@ use sifr_cache_storage::ProcessLease;
 #[cfg(test)]
 pub(super) use sifr_compiler_services::project_history::MANIFEST_LIMIT;
 pub(super) use sifr_compiler_services::project_history::{
-    HISTORY_BYTES, Manifest, PROJECTS, Payload, READER_ADMISSION, RECORD_COUNT, RECORD_LIMIT, key,
+    HISTORY_BYTES, Manifest, PROJECTS, Payload, READER_ADMISSION, RECORD_COUNT, RECORD_LIMIT,
+    generation_key, key, latest_generation, next_sequence,
 };
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
@@ -124,30 +125,11 @@ impl Store {
         })
     }
     pub(super) fn latest(&self) -> Option<Generation> {
-        // The workspace hint is optional. An absent/read-only workspace still
-        // discovers the generation through the owner-scoped user cache pointer.
-        let hint = read(&self.workspace_root, ".sifrbuildinfo", 4096)
-            .ok()
-            .filter(|bytes| bytes.len() <= 4096)
-            .and_then(|bytes| serde_json::from_slice::<Hint>(&bytes).ok());
-        let pointer = read(&self.root, "latest", 4096)
-            .ok()
-            .and_then(|bytes| serde_json::from_slice::<Hint>(&bytes).ok());
-        for hint in pointer.into_iter().chain(hint) {
-            if hint.schema == 1
-                && hint.workspace == self.workspace
-                && hint.context == self.context
-                && key(&hint.generation)
-            {
-                if let Ok(generation) = self.generation(&hint.generation) {
-                    return Some(generation);
-                }
-            }
-        }
-        None
+        let head = latest_generation(&self.root.join("generations")).ok()??;
+        self.generation(&head).ok()
     }
     pub(super) fn generation_manifest(&self, id: &str) -> io::Result<Manifest> {
-        if !key(id) {
+        if !generation_key(id) {
             return Err(invalid("invalid generation identity"));
         }
         Manifest::read(
@@ -158,7 +140,10 @@ impl Store {
         )
     }
     fn generation(&self, id: &str) -> io::Result<Generation> {
-        if !key(id) {
+        self.generation_at(id, self.root.join("generations").join(id))
+    }
+    fn generation_at(&self, id: &str, path: PathBuf) -> io::Result<Generation> {
+        if !generation_key(id) {
             return Err(invalid("invalid generation identity"));
         }
         let parent = self.root.join("generations");
@@ -168,8 +153,7 @@ impl Store {
         )?)?;
         let lease = ProcessLease::shared(super::housekeeping::existing_lease(&parent, id)?)?;
         drop(admission);
-        let path = parent.join(id);
-        let manifest = self.generation_manifest(id)?;
+        let manifest = Manifest::read(&path, &self.workspace, &self.context, id)?;
         let generation = Generation {
             path,
             manifest,
@@ -190,7 +174,10 @@ impl Store {
         // Establish admission before publishing any generation. Merely opening
         // an empty store or pruning it must not create writer authority.
         let _admission_file = storage::process_entry_lock(&self.root, READER_ADMISSION)?;
-        let previous = self.latest();
+        let parent = self.root.join("generations");
+        let head = latest_generation(&parent)?;
+        let sequence = next_sequence(head.as_deref())?;
+        let previous = head.as_deref().and_then(|id| self.generation(id).ok());
         if bytes.len() as u64 > RECORD_LIMIT {
             return Err(invalid("project result exceeds limit"));
         }
@@ -232,19 +219,16 @@ impl Store {
         records = retained;
         let manifest = Manifest {
             schema: sifr_compiler_services::project_history::SCHEMA,
+            sequence,
             workspace: self.workspace.clone(),
             context: self.context.clone(),
             records,
             payloads,
         };
-        let generation_id = manifest.identity()?;
-        let parent = self.root.join("generations");
+        let generation_id = manifest.generation()?;
         let destination = parent.join(&generation_id);
-        if destination.exists() {
-            // Never trust an existing publication winner; validate all references.
-            let _winner = self.generation(&generation_id)?;
-            self.point(&generation_id)?;
-            return Ok(generation_id);
+        if destination.symlink_metadata().is_ok() {
+            return Err(invalid("project commit name already exists"));
         }
         // Establish the permanent reader lock before the generation is visible.
         let _generation_lock = storage::process_entry_lock(&parent, &generation_id)?;
@@ -259,15 +243,29 @@ impl Store {
                 return Err(io::Error::other("injected storage full"));
             }
             sifr_compiler_services::project_history::write(&stage, &manifest, bytes)?;
+            #[cfg(unix)]
+            {
+                // A returned commit must remain readable after a restart: its
+                // empty stable lease inodes are authority too. Synchronize their
+                // directory entries before exposing the committed bundle.
+                fs::File::open(self.root.join(".locks"))?.sync_all()?;
+                fs::File::open(parent.join(".locks"))?.sync_all()?;
+            }
             #[cfg(test)]
             super::tests::pause("before-rename");
             cancelled(cancel)?;
+            let _validated = self.generation_at(&generation_id, stage.clone())?;
+            #[cfg(test)]
+            super::tests::pause("after-stage-validation");
+            cancelled(cancel)?;
+            #[cfg(test)]
+            super::tests::pause("before-commit");
+            // The complete immutable bundle is also the commit record. Publish
+            // and synchronize it once; no second mutable pointer needs a flush.
             storage::publish(&stage, &destination)?;
             #[cfg(test)]
-            super::tests::pause("after-rename");
-
-            let _validated = self.generation(&generation_id)?;
-            self.point(&generation_id)?;
+            super::tests::pause("after-commit");
+            self.hint(&generation_id);
             Ok(generation_id.clone())
         })();
         if stage.exists() {
@@ -275,18 +273,15 @@ impl Store {
         }
         result
     }
-    fn point(&self, generation: &str) -> io::Result<()> {
-        let hint = serde_json::to_vec(&Hint {
+    fn hint(&self, generation: &str) {
+        let Ok(hint) = serde_json::to_vec(&Hint {
             schema: 1,
             workspace: self.workspace.clone(),
             context: self.context.clone(),
             generation: generation.into(),
-        })?;
-        let scratch = self.root.join(format!("latest.stage-{}", token()));
-        write_new(&scratch, &hint)?;
-        #[cfg(test)]
-        super::tests::pause("pointer-scratch");
-        storage::publish(&scratch, &self.root.join("latest"))?;
+        }) else {
+            return;
+        };
         // Hint failures never invalidate the complete user-cache generation.
         let scratch = self
             .workspace_root
@@ -295,7 +290,6 @@ impl Store {
             let _ = fs::rename(&scratch, self.workspace_root.join(".sifrbuildinfo"));
             let _ = fs::remove_file(&scratch);
         }
-        Ok(())
     }
     /// Explicit pressure cleanup retains the latest bounded history and leased
     /// predecessors. Evicted older records are permitted to miss.
@@ -312,7 +306,7 @@ impl Generation {
         self.path
             .file_name()
             .and_then(|name| name.to_str())
-            .filter(|name| key(name))
+            .filter(|name| generation_key(name))
             .ok_or_else(|| invalid("invalid generation identity"))
     }
     #[cfg(test)]
@@ -334,7 +328,7 @@ impl Generation {
 
 fn write_advisory_hint(path: &Path, bytes: &[u8]) -> io::Result<()> {
     // This optional discovery hint cannot strengthen the committed cache
-    // pointer. Atomic visibility is sufficient; loss after a crash is a miss.
+    // commit. Atomic visibility is sufficient; loss after a crash is a miss.
     storage::new_private_file(path)?.write_all(bytes)
 }
 
