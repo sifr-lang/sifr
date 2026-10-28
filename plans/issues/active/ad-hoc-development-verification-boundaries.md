@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1, D2 and D4 delivered; D3 integrated discovery and inventory reconciliation
+- Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -839,7 +839,7 @@ unchanged. Refresh those two documentation rows and run the inventory checker
 and its13 self-tests before retrying. The failed sweep, lane report and all
 blocked categories remain preserved; no main test execution is claimed.
 
-#### D3 integrated inventory reconciliation (prospective)
+#### D3 integrated inventory reconciliation (delivered)
 
 The second sweep remains frozen at `7285e1fb34cef95eba226799fc175e71fc0b5078`.
 Its all-category failure continuation exposed integration omissions from D1/D4:
@@ -882,3 +882,35 @@ identities, so updating producer receipts alone would be invalid. Owner: this
 phase's production/verification identity boundary. Keep real artifact rebuilding
 and necessary invalidation until that boundary is repaired and qualified. This
 is separate from the inventory candidate; the complete phase gate stays open.
+
+#### Inventory reconciliation closure — 2026-10-28
+
+Merged [PR #4516](https://github.com/sifr-lang/sifr/pull/4516) with normal merge,
+without an administrative override. Exact qualified/reviewed candidate:
+`371e10b7a40a852ea676ae7420c0f88ffd31ac5f`; merge:
+`e03da58ceef199196cc5380849a08d3939416a5f`.
+
+Pinned focused qualification passed in137.169s: all108 Rust dependency/manifest
+assertions,10 taxonomy unit tests,56 architecture-policy tests without fail-fast,
+strict coverage readiness and negative controls, profile assignment, the complete
+410-site unsafe/ABI inventory, formatting, file-size and diff checks. The metadata
+consumer inventory and its13 tests also pass. An exact record comparison confirms
+all17 moved target records retain order/classification/profile and every other
+package record is unchanged. The audit rename affects three identifiers and one
+message; it changes no assertion. All107 local documentation destinations resolve;
+the final record addition introduced no new links.
+
+Independent read-only Claude Opus review: **SATISFIED; no blocking findings**.
+Evidence: `dev-verify-inventory-review-2pt06der/response.md`, outside the reviewed
+tree. The archive `dev-verify-inventory-evidence.tar.gz` has SHA-256
+`9b5f67944f4899f198338820426942cce8d94f1051b8221a50867f6b94eaf7d7`;
+all82 archived payload hashes were verified. The initial144.280s failed run is
+preserved. CI was still running at merge; this record does not claim CI success.
+
+The complete remote diagnostic remains frozen at7285 while these separately
+qualified repairs are delivered. Its SQL category finished in956.726s, including
+the passing511.420s clean/reused/independent-clean linked build protocol. Component
+provenance failures remain open. Finish the diagnostic, account for every missing
+execution, and use controlled same-binary/context probes to choose the next macro
+improvement. Full phase correctness, coverage, invalidation and repeated480-second
+qualification remain outstanding.
