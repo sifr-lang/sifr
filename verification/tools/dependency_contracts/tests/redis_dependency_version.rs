@@ -5,22 +5,23 @@ use support::TestUnwrap as _;
 const REDIS_VERSION: &str = "1.7.0";
 const REDIS_PACKAGE_HASH: &str = "2acbc41a996f7652b2ddd9dfd98cc4ff602cfd742ae35382f07f608405ab50ed";
 
-const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const CATALOG_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
 const RESOURCE_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.toml"
 );
 const SUBSCRIPTION_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.toml"
 );
 const RESOURCE_BRIDGE: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/src/bridges/resources.rs"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/src/bridges/resources.rs"
 );
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const RESOURCE_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/opaque_resource_matrix/examples/resource_lifecycle_runtime/Cargo.lock"
 );
 const SUBSCRIPTION_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/callback_subscription_ecosystem/examples/subscription_lifecycle_runtime/Cargo.lock"
 );
 
 #[test]

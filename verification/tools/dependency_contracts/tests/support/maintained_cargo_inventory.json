@@ -149,6 +149,7 @@
     "verification/fuzz/project_fixtures/base/beta/Cargo.toml",
     "verification/fuzz/project_fixtures/base/gamma/Cargo.toml",
     "verification/tools/corpus_oracle/Cargo.toml",
+    "verification/tools/dependency_contracts/Cargo.toml",
     "verification/tools/maintainability_builtin_input/Cargo.toml",
     "verification/tools/maintainability_builtin_input/fixtures/Cargo.toml",
     "verification/tools/maintainability_builtin_input/fixtures/field_origin/Cargo.toml",
@@ -360,10 +361,10 @@
     },
     {
       "lock": "Cargo.lock",
-      "owner": "sifr_stdlib_manifest",
+      "owner": "sifr_dependency_contracts",
       "package": "itertools",
       "manifests": [
-        "crates/sifr_stdlib_manifest/Cargo.toml"
+        "verification/tools/dependency_contracts/Cargo.toml"
       ]
     },
     {

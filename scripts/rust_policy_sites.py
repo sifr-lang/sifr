@@ -13,6 +13,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import tomllib
 
 
 @dataclass(frozen=True)
@@ -298,7 +299,14 @@ class Source:
 def rust_sources(root: Path):
     # All first-party crate source/test/build files, excluding bundled native
     # inputs. New crates and files are discovered in a cold checkout.
-    for path in sorted((root / 'crates').rglob('*.rs')):
+    paths = set((root / 'crates').rglob('*.rs'))
+    manifest = root / 'Cargo.toml'
+    if manifest.is_file():
+        members = tomllib.loads(manifest.read_text()).get('workspace', {}).get('members', [])
+        for member in members:
+            if member.startswith('verification/tools/'):
+                paths.update((root / member).rglob('*.rs'))
+    for path in sorted(paths):
         rel = path.relative_to(root).as_posix()
         if any(p in ('target', 'third_party', 'vendor') for p in path.relative_to(root).parts):
             continue

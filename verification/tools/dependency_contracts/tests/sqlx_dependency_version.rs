@@ -2,19 +2,20 @@ mod support;
 
 use support::TestUnwrap as _;
 
-const CATALOG_MANIFEST: &str = include_str!("../../sifr_rust_interop_catalog/Cargo.toml");
+const CATALOG_MANIFEST: &str =
+    include_str!("../../../../crates/sifr_rust_interop_catalog/Cargo.toml");
 const FIXTURE_MANIFEST: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml"
+    "../../../areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.toml"
 );
 const FIXTURE_POLICY: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/ecosystem_backend_certification/fixture.json"
+    "../../../areas/rust_interop/fixtures/ecosystem_backend_certification/fixture.json"
 );
 const MATRIX_POLICY: &str =
-    include_str!("../../../verification/areas/rust_interop/data/rust_interop_fixture_matrix.json");
+    include_str!("../../../areas/rust_interop/data/rust_interop_fixture_matrix.json");
 
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const FIXTURE_LOCK: &str = include_str!(
-    "../../../verification/areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.lock"
+    "../../../areas/rust_interop/fixtures/ecosystem_backend_certification/examples/backend_feature_package/Cargo.lock"
 );
 
 const SQLX_VERSION: &str = "0.9.0";

@@ -12,14 +12,16 @@ mod cargo_vendor;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const DEPENDENCY_PLAN: &str = include_str!("../src/features/dependency_plan.rs");
-const VENDORED_0_4_MANIFEST: &str = include_str!("../../../vendor/num-bigint-0.4.8/Cargo.toml");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
+const DEPENDENCY_PLAN: &str =
+    include_str!("../../../../crates/sifr_stdlib_manifest/src/features/dependency_plan.rs");
+const VENDORED_0_4_MANIFEST: &str = include_str!("../../../../vendor/num-bigint-0.4.8/Cargo.toml");
 const VENDORED_0_4_CHECKSUM: &str =
-    include_str!("../../../vendor/num-bigint-0.4.8/.cargo-checksum.json");
-const VENDORED_0_5_MANIFEST: &str = include_str!("../../../vendor/num-bigint/Cargo.toml");
-const VENDORED_0_5_CHECKSUM: &str = include_str!("../../../vendor/num-bigint/.cargo-checksum.json");
+    include_str!("../../../../vendor/num-bigint-0.4.8/.cargo-checksum.json");
+const VENDORED_0_5_MANIFEST: &str = include_str!("../../../../vendor/num-bigint/Cargo.toml");
+const VENDORED_0_5_CHECKSUM: &str =
+    include_str!("../../../../vendor/num-bigint/.cargo-checksum.json");
 
 #[test]
 fn num_bigint_direct_dependencies_use_the_latest_stable_release() {

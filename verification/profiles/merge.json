@@ -375,6 +375,21 @@
         "executed_in_merge": true
       },
       {
+        "id": "sifr_dependency_contracts",
+        "package": "sifr_dependency_contracts",
+        "command": [
+          "test",
+          "-p",
+          "sifr_dependency_contracts"
+        ],
+        "modes": [
+          "smoke",
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
+      },
+      {
         "id": "sifr_stdlib",
         "package": "sifr_stdlib",
         "command": [

@@ -83532,19 +83532,19 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/src/sources.rs::load_stdlib_sources_reads_physical_sysroot_files enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges::literal-comparison::1",
-      "fingerprint": "8c9804c80b2530e8829271292118659af24e16bf2db6dcbb6dbf6648e1ba0266",
+      "site": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges::literal-comparison::1",
+      "fingerprint": "1b2f9effe35458010b176e137a39f75d69924e6cb47bb134e1eea3ef805bb07c",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if components . next ( ) != Some ( \"base64\" )",
       "inputs": "fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/base64_dependency_version.rs::vendored_base64_packages_cover_vendored_and_first_party_lock_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release::literal-comparison::1",
       "fingerprint": "f42dec7116207fbd00f2496bb012e0da79c11e5031f39b9ad748fa27dbd39001",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83552,11 +83552,11 @@
       "inputs": "fn sha2_direct_dependencies_use_one_canonical_stable_release ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::sha2_direct_dependencies_use_one_canonical_stable_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-comparison::1",
       "fingerprint": "985490a12ec925cc8350b45bbca1535500595890d4dc27aca528eef83e3416e4",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83564,11 +83564,11 @@
       "inputs": "fn first_party_lock_edges_use_sha2_0_11 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-comparison::2",
       "fingerprint": "16f044ab08247ef45d0f667b1012533c4360a9753f0671f5f46eb3f47907c2b2",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83576,11 +83576,11 @@
       "inputs": "fn first_party_lock_edges_use_sha2_0_11 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-match::1",
+      "site": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11::literal-match::1",
       "fingerprint": "a75a255927be199af73040070887fef44711221ef756bc87fd2a3acb86f82b70",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83588,23 +83588,23 @@
       "inputs": "fn first_party_lock_edges_use_sha2_0_11 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/hash_sha2_dependency_versions.rs::first_party_lock_edges_use_sha2_0_11 enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15::literal-comparison::1",
-      "fingerprint": "11c5e286821314bcf815bbfa3b78d3ee30d20c28efe06f183368f928d486f79d",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15::literal-comparison::1",
+      "fingerprint": "e1dde422b98c5ecf8cc7d6ffc225b560a99acae2a957257cc40cc324ee8fb567",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "package_name ( package ) == Some ( \"itertools\" )",
       "inputs": "fn first_party_lock_edges_use_itertools_0_15 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::first_party_lock_edges_use_itertools_0_15 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::1",
       "fingerprint": "e5e91f10ca4e470521e2d3fffed81dfc8644647ff414e10a2dbdeafe8d6f37f6",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83612,11 +83612,11 @@
       "inputs": "fn vendor_contains_current_and_external_transitive_itertools_releases ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::2",
       "fingerprint": "bcb5c94c9e753c41aab00b37cb52d36122fc58805e14003bae077a08151d3495",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83624,11 +83624,11 @@
       "inputs": "fn vendor_contains_current_and_external_transitive_itertools_releases ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases::literal-comparison::3",
       "fingerprint": "05d6e1b5d2dd5d949e34548f7ba4246dabe4cadfbb9ff44c3948eff68547d1d1",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83636,11 +83636,11 @@
       "inputs": "fn vendor_contains_current_and_external_transitive_itertools_releases ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::vendor_contains_current_and_external_transitive_itertools_releases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::1",
       "fingerprint": "be319571fc144d21fdd2163b941a30fcb385ec719aa80a1ed576583dd9fb4f2b",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83648,11 +83648,11 @@
       "inputs": "fn itertools_vendor_files_and_external_0_13_owners_are_authenticated ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::2",
       "fingerprint": "819af31a8fbc59aeca39280fa522828e875b45731c882f7b3d4d387816c3e779",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83660,11 +83660,11 @@
       "inputs": "fn itertools_vendor_files_and_external_0_13_owners_are_authenticated ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::3",
       "fingerprint": "dcdc681e3d80ae845b281174d2edf5ff8b7c00d4883679e3bd7b3769f98e6cd5",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83672,11 +83672,11 @@
       "inputs": "fn itertools_vendor_files_and_external_0_13_owners_are_authenticated ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::4",
+      "site": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated::literal-comparison::4",
       "fingerprint": "622db03866b43ec28d977f5b2ec16893368427ef68bfc3473f41998d6532c6b6",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83684,11 +83684,11 @@
       "inputs": "fn itertools_vendor_files_and_external_0_13_owners_are_authenticated ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/itertools_dependency_version.rs::itertools_vendor_files_and_external_0_13_owners_are_authenticated enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0::literal-comparison::1",
       "fingerprint": "5b920fc24cfd162ec484c128dcad6c3ccf39566ca704d011296d80f97b3ca7c4",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83696,11 +83696,11 @@
       "inputs": "fn first_party_lock_edge_uses_only_lsp_server_0_10_0 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0::literal-comparison::2",
       "fingerprint": "a73b3fa82ca80276a78e1c04df28d336fd9808ce64cb5fbbfa4cd14816586c48",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83708,11 +83708,11 @@
       "inputs": "fn first_party_lock_edge_uses_only_lsp_server_0_10_0 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/lsp_server_dependency_version.rs::first_party_lock_edge_uses_only_lsp_server_0_10_0 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::snapshot_field_strings::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::snapshot_field_strings::literal-comparison::1",
       "fingerprint": "5adbdd1c5aca9ecd27c211d6e710c03d7f8fd02d3945a3f854df932af47a7d92",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83720,11 +83720,11 @@
       "inputs": "fn snapshot_field_strings ( payload : & Value , snapshot_id : & str , field : & str )",
       "outputs": "Vec < String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::snapshot_field_strings enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::snapshot_field_strings enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::snapshot_field_strings enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::snapshot_field_strings enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks::literal-comparison::1",
       "fingerprint": "3284fc2a5ca8e5e952643483b99b1fa4aeb1776438b2b7eb2c44786842946275",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83732,11 +83732,11 @@
       "inputs": "fn network_http_tls_versions_match_latest_stable_locks ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/network_http_dependency_snapshots.rs::network_http_tls_versions_match_latest_stable_locks enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity::literal-comparison::1",
       "fingerprint": "45e72a21edd17d6cae9d8ab24f0f0af226e607c4a9c3b2ceb66ed9b70434acf5",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83744,11 +83744,11 @@
       "inputs": "fn sole_num_bigint_target_must_resolve_to_the_current_registry_identity ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::sole_num_bigint_target_must_resolve_to_the_current_registry_identity enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines::literal-comparison::1",
       "fingerprint": "103703204c7fe27371312a5042bb6678f7e5fc03906ffee8c5fd897282ef1fcc",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83756,11 +83756,11 @@
       "inputs": "fn bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines::literal-comparison::2",
       "fingerprint": "bbe3c7d4e68bb7d2b0274de0b2c02887ee2b80233b5f005855dc1909efe89bc0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83768,11 +83768,11 @@
       "inputs": "fn bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::bigdecimal_and_vendor_sources_keep_their_owned_num_bigint_lines enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release::literal-comparison::1",
       "fingerprint": "37a441f505d611ca8402cd43cb83548fc1f10644c281dfa4ce467bbdedb2e078",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83780,11 +83780,11 @@
       "inputs": "fn assert_vendored_release ( packages : & [ toml :: Value ] , manifest_source : & str , checksum_source : & str , expected_version : & str , )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release::literal-comparison::2",
       "fingerprint": "09b4d72cee2c37e1053ca24a1d3797047dd42412f661fced041a9ec3a94cd0ad",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83792,11 +83792,11 @@
       "inputs": "fn assert_vendored_release ( packages : & [ toml :: Value ] , manifest_source : & str , checksum_source : & str , expected_version : & str , )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/num_bigint_dependency_versions.rs::assert_vendored_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::1",
       "fingerprint": "9ed796e8d11142510ed04fa2d7f1674ca1c63cdee356d8abd8755bfb0099f765",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83804,11 +83804,11 @@
       "inputs": "fn maintained_locks_use_one_current_polars_family ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::2",
       "fingerprint": "fbda459c110d1abfc49f2f032cecb9911d15ba863a1e0c26e95f8f5ef6cff4bf",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83816,11 +83816,11 @@
       "inputs": "fn maintained_locks_use_one_current_polars_family ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family::literal-comparison::3",
       "fingerprint": "242cc8f4b7bd1f1d731e2046eaa4360b855c948b241055c5f9d1230883673646",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83828,11 +83828,11 @@
       "inputs": "fn maintained_locks_use_one_current_polars_family ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/polars_dependency_version.rs::maintained_locks_use_one_current_polars_family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum::literal-comparison::1",
       "fingerprint": "f9cf0ca7f6a73fcf5ca0fcfa3614bd3c7c14cf341bf37f806f93fe7b4ba842c1",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83840,11 +83840,11 @@
       "inputs": "fn maintained_locks_use_current_redis_with_registry_checksum ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/redis_dependency_version.rs::maintained_locks_use_current_redis_with_registry_checksum enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5::literal-comparison::1",
       "fingerprint": "8ca70f40116c89fa01a3723d8f5ad894b0ad26d83a0bee21387f9a66608e3bce",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83852,11 +83852,11 @@
       "inputs": "fn maintained_lock_edges_select_reqwest_0_13_5 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/reqwest_dependency_version.rs::maintained_lock_edges_select_reqwest_0_13_5 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy::literal-comparison::1",
       "fingerprint": "4cd52af19ea2e5a475ce358017dd370631dda60a90abd2d2bebc36cb05582083",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83864,35 +83864,35 @@
       "inputs": "fn maintained_rusqlite_dependencies_use_the_latest_stable_policy ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_rusqlite_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2::literal-comparison::1",
-      "fingerprint": "e30651a77ba0f3b009381769552ecf9905d92dbf41ab548a392bb7170bdd4ec1",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2::literal-comparison::1",
+      "fingerprint": "631e2aad3c76edb45b77c6b2e01c7757236bbc9697cb513ba641092377cefe86",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "owner ) | owner == \"resource-lifecycle-runtime\" ) )",
       "inputs": "fn maintained_lock_edges_use_rusqlite_0_40_2 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2::literal-comparison::2",
-      "fingerprint": "78f54ec64141d0c8960bce7cc78780fdd4a27f921d4ad05f54820bc1d7f1f837",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2::literal-comparison::2",
+      "fingerprint": "51cf5a5f8174595eaad3436b79733ea3822c300e4200bfbd66c1f76ae64216ed",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( dependency [ \"features\" ] . as_array ( ) . test_unwrap ( \"rusqlite features must be an array\" ) . iter ( ) . any ( | feature | feature . as_str ( ) == Some ( \"cache\" ) )",
       "inputs": "fn maintained_lock_edges_use_rusqlite_0_40_2 ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::maintained_lock_edges_use_rusqlite_0_40_2 enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge::literal-comparison::1",
       "fingerprint": "456f8377f063325e2f151e5fa1e79544b769e4e602897498b435c1ee486a7196",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83900,11 +83900,11 @@
       "inputs": "fn lock_edge_contract_rejects_each_missing_required_edge ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::lock_edge_contract_rejects_each_missing_required_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package::literal-comparison::1",
       "fingerprint": "d70dcbf5c4abea5c9a24c4dbb2c81e6de16ec7287215e55258ef418d9f499de1",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83912,11 +83912,11 @@
       "inputs": "fn package < ' a > ( packages : & ' a [ toml :: Value ] , name : & str , version : & str )",
       "outputs": "& ' a toml :: Value",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package::literal-comparison::2",
       "fingerprint": "22acdfc6b61f4de70c10071e3fc6bfb5b382d00c264cb78f81b55b641279f943",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83924,11 +83924,11 @@
       "inputs": "fn package < ' a > ( packages : & ' a [ toml :: Value ] , name : & str , version : & str )",
       "outputs": "& ' a toml :: Value",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rusqlite_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift::literal-comparison::1",
       "fingerprint": "566c011b0c1c3936767fe703abb36e33edc42f51bd1323e7ce2da709f3144494",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83936,11 +83936,11 @@
       "inputs": "fn checksum_audit_rejects_full_version_source_and_checksum_drift ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift::literal-comparison::2",
       "fingerprint": "c6b0a0c00e41eab34c5662603670086fa68f672181c7047c78329709342110aa",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83948,11 +83948,11 @@
       "inputs": "fn checksum_audit_rejects_full_version_source_and_checksum_drift ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/rust_direct_dependency_versions.rs::checksum_audit_rejects_full_version_source_and_checksum_drift enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy::literal-comparison::1",
       "fingerprint": "04ea287050248e2c468e699e6f7ad5a10938c6b7eafbafdecacffcebb5fed606",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83960,11 +83960,11 @@
       "inputs": "fn maintained_sqlx_dependencies_use_the_latest_stable_policy ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::maintained_sqlx_dependencies_use_the_latest_stable_policy enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::assert_package::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::assert_package::literal-comparison::1",
       "fingerprint": "6e53d8b9bcfbb1b219230ab0f316d8839aa684ccc2c3cbea5ed632e33421e332",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83972,11 +83972,11 @@
       "inputs": "fn assert_package ( packages : & [ toml :: Value ] , name : & str , checksum : & str )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::assert_package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::assert_package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::assert_package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::assert_package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::package::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::package::literal-comparison::1",
       "fingerprint": "4d48a14e3a84b325e16678cab3a243fbf70eed05945b4c43349964cc8749e73c",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83984,11 +83984,11 @@
       "inputs": "fn package < ' a > ( packages : & ' a [ toml :: Value ] , name : & str )",
       "outputs": "& ' a toml :: Value",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/sqlx_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/sqlx_dependency_version.rs::package enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges::literal-comparison::1",
       "fingerprint": "7c70b605f8a9434a1d79f7b365aefc750672270a5d5ca9cddf081d98b7120d53",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -83996,11 +83996,11 @@
       "inputs": "fn first_party_edges ( name : & str , version : & str )",
       "outputs": "BTreeSet < ( String , String ) >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges::literal-comparison::2",
       "fingerprint": "0a67051074188f526b8a91a2d6caf9e9e0ff2c0e26a3ce53e0cc3aafd78fc2a3",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84008,11 +84008,11 @@
       "inputs": "fn first_party_edges ( name : & str , version : & str )",
       "outputs": "BTreeSet < ( String , String ) >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_edges.rs::first_party_edges enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::1",
       "fingerprint": "d783dbea2a2dbfb2100f2af47b84462f27780ff04e379cb0464f966b3d53fb9d",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84020,11 +84020,11 @@
       "inputs": "fn select_tracked_paths ( listing : & [ u8 ] , filename : & str , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::2",
       "fingerprint": "d6bc294c8875075426a2f816815342146a15abb7643df874bbd2cb8ed495d6ba",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84032,11 +84032,11 @@
       "inputs": "fn select_tracked_paths ( listing : & [ u8 ] , filename : & str , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths::literal-comparison::3",
       "fingerprint": "07c0d0009b2fd54669217e51349591e99a6b19cd683b374a4cba2bb7c9d0dd67",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84044,11 +84044,11 @@
       "inputs": "fn select_tracked_paths ( listing : & [ u8 ] , filename : & str , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths::literal-match::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths::literal-match::1",
       "fingerprint": "2aab6db47fbfd498ba01dbfa09d6c19bb4700a4aae19954e3c4c2a2b7ea91952",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84056,11 +84056,11 @@
       "inputs": "fn select_tracked_paths ( listing : & [ u8 ] , filename : & str , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::select_tracked_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::maintained_paths::literal-match::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::maintained_paths::literal-match::1",
       "fingerprint": "2226bd7898b87f58a1dfe2b780d796f44fd9c0b3eac51a8f51bccd2f4e409c8a",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84068,11 +84068,11 @@
       "inputs": "fn maintained_paths ( filename : & str )",
       "outputs": "Vec < String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::maintained_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::maintained_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::maintained_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::maintained_paths enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::registry_requirement::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::registry_requirement::literal-comparison::1",
       "fingerprint": "80b36f46d7bee599e3458dfad39eab8847c2326445cd8fd8c005b685af51b171",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84080,11 +84080,11 @@
       "inputs": "fn registry_requirement ( alias : & str , specification : & toml :: Value , )",
       "outputs": "Result < Option < ( String , String ) > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::registry_requirement enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::registry_requirement enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::registry_requirement enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::registry_requirement enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::owner_declares::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::owner_declares::literal-comparison::1",
       "fingerprint": "93ac27ddeb1e90a5b11aa42c5762fa72217d3cb05135072a3fe03a94b5f61999",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84092,11 +84092,11 @@
       "inputs": "fn owner_declares ( path : & str , dependency : & str )",
       "outputs": "bool",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::owner_declares enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_inventory.rs::owner_declares enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::owner_declares enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_inventory.rs::owner_declares enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release::literal-comparison::1",
       "fingerprint": "58e79f3110a4e998f4b4d022ed553b8bbb8139bc36d7c5e64be05cdd1efb4a88",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84104,11 +84104,11 @@
       "inputs": "fn selected_release ( directory : & Path , name : & str , version : & str , hash : & str , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release::literal-comparison::2",
       "fingerprint": "8293208194b0f7d36107a9be622d9515b1fe82a07fede82a5b52bf35e0e40905",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84116,11 +84116,11 @@
       "inputs": "fn selected_release ( directory : & Path , name : & str , version : & str , hash : & str , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release::literal-comparison::3",
       "fingerprint": "0119b6966ee1f0e5bbfe6a940f6be3ec05a8a22893df7a0881249c77bb679312",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84128,11 +84128,11 @@
       "inputs": "fn selected_release ( directory : & Path , name : & str , version : & str , hash : & str , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::selected_release enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::family::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::family::literal-comparison::1",
       "fingerprint": "46e71b2d07d84a3a02f15e5ae8c115128aefb6248fe5cf070bf4f39a68f222b5",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84140,11 +84140,11 @@
       "inputs": "fn family ( root : & Path , name : & str , selected : & [ & str ] , packages : & [ toml :: Value ] , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/cargo_vendor.rs::family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/cargo_vendor.rs::family enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash::literal-comparison::1",
       "fingerprint": "cd1ecec5bb6b7187882cd246403e4d80d957a71a2f7f1819ace4f98b7a7f1df7",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84152,11 +84152,11 @@
       "inputs": "fn changed_lock_cannot_pass_with_only_a_new_input_hash ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash::literal-comparison::2",
       "fingerprint": "2f67f33289b9b51ac7089e20cdc09dca3d33f2a6330dee6e934a367f5e5763a3",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84164,11 +84164,11 @@
       "inputs": "fn changed_lock_cannot_pass_with_only_a_new_input_hash ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graph_tests.rs::changed_lock_cannot_pass_with_only_a_new_input_hash enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::in_scope::literal-match::1",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::in_scope::literal-match::1",
       "fingerprint": "0efe1b1a934931d66727f4d5c1a7b7898c00df5912806e31bdd7eea68645072d",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84176,11 +84176,11 @@
       "inputs": "fn in_scope ( path : & str )",
       "outputs": "bool",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::in_scope enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::in_scope enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::in_scope enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::in_scope enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate::literal-comparison::1",
       "fingerprint": "52a7db30fd5a26e6025bf82f39b281bc385a410fdad0d1457eb5fa232c988919",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84188,11 +84188,11 @@
       "inputs": "fn validate ( policy : & serde_json :: Value , inputs : & BTreeMap < String , Vec < u8 > > , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate::literal-comparison::2",
       "fingerprint": "f34505ea9380445f6e5bd9ad65fdc0588ea327a5cbb8d187cda76735fc16acd0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84200,11 +84200,11 @@
       "inputs": "fn validate ( policy : & serde_json :: Value , inputs : & BTreeMap < String , Vec < u8 > > , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate::literal-comparison::3",
       "fingerprint": "fa024681bb4c3058812fa59c3bb0c5cad44d54bc70b308f740ab6a27401eaad0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84212,11 +84212,11 @@
       "inputs": "fn validate ( policy : & serde_json :: Value , inputs : & BTreeMap < String , Vec < u8 > > , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate::literal-comparison::4",
+      "site": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate::literal-comparison::4",
       "fingerprint": "f85a36deaeca874544c9207d0bec27dce1a3723762ec2814c2b960ef792dd967",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84224,11 +84224,11 @@
       "inputs": "fn validate ( policy : & serde_json :: Value , inputs : & BTreeMap < String , Vec < u8 > > , )",
       "outputs": "Result < BTreeSet < String > , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/pinned_graphs.rs::validate enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::requirement_matches_latest::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::requirement_matches_latest::literal-comparison::1",
       "fingerprint": "45d6bf3ca23a644d7f6dc93c249353c15dcfd35104bce088369b3c49b3c6660e",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84236,11 +84236,11 @@
       "inputs": "fn requirement_matches_latest ( requirement : & str , latest : & str )",
       "outputs": "bool",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::requirement_matches_latest enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::requirement_matches_latest enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::requirement_matches_latest enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/registry_audit.rs::requirement_matches_latest enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums::literal-comparison::1",
       "fingerprint": "985944cd279d7ac394f7fd0367e8d84dc9d8521dc803ee2eb1a21f516c4e6f90",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84248,11 +84248,11 @@
       "inputs": "fn lock_checksums ( audit : & serde_json :: Value , packages : & [ toml :: Value ] , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums::literal-comparison::2",
       "fingerprint": "7ed0c8a28f789d1f450138c680c8dea9c32c450a1f08f81be58a6290bdbe88ba",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84260,11 +84260,11 @@
       "inputs": "fn lock_checksums ( audit : & serde_json :: Value , packages : & [ toml :: Value ] , )",
       "outputs": "Result < ( ) , String >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/support/registry_audit.rs::lock_checksums enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit::literal-comparison::1",
       "fingerprint": "3c4aa55f05f6fffec412de634f94a9f20cbf99e96133c7466e2ac611b6429a98",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84272,11 +84272,11 @@
       "inputs": "fn direct_syntax_dependencies_use_the_latest_stable_unit ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::direct_syntax_dependencies_use_the_latest_stable_unit enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::1",
       "fingerprint": "d3de16146d2947ca49504d8c537bab381da33b67ad946d08186df537335d80e0",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84284,11 +84284,11 @@
       "inputs": "fn syntax_owner_rejects_an_extra_old_direct_edge ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::2",
+      "site": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::2",
       "fingerprint": "1c9e9245da61442c3e5daf64c2a9fc71027a1fc7e181bd451fa61ac6a2c8ee91",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84296,11 +84296,11 @@
       "inputs": "fn syntax_owner_rejects_an_extra_old_direct_edge ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::3",
+      "site": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge::literal-comparison::3",
       "fingerprint": "b3950f0f97d56218b9a3c29cde8677d64316804d17773943dcb3d5471a163bed",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84308,11 +84308,11 @@
       "inputs": "fn syntax_owner_rejects_an_extra_old_direct_edge ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/syn_prettyplease_dependency_versions.rs::syntax_owner_rejects_an_extra_old_direct_edge enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::locked_versions::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::locked_versions::literal-comparison::1",
       "fingerprint": "e493b145540541e60bb2d0b2a5e56f9c27acd6a083541ea682d17ed52295ecd7",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84320,11 +84320,11 @@
       "inputs": "fn locked_versions < ' a > ( packages : & ' a [ toml :: Value ] , name : & str )",
       "outputs": "Vec < & ' a str >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::locked_versions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::locked_versions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::locked_versions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::locked_versions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::package_dependencies::literal-comparison::1",
+      "site": "verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::package_dependencies::literal-comparison::1",
       "fingerprint": "ea96126b40af64328c76be77d7c581001e1b2aaa6deb293aef1b4baa3c19643c",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -84332,8 +84332,8 @@
       "inputs": "fn package_dependencies < ' a > ( packages : & ' a [ toml :: Value ] , name : & str )",
       "outputs": "Vec < & ' a str >",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::package_dependencies enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_stdlib_manifest/tests/text_i18n_icu_dependency_versions.rs::package_dependencies enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::package_dependencies enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: verification/tools/dependency_contracts/tests/text_i18n_icu_dependency_versions.rs::package_dependencies enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_syntax/src/lib.rs::parse_module_exposes_suite_and_tokens::literal-comparison::1",
@@ -85630,6 +85630,42 @@
       "role": "test fixture construction, execution or assertion",
       "caller_admission_relationship": "crates/sifr_sql_tool/tests/native_compiler.rs::direct_worker_finishes_and_idle_cancellation_reaps_it enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "test fixture construction, execution or assertion: crates/sifr_sql_tool/tests/native_compiler.rs::direct_worker_finishes_and_idle_cancellation_reaps_it enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "verification/tools/corpus_oracle/src/lib.rs::full_corpus_exact_emission::literal-comparison::1",
+      "fingerprint": "424aaa51a8da789dac446224facf9a39c85a4a20e49d5128cf015d8eeedc0793",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "let mut paths = std :: fs :: read_dir ( root ) . unwrap ( ) . map ( | entry | entry . unwrap ( ) . path ( ) ) . filter ( | path | path . extension ( ) . is_some_and ( | e | e == \"sifr\" ) ) . collect :: < Vec < _ > > ( )",
+      "inputs": "fn full_corpus_exact_emission ( root : & std :: path :: Path )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "verification/tools/corpus_oracle/src/lib.rs::full_corpus_exact_emission enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: verification/tools/corpus_oracle/src/lib.rs::full_corpus_exact_emission enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "verification/tools/corpus_oracle/src/main.rs::main::literal-comparison::1",
+      "fingerprint": "e59d42a4290d21264db857a00563afc773419074e2ad7f08e604637f4507ba6f",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "args [ 0 ] == \"--version\"",
+      "inputs": "fn main ( )",
+      "outputs": "ExitCode",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "verification/tools/corpus_oracle/src/main.rs::main::literal-comparison::2",
+      "fingerprint": "8403b4192e64056a45802e5037b3d30c281de73ae005ecef5547ef6a4495ba0f",
+      "classification": "compiler-policy",
+      "owner": "compiler-owner",
+      "operation": "args [ 0 ] != \"--fixtures\"",
+      "inputs": "fn main ( )",
+      "outputs": "ExitCode",
+      "role": "select compiler policy by the recorded lexical operation",
+      "caller_admission_relationship": "verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     }
   ]
 }

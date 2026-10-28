@@ -8,9 +8,8 @@ use sifr_stdlib_manifest::{
 };
 use std::collections::HashSet;
 
-const SNAPSHOT_JSON: &str = include_str!(
-    "../../../verification/areas/stdlib_parity/data/concurrency_runtime_dependency_snapshots.json"
-);
+const SNAPSHOT_JSON: &str =
+    include_str!("../../../areas/stdlib_parity/data/concurrency_runtime_dependency_snapshots.json");
 
 fn string_array<'a>(snapshot: &'a Value, field: &str) -> Vec<&'a str> {
     snapshot

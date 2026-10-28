@@ -15,10 +15,10 @@ use std::path::Path;
 
 use support::TestUnwrap as _;
 
-const WORKSPACE_MANIFEST: &str = include_str!("../../../Cargo.toml");
-const WORKSPACE_LOCK: &str = include_str!("../../../Cargo.lock");
-const STDLIB_MANIFEST: &str = include_str!("../../sifr_stdlib/Cargo.toml");
-const VENDORED_MANIFEST: &str = include_str!("../../../vendor/base64/Cargo.toml");
+const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
+const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
+const STDLIB_MANIFEST: &str = include_str!("../../../../crates/sifr_stdlib/Cargo.toml");
+const VENDORED_MANIFEST: &str = include_str!("../../../../vendor/base64/Cargo.toml");
 
 #[test]
 fn base64_direct_dependency_uses_latest_stable_safe_features() {
@@ -94,7 +94,7 @@ fn vendored_base64_packages_cover_vendored_and_first_party_lock_edges() {
         .get("package")
         .and_then(toml::Value::as_array)
         .test_unwrap("workspace lock packages must be an array");
-    let vendor_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
+    let vendor_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../vendor");
     let mut vendored_packages = BTreeSet::new();
     for entry in fs::read_dir(&vendor_root).test_unwrap("vendor directory must be readable") {
         let entry = entry.test_unwrap("vendor entry must be readable");
