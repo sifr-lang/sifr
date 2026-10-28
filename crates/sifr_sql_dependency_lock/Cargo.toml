@@ -49,5 +49,5 @@ wit-bindgen = { workspace = true, optional = true }
 [lints]
 workspace = true
 
-[package.metadata.sifr]
+[package.metadata.sifr-build]
 production-inputs = ["src"]

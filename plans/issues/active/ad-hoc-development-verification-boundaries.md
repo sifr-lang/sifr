@@ -1171,3 +1171,29 @@ and external embedded-asset invalidation with actual consumer execution. Nine
 identity controls are being qualified; complete-driver comparison and independent
 review remain pending. The metadata consumer audit now includes private tests/unit
 sources and has a regression preventing their silent disappearance after relocation.
+
+#### D6 namespace correction and interrupted preparation — 2026-10-29
+
+The initial candidate1f6af6c6 is not qualified. Its first preparation was interrupted
+by an execution-host reboot after the production build, while driver tests were
+still compiling. On return the checkout was clean and retained targets/caches were
+present. Preserve the incomplete logs; no terminal passing receipt exists. This
+also separates the earlier baseline from the new boot for timing interpretation.
+
+The resumed attempt was deliberately cancelled after116.027s, with an empty owned
+session, after code inspection found a namespace conflict: application discovery
+already owns package.metadata.sifr and rejects unknown keys. Compiler build-input
+ownership now uses the separate package.metadata.sifr-build namespace. A focused
+package regression proves compiler metadata does not claim application discovery,
+can coexist with valid application metadata, and cannot weaken rejection of invalid
+application fields. Its source lives outside production roots under tests/unit.
+Nine identity controls pass again after the namespace correction.
+
+Before adoption, run the revised candidate's actual edit cycle and full affected
+coverage. In addition to the historical baseline, use a same-boot causal control:
+temporarily declare the private unit directory as a production input, reproduce
+the assertion-triggered production rebuild, then restore exact manifest/test bytes
+and the original production binary. This isolates the ownership effect without
+attributing host-reboot effects to the implementation. It is a counterfactual
+ownership variant, not a claim to rerun the historical implementation. The complete
+observed-input audit and independent review remain required.

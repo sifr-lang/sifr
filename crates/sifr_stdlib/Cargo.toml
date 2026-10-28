@@ -107,5 +107,5 @@ workspace = true
 [dev-dependencies]
 static_assertions = { workspace = true }
 
-[package.metadata.sifr]
+[package.metadata.sifr-build]
 production-inputs = ["src"]

@@ -47,7 +47,7 @@ fn package_inputs(
     let ownership = data
         .get("package")
         .and_then(|v| v.get("metadata"))
-        .and_then(|v| v.get("sifr"))
+        .and_then(|v| v.get("sifr-build"))
         .ok_or_else(|| io::Error::other("missing production input ownership"))?;
     let inputs = ownership
         .get("production-inputs")

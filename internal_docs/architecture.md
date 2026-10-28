@@ -2,7 +2,7 @@
 
 ## Architecture Scope
 
-- Production compiler identities use the package manifest's `package.metadata.sifr.production-inputs`
+- Production compiler identities use the package manifest's `package.metadata.sifr-build.production-inputs`
   and optional `production-workspace-inputs`. Source roots, build scripts and embedded/generated
   asset inputs are explicit; root Cargo configuration, lock and toolchain identity remain included.
   Private unit modules can live under `tests/unit` and stay inside the same Rust test target through
@@ -1123,7 +1123,7 @@ Management).
 - **Sifr compiler metadata:** `sifr.toml` owns the Sifr package name, edition, compiler requirement, one source root, privacy, aliases, and native trust policy. Source `__init__.sifr` files own public exports. The manifest does not own external dependency resolution or registry credentials.
 - **Package graph:** `crates/sifr_package` consumes `cargo metadata --format-version 1`, normalizes Cargo packages and resolved dependency edges, and derives `SifrPackageGraph` plus `PackageSourceMap` for the normal frontend/lowering/codegen pipeline. Package source-map construction uses the SourceProvider boundary for source-root traversal and `__init__.sifr` API reads, and preserves otherwise legal ambiguous module candidates for import-site `SIFR-IMPORT-0005` diagnostics instead of failing construction as `SIFR-PACKAGE-*`.
 - **Package identity:** package instance identity includes Cargo package id, version, and source identity. Multiple Cargo-selected versions are allowed when each package's direct dependency scope remains unambiguous.
-- **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
+- **Distribution:** a Sifr package is a valid Cargo package carrying `.sifr` source and `[package.metadata.sifr-build] manifest = "sifr.toml"`. Pure Sifr packages include only the canonical Rust marker target; Rust-backed packages must declare and pass backend trust validation.
 - **No Sifr-native lockfile in package-management architecture:** there is no committed `sifr.lock`; reproducibility is derived from `Cargo.toml`, `Cargo.lock`, `sifr.toml`, selected Sifr source, compiler/toolchain inputs, and package feature/selector inputs.
 - **Interop package surfaces:** Python interop consumes externally managed `pyproject.toml`, `uv.lock`, and `.venv` metadata without forking package resolution. Rust interop consumes Cargo dependencies and bridge metadata through declaration-level Cargo integration. Both lanes must lower into the same package graph/import semantics instead of creating alternate resolvers.
 

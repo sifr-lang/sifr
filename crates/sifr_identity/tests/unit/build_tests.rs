@@ -44,20 +44,20 @@ fn production_ownership_requires_complete_valid_explicit_roots() {
     };
     for manifest in [
         "[package]\nname='probe'\n",
-        "[package.metadata.sifr]\nproduction-inputs=['../outside']\n",
-        "[package.metadata.sifr]\nproduction-inputs=['/outside']\n",
-        "[package.metadata.sifr]\nproduction-inputs=['src','src/lib.rs']\n",
-        "[package.metadata.sifr]\nproduction-inputs=['src','missing.asset']\n",
-        "[package.metadata.sifr]\nproduction-inputs=['src',false]\n",
-        "[package.metadata.sifr]\nproduction-inputs=['Cargo.toml','src']\n",
-        "[package.metadata.sifr]\nproduction-inputs=[]\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['../outside']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['/outside']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['src','src/lib.rs']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['src','missing.asset']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['src',false]\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['Cargo.toml','src']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=[]\n",
     ] {
         tree.write("Cargo.toml", manifest);
         assert!(hash().is_err(), "accepted invalid ownership: {manifest}");
     }
     tree.write(
         "Cargo.toml",
-        "[package.metadata.sifr]\nproduction-inputs=['src']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['src']\n",
     );
     let before = hash().unwrap();
     tree.write("tests/unit/assertions.rs", "private assertion");
@@ -66,7 +66,7 @@ fn production_ownership_requires_complete_valid_explicit_roots() {
     assert!(hash().is_err(), "an undeclared build script is not safe");
     tree.write(
         "Cargo.toml",
-        "[package.metadata.sifr]\nproduction-inputs=['src','build.rs']\n",
+        "[package.metadata.sifr-build]\nproduction-inputs=['src','build.rs']\n",
     );
     assert_ne!(before, hash().unwrap());
 }
@@ -84,7 +84,7 @@ fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
         "['crates/owner']",
     ] {
         tree.write("crates/owner/Cargo.toml", &format!(
-            "[package.metadata.sifr]\nproduction-inputs=['src']\nproduction-workspace-inputs={inputs}\n"
+            "[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs={inputs}\n"
         ));
         let mut hash = IdentityEncoder::new("workspace-ownership-test");
         assert!(
@@ -92,7 +92,7 @@ fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
             "accepted invalid workspace ownership: {inputs}"
         );
     }
-    tree.write("crates/owner/Cargo.toml", "[package.metadata.sifr]\nproduction-inputs=['src']\nproduction-workspace-inputs=['shared']\n");
+    tree.write("crates/owner/Cargo.toml", "[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs=['shared']\n");
     let mut hash = IdentityEncoder::new("workspace-ownership-test");
     visit_package(&tree.0, &tree.0.join("crates/owner"), &mut hash).unwrap();
 }
@@ -276,7 +276,7 @@ fn product_source_identity_tracks_sources_independently_of_configuration() {
         "crates/probe/Cargo.toml",
         &format!(
             "[package]\nname='product_identity_probe'\nversion='0.0.0'\nedition='2024'\n\
-             [package.metadata.sifr]\nproduction-inputs=['src','build.rs','semantic-input.txt']\nproduction-workspace-inputs=['shared']\n\
+             [package.metadata.sifr-build]\nproduction-inputs=['src','build.rs','semantic-input.txt']\nproduction-workspace-inputs=['shared']\n\
              [features]\nalternate=[]\n[build-dependencies]\n\
              sifr_identity={{path={:?},features=['build']}}\n",
             identity.to_str().unwrap()
