@@ -6,15 +6,34 @@ use std::{
     os::unix::fs::{MetadataExt, PermissionsExt, symlink},
 };
 
+fn private_root() -> tempfile::TempDir {
+    tempfile::Builder::new()
+        .permissions(Permissions::from_mode(0o700))
+        .tempdir()
+        .unwrap()
+}
+
+fn private_payload(path: &std::path::Path, bytes: &[u8]) {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)
+        .unwrap();
+    file.write_all(bytes).unwrap();
+}
+
 #[test]
 fn payload_handle_binds_bytes_and_metadata_across_path_replacement() {
-    let root = tempfile::tempdir().unwrap();
+    let root = private_root();
     let root = root.path().canonicalize().unwrap();
     let path = root.join("payload");
-    fs::write(&path, b"original").unwrap();
+    private_payload(&path, b"original");
     let (mut file, metadata) = read_owned_payload(&path).unwrap();
     fs::rename(&path, root.join("retained")).unwrap();
-    fs::write(&path, b"replacement").unwrap();
+    private_payload(&path, b"replacement");
     let mut bytes = Vec::new();
     file.read_to_end(&mut bytes).unwrap();
     assert_eq!(bytes, b"original");
@@ -30,12 +49,12 @@ fn payload_handle_binds_bytes_and_metadata_across_path_replacement() {
 
 #[test]
 fn payload_rejects_unsafe_parent_file_symlinks_and_directories() {
-    let root = tempfile::tempdir().unwrap();
+    let root = private_root();
     let root = root.path().canonicalize().unwrap();
     let parent = root.join("private");
-    fs::create_dir(&parent).unwrap();
+    crate::directory(&parent).unwrap();
     let path = parent.join("payload");
-    fs::write(&path, b"private").unwrap();
+    private_payload(&path, b"private");
     read_owned_payload(&path).unwrap();
     fs::set_permissions(&path, Permissions::from_mode(0o666)).unwrap();
     assert!(read_owned_payload(&path).is_err());
@@ -54,7 +73,7 @@ fn payload_rejects_unsafe_parent_file_symlinks_and_directories() {
 #[allow(unsafe_code)]
 fn fifo_payload_is_rejected_without_waiting_for_a_writer() {
     use std::{ffi::CString, os::unix::ffi::OsStrExt};
-    let root = tempfile::tempdir().unwrap();
+    let root = private_root();
     let path = root.path().canonicalize().unwrap().join("fifo");
     let name = CString::new(path.as_os_str().as_bytes()).unwrap();
     // SAFETY: name is a live NUL-terminated path in this test's private directory.

@@ -25792,22 +25792,8 @@
     {
       "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
       "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
-      "operation": "write",
-      "site": "fs::write(&path, b\"original\").unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
-      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
       "operation": "rename",
       "site": "fs::rename(&path, root.join(\"retained\")).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
-      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
-      "operation": "write",
-      "site": "fs::write(&path, b\"replacement\").unwrap();",
       "classification": "output-effect"
     },
     {
@@ -25830,20 +25816,6 @@
       "operation": "canonicalize",
       "site": "let root = root.path().canonicalize().unwrap();",
       "classification": "tooling-input"
-    },
-    {
-      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
-      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
-      "operation": "create_dir",
-      "site": "fs::create_dir(&parent).unwrap();",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
-      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
-      "operation": "write",
-      "site": "fs::write(&path, b\"private\").unwrap();",
-      "classification": "output-effect"
     },
     {
       "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
@@ -26158,6 +26130,13 @@
       "symbol": "dx13_c04_unavailable_readonly_and_hintless",
       "operation": "set_permissions",
       "site": "fs::set_permissions(",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "private_payload",
+      "operation": "open-write",
+      "site": ".open(path)",
       "classification": "output-effect"
     }
   ]

@@ -1,6 +1,16 @@
 use super::{generation_key, latest_generation, next_sequence};
 use std::{fs, time::Instant};
 
+fn private_root() -> tempfile::TempDir {
+    let mut builder = tempfile::Builder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        builder.permissions(fs::Permissions::from_mode(0o700));
+    }
+    builder.tempdir().unwrap()
+}
+
 fn name(sequence: u64, digit: char) -> String {
     format!("{sequence:016x}-{}", digit.to_string().repeat(64))
 }
@@ -25,7 +35,7 @@ fn commit_names_are_canonical_and_sequences_never_wrap() {
 
 #[test]
 fn head_discovery_rejects_ambiguity_and_ignores_noncommitted_names() {
-    let root = tempfile::tempdir().unwrap();
+    let root = private_root();
     assert_eq!(latest_generation(root.path()).unwrap(), None);
     for (sequence, digit) in [(9, 'a'), (1, 'b'), (16, 'c')] {
         fs::write(root.path().join(name(sequence, digit)), []).unwrap();
@@ -42,7 +52,7 @@ fn head_discovery_rejects_ambiguity_and_ignores_noncommitted_names() {
 
 #[test]
 fn head_discovery_handles_4097_unpruned_names() {
-    let root = tempfile::tempdir().unwrap();
+    let root = private_root();
     for sequence in (0..4097).rev() {
         fs::write(root.path().join(name(sequence, 'a')), []).unwrap();
     }

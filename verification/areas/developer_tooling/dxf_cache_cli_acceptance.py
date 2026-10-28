@@ -33,7 +33,7 @@ def qualify(binary, output, identity, *, environment):
     binary, output = binary.resolve(), output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     workspace = output / "workspace"
-    workspace.mkdir()
+    workspace.mkdir(mode=0o700)
     source = workspace / "main.sifr"
     cache = output / "cache"
     native = cache / "native" / "artifacts"
