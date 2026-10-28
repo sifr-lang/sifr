@@ -1,18 +1,22 @@
 //! Successful immutable-record facts, bounded by one storage owner's lifetime.
-//! Every lookup follows a fresh owned-file read and hashes the observed bytes.
-//! Entries retain only identities; payloads, decoded records and failures are not cached.
+//! Every lookup follows a fresh owned-file read. A bounded exact-byte proof or
+//! observed digest ties that read to prior validation; no decoded result is reused.
 use super::storage::{RECORD_COUNT, invalid, stamp};
 use sifr_frontend::persistence::CompletedCheck;
 use sifr_identity::IdentityEncoder;
 use std::{collections::VecDeque, io, sync::Mutex};
 
+const BYTE_BUDGET: usize = 2 * 1024 * 1024;
+
 struct Fact {
     stored: String,
     observed: String,
+    bytes: Option<Box<[u8]>>,
 }
 #[derive(Default)]
 struct Entries {
     facts: VecDeque<Fact>,
+    retained_bytes: usize,
     #[cfg(test)]
     hits: usize,
     #[cfg(test)]
@@ -21,6 +25,7 @@ struct Entries {
 pub(super) struct RecordValidation {
     context: String,
     capacity: usize,
+    byte_budget: usize,
     entries: Mutex<Entries>,
 }
 impl RecordValidation {
@@ -28,25 +33,31 @@ impl RecordValidation {
         Self::with_capacity(context, RECORD_COUNT)
     }
     fn with_capacity(context: String, capacity: usize) -> Self {
+        Self::with_limits(context, capacity, BYTE_BUDGET)
+    }
+    fn with_limits(context: String, capacity: usize, byte_budget: usize) -> Self {
         Self {
             context,
             capacity,
+            byte_budget,
             entries: Mutex::new(Entries::default()),
         }
     }
     pub(super) fn validate(&self, stored: &str, bytes: &[u8], mismatch: &str) -> io::Result<()> {
-        let mut digest = IdentityEncoder::new("project-record-observed-bytes-v1");
-        digest.field("record", bytes);
-        let observed = digest.finish();
+        let mut observed = None;
         let mut entries = self
             .entries
             .lock()
             .map_err(|_| io::Error::other("project record validation owner is poisoned"))?;
-        if let Some(index) = entries
-            .facts
-            .iter()
-            .position(|fact| fact.stored == stored && fact.observed == observed)
-            && let Some(fact) = entries.facts.remove(index)
+        if let Some(index) = entries.facts.iter().position(|fact| {
+            fact.stored == stored
+                && match &fact.bytes {
+                    Some(validated) => validated.as_ref() == bytes,
+                    None => {
+                        fact.observed == *observed.get_or_insert_with(|| observed_digest(bytes))
+                    }
+                }
+        }) && let Some(fact) = entries.facts.remove(index)
         {
             entries.facts.push_back(fact);
             #[cfg(test)]
@@ -79,11 +90,31 @@ impl RecordValidation {
         }
         if self.capacity != 0 {
             while entries.facts.len() >= self.capacity {
-                entries.facts.pop_front();
+                if let Some(fact) = entries.facts.pop_front() {
+                    entries.retained_bytes -= fact.bytes.as_ref().map_or(0, |bytes| bytes.len());
+                }
             }
+            // Keep digest facts even when the byte budget evicts their exact-byte
+            // proofs. Large records retain the existing digest-only validation.
+            let retained = if bytes.len() <= self.byte_budget {
+                let mut retained_bytes = entries.retained_bytes;
+                for fact in &mut entries.facts {
+                    if retained_bytes <= self.byte_budget - bytes.len() {
+                        break;
+                    }
+                    if let Some(previous) = fact.bytes.take() {
+                        retained_bytes -= previous.len();
+                    }
+                }
+                entries.retained_bytes = retained_bytes + bytes.len();
+                Some(bytes.into())
+            } else {
+                None
+            };
             entries.facts.push_back(Fact {
                 stored: stored.to_owned(),
-                observed,
+                observed: observed.unwrap_or_else(|| observed_digest(bytes)),
+                bytes: retained,
             });
         }
         Ok(())
@@ -93,6 +124,12 @@ impl RecordValidation {
         let entries = self.entries.lock().expect("test validation owner");
         (entries.hits, entries.validations, entries.facts.len())
     }
+}
+
+fn observed_digest(bytes: &[u8]) -> String {
+    let mut digest = IdentityEncoder::new("project-record-observed-bytes-v1");
+    digest.field("record", bytes);
+    digest.finish()
 }
 
 #[cfg(test)]

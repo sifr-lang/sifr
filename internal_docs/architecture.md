@@ -2221,6 +2221,12 @@ compiler/metadata/target authority remain pinned.
 Driver-owned project generations retain up to 128 recent immutable records (64 MiB)
 under OS leases, with ordered observation deduplication and at most one filtered
 interface-proof attempt per lookup.
+Each Store-owned record validator retains at most 128 successful identity facts
+and 2 MiB of exact-byte proofs. Every lookup reads the current owned file; equality
+with previously validated bytes avoids rehashing that read. Facts without a byte
+proof use the observed digest, and changed bytes require full stored-identity and
+semantic validation. Byte-proof eviction preserves digest facts. No decoded
+compiler results, failures, or metadata-only freshness proofs are retained here.
 Driver-owned project generations inherit immutable records under OS leases,
 validate complete manifests, and publish atomically. Optional project storage
 failures preserve semantic results. `--no-incremental` disables this project

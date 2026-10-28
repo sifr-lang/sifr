@@ -96,6 +96,109 @@ fn bounded_recency_and_zero_capacity_preserve_validation() {
 }
 
 #[test]
+fn byte_budget_evicts_proofs_without_losing_digest_facts() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let original = fixtures::super_record(&file);
+    let records: Vec<_> = (0..3)
+        .map(|index| {
+            let mut record = original.clone();
+            record
+                .displays
+                .insert(format!("unused-{index}"), "unused".into());
+            encoded(&record)
+        })
+        .collect();
+    let budget = records[0].1.len();
+    assert!(records.iter().all(|(_, bytes)| bytes.len() == budget));
+    let validation =
+        RecordValidation::with_limits(fixtures::context().identity().unwrap(), 2, budget);
+    for (id, bytes) in &records[..2] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+    }
+    {
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, budget);
+        assert!(entries.facts[0].bytes.is_none());
+        assert_eq!(
+            entries.facts[1].bytes.as_deref(),
+            Some(records[1].1.as_slice())
+        );
+    }
+    // The evicted byte proof still permits a digest hit, while corruption of
+    // either representation is rejected and cannot displace a successful fact.
+    for (id, bytes) in &records[..2] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+        let mut changed = bytes.clone();
+        changed[0] = b'[';
+        assert!(validation.validate(id, &changed, "mismatch").is_err());
+    }
+    assert_eq!(validation.stats(), (2, 4, 2));
+    validation
+        .validate(&records[2].0, &records[2].1, "mismatch")
+        .unwrap();
+    let entries = validation.entries.lock().unwrap();
+    assert_eq!(entries.retained_bytes, budget);
+    assert_eq!(entries.facts.len(), 2);
+    assert_eq!(
+        entries.facts.back().unwrap().bytes.as_deref(),
+        Some(records[2].1.as_slice())
+    );
+    assert!(entries.facts.front().unwrap().bytes.is_none());
+}
+
+#[test]
+fn oversized_and_zero_budget_records_keep_digest_validation() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let (id, bytes) = encoded(&fixtures::super_record(&file));
+    for budget in [0, bytes.len() - 1] {
+        let validation =
+            RecordValidation::with_limits(fixtures::context().identity().unwrap(), 2, budget);
+        for _ in 0..2 {
+            validation.validate(&id, &bytes, "mismatch").unwrap();
+        }
+        assert!(
+            validation
+                .validate(&"0".repeat(64), &bytes, "mismatch")
+                .is_err()
+        );
+        assert_eq!(validation.stats(), (1, 2, 1));
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, 0);
+        assert!(entries.facts[0].bytes.is_none());
+    }
+    let disabled =
+        RecordValidation::with_limits(fixtures::context().identity().unwrap(), 0, bytes.len());
+    disabled.validate(&id, &bytes, "mismatch").unwrap();
+    assert_eq!(disabled.entries.lock().unwrap().retained_bytes, 0);
+}
+
+#[test]
+fn count_eviction_releases_byte_budget() {
+    let (_root, file, _cache) = fixtures::fixture();
+    let mut record = fixtures::super_record(&file);
+    let (first_id, first) = encoded(&record);
+    record.displays.insert("unused".into(), "unused".into());
+    let (second_id, second) = encoded(&record);
+    let validation = RecordValidation::with_limits(
+        fixtures::context().identity().unwrap(),
+        1,
+        first.len() + second.len(),
+    );
+    for (id, bytes) in [
+        (&first_id, &first),
+        (&second_id, &second),
+        (&first_id, &first),
+    ] {
+        validation.validate(id, bytes, "mismatch").unwrap();
+        let entries = validation.entries.lock().unwrap();
+        assert_eq!(entries.retained_bytes, bytes.len());
+        assert_eq!(entries.facts.len(), 1);
+        assert_eq!(entries.facts[0].bytes.as_deref(), Some(bytes.as_slice()));
+    }
+    assert_eq!(validation.stats(), (0, 3, 1));
+}
+
+#[test]
 fn generation_keeps_fact_owner_alive_until_last_reader_drops() {
     let (_root, file, cache) = fixtures::fixture();
     assert_eq!(fixtures::run(&cache, &file).1.status, "published");
