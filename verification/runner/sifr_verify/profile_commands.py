@@ -22,12 +22,16 @@ class CommandFailed(Exception):
         self.cause = cause
 
 
-def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Outcome:
+def run_command(command: list[str], *, env: dict[str, str] | None = None, monitor=None) -> Outcome:
     # Prefix every child line, including runner-looking lines. The authoritative
     # events remain emitted solely by the enclosing profile runner.
     pending = {"stdout": "", "stderr": ""}
     deadline = (env or {}).get("SIFR_VERIFY_SAFETY_DEADLINE_SECONDS", "2400")
     progress = CommandProgress(command, REPO_ROOT, os.environ if env is None else env, deadline)
+    def heartbeat(elapsed):
+        if monitor is not None:
+            monitor()
+        progress.heartbeat(elapsed)
     def emit(stream: str, data: bytes) -> None:
         pending[stream] += data.decode("utf-8", errors="replace")
         while "\n" in pending[stream]:
@@ -37,7 +41,7 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
             sys.stdout.flush()
     try:
         with cpu_scope("command", progress.id):
-            outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit, heartbeat=progress.heartbeat,
+            outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit, heartbeat=heartbeat,
                               deadline_seconds=deadline)
     except BaseException as error:
         progress.error(error)

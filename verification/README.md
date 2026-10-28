@@ -206,6 +206,17 @@ The `[sifr-build-allocation]` receipt records requests, override sources, policy
 capacity and resolved allocations. Standalone E2E commands retain their explicit
 worker controls; use the profile runner for capacity-bounded admission.
 
+Ordinary driver libtests share this budget with their nested Cargo and Rayon
+work. The runner samples capacity again before this configuration, bounds
+`RUST_TEST_THREADS` by available slots, and divides nested jobs among the selected
+workers. An explicit smaller thread request is preserved. A libtest
+`--test-threads` flag exceeding admission fails instead of bypassing the budget.
+Preparation retains its compiler allocation. A lost memory reserve during
+execution terminates the owned command and fails the category. The
+`[sifr-driver-test-allocation]` receipt records width and nested jobs. Other
+ordinary crate configurations retain their existing execution policy; generated
+build tests retain their separate native allocation.
+
 Installed metadata public-emission checks use the same resolved slot limit,
 exported by the profile runner as `SIFR_VERIFY_PROCESS_SLOTS`. Each parallel CLI
 uses one Cargo/Rayon worker; direct invocation without a profile allocation runs

@@ -16,15 +16,23 @@ from .preparation import PreparationRun
 from .profile_commands import CommandFailed
 from .profile_runner import ProfileRunner
 from .profiles import load_profile
+from .build_allocation import allocate
+from .driver_test_allocation import allocate_driver_tests
 
 
 class CrateExecutionTests(unittest.TestCase):
+    def setUp(self):
+        capacity = patch("sifr_verify.driver_test_allocation.discover_capacity", return_value=ROOM)
+        capacity.start()
+        self.addCleanup(capacity.stop)
+
     def runner(self, collect):
         runner = ProfileRunner.__new__(ProfileRunner)
         runner.profile = load_profile("merge")
         runner.env = {"CARGO_TARGET_DIR": "/owned/target", "RUST_TEST_THREADS": "1"}
         runner.no_fail_fast = collect
         runner.preparation = None
+        runner.build_allocation = allocate(runner.profile, {}, {}, ROOM)
         return runner
 
     def groups(self):
@@ -110,7 +118,12 @@ class CrateExecutionTests(unittest.TestCase):
                         if collect:
                             expected.insert(2, "--no-fail-fast")
                         self.assertEqual(call.args[0], expected)
-                        self.assertEqual(call.kwargs, {"env": runner.env})
+                        if group.ids == ("sifr_driver_lib",):
+                            _, environment = allocate_driver_tests(runner.build_allocation, runner.env, expected)
+                            self.assertEqual(call.kwargs["env"], environment)
+                            self.assertTrue(callable(call.kwargs["monitor"]))
+                        else:
+                            self.assertEqual(call.kwargs, {"env": runner.env})
                     selected = [g for g in plan if any(s in NATIVE_SUITES for s in g.ids)]
                     self.assertEqual(len(selected), native.call_count)
                     for group, call in zip(selected, native.call_args_list, strict=True):
@@ -172,7 +185,8 @@ class CrateExecutionTests(unittest.TestCase):
 
     def test_terminal_failure_takes_precedence_and_stops_collection(self):
         for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"),
-                         CommandFailed(130, "cancelled"), CommandFailed(2, "spawn-error")):
+                         CommandFailed(130, "cancelled"), CommandFailed(2, "spawn-error"),
+                         CommandFailed(2, "driver_test_capacity")):
             runner = self.runner(True)
             with self.subTest(terminal=terminal), \
                  patch("sifr_verify.profile_runner.configuration_plan", return_value=self.groups()), \

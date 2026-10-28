@@ -987,3 +987,34 @@ Next restore connectivity, verify the full archive locally, finish the controlle
 same-binary CLI probe and capped missing-category recovery at7285, then synchronize
 D5 and run its same-candidate serial/concurrent comparison. Scheduling policy,
 SQL provenance, final gates and480-second timing acceptance remain open.
+
+
+#### Recovery resumed and D5 scheduling prototype
+
+Connectivity is restored. The original discovery archive is now fully downloaded:
+all6,663 payload hashes pass local verification. The incomplete transfer remains
+separately preserved; the completed diagnostic remains failed/incomplete.
+
+The first recovery helper failed before tests because its external script lacked
+an import path. The next attempt was cancelled after424.416s with a clean owned
+session: directly invoking the pinned Python interpreter bypassed the canonical
+`uv run --project verification --locked` entry point. A controlled environment
+comparison found a different PATH, which participates in native toolchain identity;
+the helper selected a new native dependency target. Preserve this diagnostic
+setup failure, its environment comparison and partial build evidence. Restart
+through the canonical entry point without weakening cache identity. This is not
+evidence that the normal gate loses its retained artifacts.
+
+The unqualified D5 prototype bounds only the existing `sifr_driver_lib`
+configuration. It samples current admission capacity, shares slots between
+libtest workers and nested Cargo/Rayon work, preserves smaller explicit requests,
+and stops the owned command if its memory reserve is lost. Other crate selections,
+preparation allocations and generated-test scheduling are unchanged. Default
+adoption remains conditional on the passing same-candidate comparison above.
+
+Local allocation/selection controls pass23 tests. The first combined local
+control attempt failed four process-cancellation checks because the OS rejected
+process-group signals; three are existing progress checks and one is the new
+reserve-monitor integration control. Preserve that failure and qualify these
+checks in the prepared execution environment. No passing cancellation claim is
+made. Formatting, file-size guardrails (4,563 files) and diff checks pass.
