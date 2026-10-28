@@ -616,3 +616,17 @@ against the first prototype. Retained preparation plus execution is 30.171s;
 19.62s is recompilation. This is correctness evidence, not the matched history
 speedup required for adoption. Full affected Linux validation and ordinary
 before/after timing remain pending.
+
+
+At candidate `79feeea8ea4e61fa178d236bd2707b3ee1e23a87`, the real local cache
+CLI contract passes all 36 isolated calls. The full local project-cache run
+executes 55 tests: 53 pass, including all 4,097 publications; the known absent
+`/bin/true` harness failure remains, and the empty-store contract detects that
+admission authority was created during `Store::open`. Correct this by establishing
+the permanent admission inode only under the first writer lease. Empty-store
+opening and pruning remain read-only with respect to writer authority; incomplete
+writer setup grants no reclamation authority. The original pressure/count test
+passes after the correction (0.11s execution, 14.156s with recompilation).
+The editor suite executes four controls: three pass, including admission and
+inherited payloads; the same host-utility failure remains. None of these local
+partial results substitutes for complete Linux qualification.

@@ -113,8 +113,6 @@ impl Store {
         let root = cache.join(PROJECTS).join(&workspace).join(context);
         storage::directory(&root)?;
         storage::directory(&root.join("generations"))?;
-        // Stable admission inode: readers never create ownership authority.
-        let _admission = storage::process_entry_lock(&root, READER_ADMISSION)?;
         Ok(Self {
             root,
             workspace_root,
@@ -188,6 +186,9 @@ impl Store {
     pub(super) fn publish(&self, bytes: &[u8], cancel: &AtomicBool) -> io::Result<String> {
         cancelled(cancel)?;
         let _writer = ProcessLease::exclusive(storage::process_entry_lock(&self.root, "writer")?)?;
+        // Establish admission before publishing any generation. Merely opening
+        // an empty store or pruning it must not create writer authority.
+        let _admission_file = storage::process_entry_lock(&self.root, READER_ADMISSION)?;
         let previous = self.latest();
         if bytes.len() as u64 > RECORD_LIMIT {
             return Err(invalid("project result exceeds limit"));

@@ -206,10 +206,10 @@ pub(super) fn prune_store(
     // Freeze new reader admission while marking. Existing readers retain their
     // generation leases; closing them can only make this mark conservative.
     // This avoids retaining one descriptor per inactive generation.
-    let _admission = ProcessLease::exclusive(existing_lease(
-        &store.root,
-        super::storage::READER_ADMISSION,
-    )?)?;
+    let Ok(admission) = existing_lease(&store.root, super::storage::READER_ADMISSION) else {
+        return Ok(report); // Incomplete writer setup never grants GC authority.
+    };
+    let _admission = ProcessLease::exclusive(admission)?;
     let parent = store.root.join("generations");
     if !safe_path(&parent) {
         return Ok(report);
