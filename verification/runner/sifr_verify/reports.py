@@ -12,6 +12,7 @@ from typing import Any
 
 from .paths import REPO_ROOT
 from .trace_reports import Traces
+from .resource_scopes import ResourceScopes
 from .command_progress import decode_child
 from .profiles import load_profile
 from .area_group_policy import order_area_steps
@@ -194,6 +195,7 @@ def directory_stats(path: Path) -> dict[str, int | str]:
 
 def parse_log(path: Path) -> dict[str, Any]:
     traces = Traces()
+    resources = ResourceScopes()
     lane_steps: list[dict[str, int | str]] = []
     preparation_steps = []
     lane_step_budgets: dict[str, dict[str, int | str]] = {}
@@ -206,6 +208,8 @@ def parse_log(path: Path) -> dict[str, Any]:
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line:
+            continue
+        if resources.add(line):
             continue
         if line.startswith("[sifr-command] ") and traces.add(line):
             continue
@@ -240,6 +244,8 @@ def parse_log(path: Path) -> dict[str, Any]:
         # matching. A decoded child can never enter those authoritative branches.
         child = line.startswith(("[child:stdout] ", "[child:stderr] "))
         line = decode_child(line)
+        if resources.add(line, child=child):
+            continue
         if traces.add(line, child=child):
             continue
         if match := CASE_TIMING_RE.match(line):
@@ -291,6 +297,7 @@ def parse_log(path: Path) -> dict[str, Any]:
 
     return {
         "traces": traces.report(),
+        "resource_scopes": resources.report(),
         "lane_steps": lane_steps,
         "preparation_steps": preparation_steps,
         "lane_step_budgets": lane_step_budgets,
@@ -385,6 +392,7 @@ def summarize(args: argparse.Namespace) -> int:
         "cpu_seconds": cpu_seconds,
         "e2e": e2e_metrics,
         "traces": parsed_log["traces"],
+        "resource_scopes": parsed_log["resource_scopes"],
         "observations": {
             "cache_hit_rate": cache_hit_rate,
             "rebuild_groups": rebuild_groups,

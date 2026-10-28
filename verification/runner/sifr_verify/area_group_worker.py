@@ -5,6 +5,7 @@ import argparse
 import os
 
 from .area_group_policy import PAIR
+from .resource_scopes import cpu_scope
 from .build_allocation import E2E_ENV, positive
 from .profile_runner import ProfileRunner
 from .process_ownership import session_environment
@@ -32,7 +33,8 @@ def main(argv=None):
     # must not replace its prepared context or partition with a new full budget.
     runner.env = environment
     selection = next(item for item in runner.profile["selected_areas"] if item["area"] == args.area)
-    runner.run_area(args.area, list(selection["suites"]))
+    with cpu_scope("area", args.area):
+        runner.run_area(args.area, list(selection["suites"]))
 
 
 if __name__ == "__main__":

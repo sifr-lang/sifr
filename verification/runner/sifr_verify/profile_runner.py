@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
 
+from .resource_scopes import cpu_scope, measure_cpu
 from .build_allocation import E2E_ENV, allocate, extract_overrides
 from .area_group_policy import execution_groups
 from .area_group_execution import run_area_group
@@ -73,7 +74,7 @@ def timed_step(name: str, callback: Callable[[], None]) -> StepResult:
     status = 0
     cause = None
     try:
-        callback()
+        measure_cpu("step", name, callback)
     except CommandFailed as exc:
         print(f"sifr_verify: {exc}", file=sys.stderr)
         status = exc.returncode
@@ -448,18 +449,19 @@ class ProfileRunner:
             start_ms = now_ms()
             case_status = "pass"
             try:
-                if any(suite in NATIVE_SUITES for suite in configuration.ids):
-                    run_native_configuration(
-                        configuration, env=self.env, no_fail_fast=self.no_fail_fast,
-                        corpus_owner_selected=corpus_owner_selected(self.profile),
-                        preparation_complete=(self.preparation is not None
-                            and not self.preparation.fatal_reason
-                            and not self.preparation.missing(("crate_tests",))),
-                    )
-                else:
-                    if self.no_fail_fast:
-                        command.insert(2, "--no-fail-fast")
-                    run_command(command, env=self.env)
+                with cpu_scope("crate_configuration", suite_id):
+                    if any(suite in NATIVE_SUITES for suite in configuration.ids):
+                        run_native_configuration(
+                            configuration, env=self.env, no_fail_fast=self.no_fail_fast,
+                            corpus_owner_selected=corpus_owner_selected(self.profile),
+                            preparation_complete=(self.preparation is not None
+                                and not self.preparation.fatal_reason
+                                and not self.preparation.missing(("crate_tests",))),
+                        )
+                    else:
+                        if self.no_fail_fast:
+                            command.insert(2, "--no-fail-fast")
+                        run_command(command, env=self.env)
             except (CommandFailed, VerificationError) as error:
                 case_status = "fail"
                 if not self.no_fail_fast or (

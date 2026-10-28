@@ -21,6 +21,7 @@ from .installed_emission_checks import policy_checks as installed_emission_check
 from .generated_materialization_checks import policy_checks as generated_materialization_checks
 from .generated_quality_batch_checks import policy_checks as generated_quality_batch_checks
 from .progress_checks import policy_checks as progress_checks
+from .resource_scope_checks import policy_checks as resource_scope_checks
 from .preparation_checks import policy_checks as preparation_checks
 from .python_preparation_checks import policy_checks as python_preparation_checks
 from .build_allocation_checks import policy_checks as build_allocation_checks
@@ -74,6 +75,7 @@ def run_all() -> list[str]:
     checks = [
         ("strict demo freshness ownership and evidence", demo_freshness_checks),
         ("R3 command progress and stage accounting", progress_checks),
+        ("inclusive CPU scope ownership and report isolation", resource_scope_checks),
         ("preparation dependency and failure accounting", preparation_checks),
         ("pinned Python preparation ownership", python_preparation_checks),
         ("compiler and native build allocation checks", build_allocation_checks),
