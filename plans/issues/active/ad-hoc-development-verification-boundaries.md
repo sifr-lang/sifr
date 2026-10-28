@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1 verification test ownership
+- Status: in progress; D1 delivered, D2 preparation and execution boundaries
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -325,3 +325,57 @@ and configuration counts. The new suite joins the existing additive group.
 Profile validation and 12 crate execution checks passed with pinned tools.
 Rebuild controls, complete affected policy checks and independent review are
 pending; these focused results are not a passing full gate or a measured speedup.
+
+
+### D1 closure — 2026-10-28
+
+- Merged [PR #4513](https://github.com/sifr-lang/sifr/pull/4513).
+- Implementation candidate: 6418846ce142a7392c4f9ef45e2cf8a43eb26954.
+- Merge: 6916f48778442aa5825cfd1389465ea832fee453.
+- Matched audit-edit cycle, including CLI preparation and all 108 dependency and
+  manifest tests: **16.435s / 40.125 CPU seconds → 4.857s / 4.449 CPU seconds**,
+  70.45% lower elapsed and 88.91% lower CPU. The same 108 test names executed.
+- Before: 13 production libraries and the CLI rebuilt. After: the audit target
+  rebuilt, production libraries and CLI stayed fresh, and CLI bytes were identical.
+  A production input edit still rebuilt consumers. The original candidate was
+  restored and its 108 tests passed again; no source drift or surviving workers.
+- All 56 affected architecture-policy tests and 12 crate execution checks passed.
+  All eight profile/mode comparisons preserve previous commands and configuration
+  counts. Formatting, file-size, filesystem effects and method policy passed.
+- Independent review: **SATISFIED**, no blocking findings, for the implementation
+  candidate. Evidence is retained outside Git in
+  dev-verify-d1-review-8s4tsc8k/response.md.
+- Verified evidence archive: dev-verify-d1-evidence.tar.gz,
+  SHA-256 dc5ad118579be44f31f6e51ad50186c514799cc345457f3e3e08a604ee1d1957.
+  The earlier inventory failures and diagnostic-helper failure remain preserved.
+- Source-policy discovery now includes workspace verification tools. The three
+  existing corpus-oracle literal sites were intentionally added to its inventory.
+- One-time base/candidate setup differs because workspace manifests and lock
+  ownership changed; it is excluded from the edit-cycle comparison. Cold CLI
+  reconstruction after cleanup took 823.58s and is not ordinary timing evidence.
+- Full-profile CI stopped before preparation because the performance-reference
+  setting was absent. Owner: performance reference admission / CI configuration.
+  It is outside this local correctness item; no full-profile CI pass is claimed.
+
+Follow-up coverage in the phase edit matrix must include shared test-support edits
+and included verification JSON changes, as well as the already required fixture,
+addition/deletion, feature, toolchain and generated-input controls. The focused
+D1 gain does not establish a full-gate runtime.
+
+### D2 — preparation and execution boundaries (in progress)
+
+The next integrated chunk makes prepared compiler ownership explicit and repairs
+segmented Python failure discovery. Consumers must use the admitted product,
+retain required independent runtime/process state, and reject stale, corrupt,
+interrupted or mismatched preparation. Build-behavior tests retain real builds.
+
+An ordinary Python suite failure under requested failure collection must preserve
+its result and allow independent suites to execute. Cancellation, capacity
+failures, abnormal termination, truncation and invalid execution evidence stop
+collection. Failed or missing results never enter passing certification. All
+selected suites must have an observable terminal or unexecuted outcome.
+
+Validate these boundaries with focused positive/negative process tests, then
+execute all Python suites and the paired generated-code contract with retained
+targets. Measure actual producer invocations and full preparation/execution cost.
+Do not waive final phase gates, qualification or the ordinary-gate target.

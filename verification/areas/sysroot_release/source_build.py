@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
-from sifr_binary import resolve_sifr_binary  # noqa: E402
+from sifr_binary import prepare_sifr_binary  # noqa: E402
 
 
 def prepare_source_sifr(root: Path, environment: dict[str, str]) -> Path:
@@ -16,7 +16,7 @@ def prepare_source_sifr(root: Path, environment: dict[str, str]) -> Path:
     env = dict(environment, CARGO_NET_OFFLINE="true")
     print("[sifr-profile-setup] sysroot-source-compiler=canonical-cargo-selection "
           f"target={env.get('CARGO_TARGET_DIR', 'Cargo configuration')}", flush=True)
-    return resolve_sifr_binary(root, env=env)
+    return prepare_sifr_binary(root, env=env)
 
 
 if __name__ == "__main__":

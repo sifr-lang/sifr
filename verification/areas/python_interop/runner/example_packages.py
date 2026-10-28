@@ -28,6 +28,7 @@ if COMMON_ROOT not in sys.path:
 
 # This standalone runner module bootstraps the shared resolver's import directory.
 from sifr_binary import resolve_sifr_binary  # noqa: E402
+from prepared_compiler import REFERENCE_ENV  # noqa: E402
 
 EXAMPLE_TIMEOUT_SECONDS = 600
 
@@ -84,8 +85,9 @@ def run_sifr_launcher_self_test(repo_root: Path) -> None:
             else:
                 os.environ["SIFR_GCQ_BIN"] = previous
             _resolved_sifr_binary.cache_clear()
-    if argv != [str(binary), "run"]:
-        raise SystemExit(f"Python interop launcher ignored profile binary: {argv}")
+    expected = canonical if REFERENCE_ENV in os.environ else binary
+    if argv != [str(expected), "run"]:
+        raise SystemExit(f"Python interop launcher ignored prepared binary: {argv}")
     if "cargo" in argv or "--manifest-path" in argv:
         raise SystemExit(f"Python interop launcher re-entered Cargo: {argv}")
     for case_runner in (_run_case, _run_sifr_command):

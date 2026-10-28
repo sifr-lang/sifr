@@ -7,12 +7,19 @@ import json
 import os
 import sys
 from pathlib import Path
+from prepared_compiler import REFERENCE_ENV, consume_prepared_compiler
+
+PREPARE_COMMAND = ("cargo", "build", "--locked", "-q", "-p", "sifr",
+                   "--bin", "sifr", "--message-format=json")
 
 def resolve_sifr_binary(repo_root: Path, *, explicit_env_var: str | None = None,
                         default_binary: Path | None = None, env: dict[str, str] | None = None) -> Path:
-    """Prepare the exact development candidate; never trust an existing pathname."""
+    """Consume the admitted product, or prepare a standalone development invocation."""
     selected_env = dict(os.environ) if env is None else dict(env)
-    candidate = _prepare(repo_root.resolve(), tuple(sorted(selected_env.items())))
+    if REFERENCE_ENV in selected_env:
+        candidate = consume_prepared_compiler(repo_root, selected_env[REFERENCE_ENV])
+    else:
+        candidate = _prepare(repo_root.resolve(), tuple(sorted(selected_env.items())))
     override = selected_env.get(explicit_env_var) if explicit_env_var else None
     if override:
         selected = Path(override).resolve()
@@ -20,7 +27,7 @@ def resolve_sifr_binary(repo_root: Path, *, explicit_env_var: str | None = None,
         if not selected.is_file() or (
                 selected != candidate.resolve() and _digest(selected) != _digest(candidate)):
             raise RuntimeError(f"compiler override {selected} does not match prepared candidate {candidate}")
-        return selected
+        return candidate if REFERENCE_ENV in selected_env else selected
     return candidate
 
 def _digest(path: Path) -> str:
@@ -29,11 +36,19 @@ def _digest(path: Path) -> str:
 
 @functools.lru_cache(maxsize=8)
 def _prepare(repo_root: Path, environment: tuple[tuple[str, str], ...]) -> Path:
+    return _build(repo_root, environment)
+
+def prepare_sifr_binary(repo_root: Path, *, env: dict[str, str]) -> Path:
+    """Explicit build contract: always enter Cargo, even with an inherited product."""
+    environment = dict(env)
+    environment.pop(REFERENCE_ENV, None)
+    return _build(repo_root.resolve(), tuple(sorted(environment.items())))
+
+def _build(repo_root: Path, environment: tuple[tuple[str, str], ...]) -> Path:
     # Cargo owns freshness including manifests, build-script inputs and flags.
     sys.path.insert(0, str(repo_root / "verification/runner"))
     from sifr_verify.fixture_execution import run_process
-    proc = run_process(["cargo", "build", "--locked", "-q", "-p", "sifr",
-                       "--bin", "sifr", "--message-format=json"], cwd=repo_root, env=dict(environment))
+    proc = run_process(list(PREPARE_COMMAND), cwd=repo_root, env=dict(environment))
     if proc.returncode or proc.cause != "exit" or proc.truncated:
         raise RuntimeError(f"failed to prepare compiler (exit {proc.returncode}):\\n{proc.stderr}")
     executables = []

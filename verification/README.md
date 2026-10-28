@@ -50,6 +50,17 @@ lanes.
 
 ## Development iterations
 
+Profile preparation selects the development compiler through Cargo and publishes
+one immutable copy for that run. Area processes consume it through
+`SIFR_VERIFY_PREPARED_COMPILER`, validate the content-bound manifest and published file identity, and hold a shared lifetime
+lease. Invalid or expired references fail; consumers never silently rebuild.
+The run owner retires the copy after execution, and cleanup waits for remaining
+consumers. A new invocation enters Cargo again. Standalone area invocations still
+prepare through Cargo; tests whose contract requires a build use the explicit
+`prepare_sifr_binary` operation even inside a prepared run. These local lifetime
+locks currently require POSIX, like the local process ownership runner. This is
+artifact reuse within one frozen candidate, not reuse of test results.
+
 Start with the smallest check affected by the edit. The public facade defaults
 to `merge`; choose a profile explicitly when preparing a candidate, rather than
 running the full gate after every local edit.

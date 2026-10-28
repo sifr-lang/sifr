@@ -8,7 +8,8 @@ from pathlib import Path
 
 from .areas import area_by_name
 from .paths import REPO_ROOT
-from .profile_commands import verification_python_command
+from .process_execution import Outcome
+from .profile_commands import CommandFailed, verification_python_command
 from .profile_results import AreaResultError, validate_area_result
 
 
@@ -41,7 +42,8 @@ def run_selected_area(
 
 def run_segmented_python_interop(
     *, suites: list[str], profile_name: str,
-    command_runner: Callable[[list[str]], None],
+    command_runner: Callable[[list[str]], Outcome],
+    no_fail_fast: bool = False,
 ) -> Path:
     """Bound each suite process and certify the complete selection afterward."""
     try:
@@ -62,16 +64,41 @@ def run_segmented_python_interop(
     for part in part_paths:
         part.unlink(missing_ok=True)
     base = verification_python_command("verification/areas/python_interop/runner.py")
-    for suite, part in zip(canonical_suites, part_paths, strict=True):
-        command_runner([*base, "--suite", suite, "--defer-certification",
-                        "--result-json", str(part.relative_to(REPO_ROOT))])
+    first_failure = None
+    outcomes = {suite: "not-run" for suite in canonical_suites}
+    try:
+        for suite, part in zip(canonical_suites, part_paths, strict=True):
+            outcomes[suite] = "incomplete"
+            try:
+                outcome = command_runner([*base, "--suite", suite, "--defer-certification",
+                                          "--result-json", str(part.relative_to(REPO_ROOT))])
+                if outcome.cause != "exit" or outcome.truncated or outcome.returncode != 0:
+                    raise AreaResultError("python_interop child returned invalid execution evidence")
+                validate_area_result(part, area="python_interop", expected_suites=[suite])
+            except CommandFailed as error:
+                outcomes[suite] = "command-failed"
+                if (not no_fail_fast or error.cause not in (None, "exit")
+                        or error.returncode < 0 or getattr(getattr(error, "outcome", None), "truncated", False)):
+                    raise
+                first_failure = first_failure or error
+            else:
+                outcomes[suite] = "result-passed"
+    finally:
+        for suite, status in outcomes.items():
+            print("[sifr-python-suite] " + json.dumps({"suite": suite, "status": status}), flush=True)
+    if first_failure is not None:
+        # Retain every individual result. Failed/missing parts cannot enter the
+        # passing-result combiner or manufacture compiled certification.
+        raise first_failure
     combined = [*base]
     for suite in canonical_suites:
         combined.extend(["--suite", suite])
     for part in part_paths:
         combined.extend(["--combine-suite-result", str(part)])
     combined.extend(["--result-json", str(result_path.relative_to(REPO_ROOT))])
-    command_runner(combined)
+    outcome = command_runner(combined)
+    if outcome.cause != "exit" or outcome.truncated or outcome.returncode != 0:
+        raise AreaResultError("python_interop combiner returned invalid execution evidence")
     payload = validate_area_result(result_path, area="python_interop", expected_suites=suites)
     certification = payload.get("compiled_certification")
     if not isinstance(certification, dict):
