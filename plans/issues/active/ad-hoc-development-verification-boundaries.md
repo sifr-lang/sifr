@@ -577,3 +577,14 @@ lease test harness and is not repaired in D4. Source dependency-direction,
 filesystem-effect inventory/self-tests, formatting, and file-size checks pass.
 A first dependency-direction attempt lacked non-host registry metadata; fetching
 the locked metadata repaired setup without changing the lockfile.
+
+
+The consumer audit also includes cache CLI ownership inspection and both DX.13
+and DXF CLI acceptance scripts. Disabled-reuse checks now hash actual project
+bundles (with a nonempty assertion), rather than vacuously finding no old
+`manifest.json` files. CLI pruning first proves referenced payload owners are
+protected, then removes both discovery pointers and performs another real
+frontend publication to make abandoned histories eligible. It preserves dry-run,
+actual reclamation, idempotence, post-prune checking and orphan-namespace checks;
+no cache metadata is fabricated. Count-bound eviction remains covered by the
+existing complete history and live-reader tests.

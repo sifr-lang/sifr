@@ -72,11 +72,15 @@ def run(binary, output, compiler_profile, source_root):
     assert stats["restored_checks"] == 1 and reverted.diagnostics == bad.diagnostics
     report["cases"]["diagnostic-edits"] = "error/fix/revert agrees with independent source expectations"
     main.write_text(GOOD)
-    manifest_before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in cache.rglob("manifest.json")}
+    projects = cache / "projects-v3"
+    project_before = {str(path): hashlib.sha256(path.read_bytes()).hexdigest()
+                      for path in projects.rglob("*") if path.is_file()}
+    assert project_before, "disabled-reuse control requires actual project publications"
     disabled, stats = invoke("reuse-disabled-disabled", ["--no-incremental", *args])
     assert stats["status"] == "disabled" and stats["restored_checks"] == 0 and disabled.diagnostics == fresh.diagnostics
-    manifest_after = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in cache.rglob("manifest.json")}
-    assert manifest_before == manifest_after
+    project_after = {str(path): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in projects.rglob("*") if path.is_file()}
+    assert project_before == project_after
     (workspace / ".sifrbuildinfo").unlink()
     _, stats = invoke("reuse-disabled-no-hint", args)
     assert stats["restored_checks"] == 1
@@ -86,7 +90,6 @@ def run(binary, output, compiler_profile, source_root):
     assert emitted.stdout == uncached_emit.stdout and "fn main" in emitted.stdout
     report["cases"]["typed-families"] = "missing typed/codegen families computed by normal emit"
     # Optional project storage cannot turn valid source into a language error.
-    projects = cache / "projects"
     held_projects = cache / "projects-held"
     projects.rename(held_projects)
     projects.write_text("inaccessible project namespace")
