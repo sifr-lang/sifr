@@ -85369,7 +85369,7 @@
     },
     {
       "site": "crates/sifr_identity/tests/unit/build_tests.rs::product_source_identity_tracks_sources_independently_of_configuration::literal-match::1",
-      "fingerprint": "40b7d2fdc68a2fcb74dafd48ef26aab5818d591ceddabdf5cfe7447d92626eec",
+      "fingerprint": "725b83a227b53335a16c40d23afca22604250dea4da67d4ea66428172751735a",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( name_text . as_ref ( ) , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
@@ -85657,7 +85657,7 @@
     },
     {
       "site": "crates/sifr_identity/src/production_inputs.rs::package_inputs::literal-comparison::1",
-      "fingerprint": "f8695c751c46476fe50948128aa31caa337cd7f754db2a86bb84b81faf091a4f",
+      "fingerprint": "9753ac062a7b28449e3008d387904f29b8217ad4108fc207ed25bf6f06187fb1",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "path == Path :: new ( \"Cargo.toml\" )",

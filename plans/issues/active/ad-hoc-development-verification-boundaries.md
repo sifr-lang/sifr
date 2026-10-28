@@ -1230,10 +1230,19 @@ attempt with1.98.0 was correctly rejected by the minimum Rust version. Both fail
 attempts remain preserved beside the successful controls. These isolated experiments
 do not change the project's pinned qualification toolchain.
 
-Only documentation corrections follow this runtime candidate: the architecture's
-application package example must remain `package.metadata.sifr`, distinct from
-compiler build ownership `package.metadata.sifr-build`, plus this execution record.
-Bind final review to the final commit and retain the actual runtime candidate;
-reuse affected runtime evidence only after verifying all non-documentation inputs
-are identical. Complete generated execution, shared-helper/fixture edit controls,
+No compiler, test, fixture or build inputs change after this runtime candidate.
+The final correction retains `package.metadata.sifr` for the application package
+example, distinct from compiler build ownership `package.metadata.sifr-build`.
+A final policy check exposed two stale method-inventory fingerprints after the
+namespace correction. Only those fingerprints are refreshed: the reviewed lexical
+operations, classifications, owners and obligations remain identical. The method
+inventory check now passes6,458 sites and235 reviewed nodes; the original failure
+is preserved. Final format, file size, unsafe, filesystem and metadata checks also
+pass (4,567 files,410 unsafe sites and3,742 filesystem sites respectively).
+
+Bind final review to the final commit and retain the actual runtime candidate.
+Before reusing runtime evidence, compare all tracked/submodule inputs, allowing
+only this prose, the architecture prose and the two reviewed inventory fingerprint
+fields; require byte-identical driver executable and unchanged discovery after
+canonical Cargo preparation at the final commit. Complete generated execution, shared-helper/fixture edit controls,
 independent review and final phase qualification remain pending.
