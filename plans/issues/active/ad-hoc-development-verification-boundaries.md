@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1, D2 and D4 delivered; D3 integrated discovery and inventory reconciliation
+- Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -839,7 +839,7 @@ unchanged. Refresh those two documentation rows and run the inventory checker
 and its13 self-tests before retrying. The failed sweep, lane report and all
 blocked categories remain preserved; no main test execution is claimed.
 
-#### D3 integrated inventory reconciliation (prospective)
+#### D3 integrated inventory reconciliation (delivered)
 
 The second sweep remains frozen at `7285e1fb34cef95eba226799fc175e71fc0b5078`.
 Its all-category failure continuation exposed integration omissions from D1/D4:
@@ -882,3 +882,202 @@ identities, so updating producer receipts alone would be invalid. Owner: this
 phase's production/verification identity boundary. Keep real artifact rebuilding
 and necessary invalidation until that boundary is repaired and qualified. This
 is separate from the inventory candidate; the complete phase gate stays open.
+
+#### Inventory reconciliation closure — 2026-10-28
+
+Merged [PR #4516](https://github.com/sifr-lang/sifr/pull/4516) with normal merge,
+without an administrative override. Exact qualified/reviewed candidate:
+`371e10b7a40a852ea676ae7420c0f88ffd31ac5f`; merge:
+`e03da58ceef199196cc5380849a08d3939416a5f`.
+
+Pinned focused qualification passed in137.169s: all108 Rust dependency/manifest
+assertions,10 taxonomy unit tests,56 architecture-policy tests without fail-fast,
+strict coverage readiness and negative controls, profile assignment, the complete
+410-site unsafe/ABI inventory, formatting, file-size and diff checks. The metadata
+consumer inventory and its13 tests also pass. An exact record comparison confirms
+all17 moved target records retain order/classification/profile and every other
+package record is unchanged. The audit rename affects three identifiers and one
+message; it changes no assertion. All107 local documentation destinations resolve;
+the final record addition introduced no new links.
+
+Independent read-only Claude Opus review: **SATISFIED; no blocking findings**.
+Evidence: `dev-verify-inventory-review-2pt06der/response.md`, outside the reviewed
+tree. The archive `dev-verify-inventory-evidence.tar.gz` has SHA-256
+`9b5f67944f4899f198338820426942cce8d94f1051b8221a50867f6b94eaf7d7`;
+all82 archived payload hashes were verified. The initial144.280s failed run is
+preserved. CI was still running at merge; this record does not claim CI success.
+
+The complete remote diagnostic remains frozen at7285 while these separately
+qualified repairs are delivered. Its SQL category finished in956.726s, including
+the passing511.420s clean/reused/independent-clean linked build protocol. Component
+provenance failures remain open. Finish the diagnostic, account for every missing
+execution, and use controlled same-binary/context probes to choose the next macro
+improvement. Full phase correctness, coverage, invalidation and repeated480-second
+qualification remain outstanding.
+
+### D5 — isolated ordinary driver tests and bounded concurrency (investigation)
+
+The frozen integrated diagnostic executes ordinary driver tests with
+`RUST_TEST_THREADS=1`. Its independent metadata producer/recovery assertions
+perform real production repeatedly, so serial execution is a material cost.
+This observation is about the recorded diagnostic configuration, not proof that
+every normal developer invocation is serial. The local 30-test stateless stdlib
+codegen diagnostic took10.430s; optimizing that smaller group is deprioritized.
+
+Before comparing complete ordinary driver execution at one versus four workers,
+remove the one process-wide cwd mutation in the workspace relative-path test.
+Its private mutex does not protect unrelated tests. Run the exact existing
+relative-path assertion in a child with an explicit cwd; require a successful,
+nonempty libtest result and verify the parent's cwd remains unchanged. Keep the
+test's discovery identity and all assertions. No global compiler/context cache
+or source/input identity relaxation is part of this item.
+
+Then measure the same candidate's complete ordinary driver selection with
+retained products. Bound nested Cargo and Rayon work along with outer libtest
+workers, retain reserve monitoring and the diagnostic cap, and record actual
+elapsed time, CPU, peak process-tree memory, all passed/failed/ignored identities,
+and preparation separately. Inspect failure modes rather than retrying unchanged
+failures. Adopt a default scheduling change only after all assertions pass and
+complete-category elapsed time improves by at least15% without unsafe resource
+oversubscription. Compare emitted gate selections and affected runner self-tests
+if policy changes; otherwise retain this as a measured experiment. Independent
+exact-candidate review and focused workspace/driver regressions remain required.
+
+The remote integrated source stays frozen until its evidence is archived. This
+local preparation does not alter that run. Full correctness, coverage, invalidation
+and480-second phase qualification remain outstanding; SQL's511.420s independent
+clean build protocol is still a separate critical-path problem.
+
+The local focused workspace check passes all three selected discovery tests with
+four libtest threads, including the subprocess relative-path assertion. Cargo
+preparation took16.73s; total guarded invocation19.492s. Formatting, file-size
+guardrails (4,561 files) and diff checks pass. No concurrency policy is adopted
+yet; whole-category comparison is still required.
+
+#### Integrated discovery and D5 diagnostic checkpoint
+
+The frozen7285 full sweep ended after5253.364s (87m33s), failed/incomplete.
+All17 preparation nodes passed. Ordinary driver execution passed805 tests with
+82 ignored in566.133s; CLI/lowering passed in609.452s. The combined crate category
+hit its1750-second diagnostic cap during generated-driver execution, so its
+remaining cases are incomplete and the final native corpus was blocked. Neither
+is an assertion-failure result. Recover the complete generated-driver category
+and native corpus separately with their own unchanged caps before source sync.
+
+The complete original archive has6663 payloads and SHA-256
+`acf463f3e86d7187e848c425f2116b972cf1ffeca605ef6522264c42a68a96d1`.
+Its creation completed and the execution session was empty with unchanged
+tracked sources. Connectivity failed during transfer; the partial local archive
+is explicitly labeled incomplete and has not passed payload verification.
+
+D5 candidate `a360b871fed11857732dcf583819c47bcf608ad8` completed a local
+four-worker diagnostic in230.43s:797 passed,7 failed,82 ignored. Nested Cargo
+and Rayon each had one worker. Peak sampled process-tree RSS was2.068GiB;
+no reserve violation or remaining child was observed. This is not passing
+qualification or a paired performance comparison. Four failures are existing
+`/bin/true` assumptions in native capture/process-lease tests; one is the native
+snapshot socket fixture exceeding the platform path limit under the diagnostic
+TMPDIR. Owners: those existing test fixtures; no portability repair is included
+in D5. The other two failures are missing local preparation: the attached-API
+fixture's locked `autocfg1.5.1` package and the pinned Python environment.
+Owner: diagnostic environment preparation. Preserve all failures; do not silently
+skip them or substitute this run for the prepared-environment qualification.
+
+Next restore connectivity, verify the full archive locally, finish the controlled
+same-binary CLI probe and capped missing-category recovery at7285, then synchronize
+D5 and run its same-candidate serial/concurrent comparison. Scheduling policy,
+SQL provenance, final gates and480-second timing acceptance remain open.
+
+
+#### Recovery resumed and D5 scheduling prototype
+
+Connectivity is restored. The original discovery archive is now fully downloaded:
+all6,663 payload hashes pass local verification. The incomplete transfer remains
+separately preserved; the completed diagnostic remains failed/incomplete.
+
+The first recovery helper failed before tests because its external script lacked
+an import path. The next attempt was cancelled after424.416s with a clean owned
+session: directly invoking the pinned Python interpreter bypassed the canonical
+`uv run --project verification --locked` entry point. A controlled environment
+comparison found a different PATH, which participates in native toolchain identity;
+the helper selected a new native dependency target. Preserve this diagnostic
+setup failure, its environment comparison and partial build evidence. Restart
+through the canonical entry point without weakening cache identity. This is not
+evidence that the normal gate loses its retained artifacts.
+
+The unqualified D5 prototype bounds only the existing `sifr_driver_lib`
+configuration. It samples current admission capacity, shares slots between
+libtest workers and nested Cargo/Rayon work, preserves smaller explicit requests,
+and stops the owned command if its memory reserve is lost. Other crate selections,
+preparation allocations and generated-test scheduling are unchanged. Default
+adoption remains conditional on the passing same-candidate comparison above.
+
+Local allocation/selection controls pass23 tests. The first combined local
+control attempt failed four process-cancellation checks because the OS rejected
+process-group signals; three are existing progress checks and one is the new
+reserve-monitor integration control. Preserve that failure and qualify these
+checks in the prepared execution environment. No passing cancellation claim is
+made. Formatting, file-size guardrails (4,563 files) and diff checks pass.
+
+#### Missing-category recovery and D5 complete comparison
+
+The frozen7285 recovery is complete. Generated-driver execution passed all81
+selected ignored tests in690.963s, with53.799s separate advanced preparation
+(747.674s guarded total). Native E2E passed all732 fixtures across186 native groups
+in574.829s (575.591s guarded):41.108s frontend,0.046s planning,519.492s native
+builds and12.205s execution. It had0/186 native cache hits and includes artifact
+reconstruction; this is coverage recovery, not warm timing acceptance. Previously
+interrupted trust-revocation and trusted-build-script cases now pass. The original
+integrated run remains failed/incomplete; separate recovery cannot relabel it.
+
+All94 recovery archive payloads were verified locally. Archive SHA-256:
+`d6e3b15703a2b6643f9397fe44e6d09040cb244fafe836e597453f2734ee14fe`.
+The source/installed-CLI diagnostic also passes18 invocations with exact matching
+outputs. Its small per-invocation savings are not a whole-gate forecast.
+
+D5 runtime qualification observed the exact candidate
+`f008ad7d3ddac04e3bc6d4b94c54e33be2f3d605` with unchanged tracked sources,
+canonical pinned uv entry, retained targets and four admitted resource slots.
+Both complete ordinary-driver runs passed805 tests,0 failed,82 ignored,0 filtered.
+Those82 ignored entries remain separately owned; D5 changes no test selection.
+
+| Measurement | Serial diagnostic allocation | Bounded parallel allocation |
+|---|---:|---:|
+| libtest / nested Cargo / Rayon workers | 1 / 4 / 4 | 4 / 1 / 1 |
+| Complete category elapsed | 498.296s | 161.236s |
+| Guarded invocation elapsed | 499.318s | 161.838s |
+| Inclusive category CPU | 447.392s | 515.356s |
+| Peak sampled session RSS | 1,486,778,368 bytes | 1,883,725,824 bytes |
+| Minimum available memory | 9,690,161,152 bytes | 9,182,781,440 bytes |
+
+Elapsed time improved67.64%, exceeding the prospective15% criterion. CPU grew
+15.19%; this is a bounded concurrency improvement, not elimination of equivalent
+CPU work. Sampling sums session RSS and may double-count shared pages. Both
+sessions ended empty with no reserve violation. Separate canonical preparation
+took38.599s, including three passing workspace discovery assertions. Forty
+allocation, selection, build-budget, progress/cancellation and native-allocation
+self-tests pass, including actual owned-process teardown. Pinned profile checks,
+formatting and file-size checks also pass. This qualifies the category relative
+to the recorded explicit serial configuration; the old unset libtest default
+could already parallelize, so this is not a measured gain for every prior default.
+
+The whole-tree filesystem-effect guard found one missing ownership record for
+the subprocess test's new canonicalize call. The correction classifies that exact
+call as tooling-input; all3,735 sites then pass. Coverage readiness, profile
+assignment and taxonomy checks pass. Preserve the initial failed guard and the
+earlier local cancellation failures rather than replacing their evidence.
+
+The final inventory-and-prose update uses the prospective input-binding protocol
+recorded before updating the measured candidate. Runtime evidence remains labeled
+f008ad7d. Reuse requires unchanged tracked/submodule inputs except the exact new
+inventory row and this phase prose, identical emitted plan and discovered tests,
+and a byte-identical driver executable after canonical Cargo preparation. Rerun
+the affected ownership guard on the final candidate. A failed binding requires
+affected runtime qualification again. The measured executable SHA-256 is
+`033c223b9f6ab8cb1d60a0d6e6553dc21704ce2838307a7c15f1e39963761b96`.
+Independent review of the final candidate remains required before adopting D5.
+
+Full phase correctness, coverage, invalidation and repeated480-second timing
+qualification remain open. The SQL511.420s independent-clean protocol and native
+build allocation remain macro priorities; do not sum gains across different
+candidates or call these separate category runs an integrated gate pass.
