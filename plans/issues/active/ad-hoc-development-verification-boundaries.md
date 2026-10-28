@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1 and D2 delivered; D3 baseline recovery, D4 durable history under qualification
+- Status: in progress; D1, D2 and D4 delivered; D3 integrated discovery and inventory reconciliation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -291,7 +291,7 @@ independent review; complete final correctness, coverage and timing qualificatio
 remain required. This sequencing does not accept the proposed ordinary/expanded
 qualification split in section 11 or waive LOCAL-GATE invalidation scenarios.
 
-### D1 — dependency contract ownership (in progress)
+### D1 — dependency contract ownership (delivered)
 
 Move the 17 repository dependency integration targets, support code and evidence
 from the production manifest crate to `verification/tools/dependency_contracts`.
@@ -501,7 +501,7 @@ an ordinary, untraced integrated discovery run, with failure continuation,
 remains charged. If a cap stops the runner, independently schedule the remaining
 categories with their actual prerequisites and retain the original incomplete run.
 
-### D4 — durable history publication representation (prospective)
+### D4 — durable history publication representation
 
 The accepted phase explicitly permits redesigning storage while retaining all
 4097 real durable publications. Reuse V1be's attribution as historical evidence,
@@ -750,3 +750,135 @@ process-death hooks now name stage validation and commit readiness; they still
 assert that interrupted private work is undiscoverable and safely reclaimable.
 The removed mutable-pointer failure injection is replaced with corruption of the
 actual committed head in the real CLI recovery contract.
+
+
+#### D4 closure — 2026-10-28
+
+Delivered in [PR #4515](https://github.com/sifr-lang/sifr/pull/4515).
+Exact qualified/reviewed implementation:
+`7233ef0e3232e0dc4cfe6b33d57f2d76ffb179c8`.
+Merge: `4c7e34ae785c074cdfb07dccd58a55bc097df350`.
+The prospective contracts and rejected experiments above remain historical;
+the final implementation uses the later single immutable commit authority.
+
+| Complete retained-target workload | Before | Final candidate | Result |
+| --- | ---: | ---: | --- |
+| All 4,097 real durable publications | 173.822s | 52.731s | Pass; 69.66% lower |
+| Ordinary driver suite | 705.444s | 540.029s | Pass; 23.45% lower |
+
+The history test also executes inside the ordinary suite; these times must not
+be added. Final candidate test preparation took12.209s separately, including
+recompilation, and is not a claimed speedup over unchanged baseline preparation.
+The earlier implementation-only candidate's529.518s ordinary result is preserved;
+the final candidate's540.029s result governs closure.
+
+All805 ordinary driver tests pass, versus794 before. Compiled inventories prove
+zero removed IDs and11 added regressions. The82 ignored entries are unchanged;
+they include separately enrolled native assertions and subprocess helpers run by
+parent tests. This ordinary-suite summary does not claim82 direct executions or
+complete gate coverage. All7 editor tests,18 cache-storage tests,3 commit-index
+tests,36 real cache CLI calls and31 independent-process DX13 CLI invocations pass.
+All command/session guards report clean source and no remaining owned processes.
+
+The initial CLI/cache/index qualification failed under ambient umask0002 because
+new test fixtures inherited group-write permission. The production ownership
+checks correctly rejected them. The final repair creates private fixture roots
+and payloads and a private CLI workspace, preserving strict rejection and every
+assertion. The initial failures remain failed evidence. Final pinned formatting,
+file-size (4,561 files), dependency direction, method authority (6,458 sites/235
+nodes), filesystem effects (3,734 sites plus self-tests), and diff checks pass.
+All139 changed-document local links outside code examples resolve.
+
+Independent read-only Claude Opus review: **SATISFIED; no blocking findings**.
+It inspected source, raw qualification, durability, reader/GC ownership, corruption,
+byte-proof invalidation, bounds and preserved assertions. Evidence remains outside
+the reviewed Git tree, keyed to the exact implementation candidate:
+
+- `dev-verify-d4-final-evidence.tar.gz`, SHA-256
+  `b98ea325ad9ed7a135fc1e2c22765931f0ffc7671bbb087f9fd7f8ab0ffd204e`;
+  archive hash and all398 payload hashes independently verified after transfer.
+- `dev-verify-d4-final-summary.json` records exact binaries, commands and results.
+- `dev-verify-d4-review-bwk05s9m/response.md` records the completed review.
+- The earlier173-payload diagnostic archive remains immutable and retains all
+  rejected, failed and cancelled experiments.
+
+Review follow-ups, outside D4 acceptance: evaluate now-unread advisory workspace
+hint writes; explicit diagnosis/recovery for externally fabricated ambiguous
+sequence heads; parent read-permission requirements for durable Unix directory
+creation; permanent generation-lock growth and pre-existing orphan `lock_tree`
+descriptor retention. Preserve lease authority and durability in any later repair.
+
+CI is not claimed passing. The create-PR job stops before setup because
+`SIFR_PERFORMANCE_REFERENCE` is absent. The deterministic-report job reports a
+missing first-run signature, also observed at baseline98dbc (job122841251014) and
+candidate7233ef (job123010834726). Its child log is suppressed and not uploaded;
+the underlying CI cause remains unclassified, and the same symptom alone does
+not prove an identical cause. Owner: local-first-validation/E2E determinism
+wrapper. No CI policy or workflow was changed to merge this locally qualified
+intermediate item under the approved phase policy.
+
+#### D3 integrated discovery continuation (prospective)
+
+Next run the complete canonical `merge --correctness-only --no-fail-fast` sweep
+on retained targets, using the same owned SSD scratch location as D4. A fresh
+emitted plan selects732 E2E fixtures,41 crate-suite entries and20 verification
+areas; it excludes only the representative benchmark capture. Include all
+preparation in the sweep's elapsed time. Keep the1,750-second diagnostic safety
+cap per category and reserve checks; preserve every failed/incomplete outcome.
+Schedule independent categories blocked by a cap or failed prerequisite explicitly.
+Use the resulting complete cost/failure picture to choose the next macro repair.
+Do not treat separate preparation recovery or D4 acceptance as a full-gate pass.
+Complete phase correctness, coverage, invalidation and repeated timing qualification
+remain required; the480-second complete ordinary gate is still unproven.
+
+The first integrated continuation at25a9d8361 stopped after22.694s before
+preparation because DX.5 consumer documentation retained two stale line anchors
+in `project_cache/mod.rs`. Review of the generated diff confirms only line
+numbers changed; symbols, operations, classifications and payload fields are
+unchanged. Refresh those two documentation rows and run the inventory checker
+and its13 self-tests before retrying. The failed sweep, lane report and all
+blocked categories remain preserved; no main test execution is claimed.
+
+#### D3 integrated inventory reconciliation (prospective)
+
+The second sweep remains frozen at `7285e1fb34cef95eba226799fc175e71fc0b5078`.
+Its all-category failure continuation exposed integration omissions from D1/D4:
+the coverage matrix still classifies the 17 relocated dependency targets under
+their former production crate; four new audit identifiers violate the existing
+naming policy; and two FIFO-test unsafe sites lack local inventory records.
+The last omission also stops the architecture-policy self-tests after 35 tests.
+These are actual failed checks, not timing failures or cancelled execution.
+
+Prepare one bounded reconciliation while the unchanged remote sweep continues:
+move those exact 17 classification records to the verification package, rename
+only the rejected local audit identifiers, and author the FIFO allowance/call
+records with source-bound thread, lifetime, alias and ownership obligations.
+Preserve every assertion, target classification and profile assignment. Do not
+change the scanner, weaken the naming rule, or grant a broad unsafe allowance.
+The two FIFO records belong to the existing cache-owned external partition.
+
+Before merging this follow-up, run the current strict coverage readiness check,
+its negative self-tests, profile-assignment matrix, taxonomy and its self-tests,
+whole-tree unsafe/ABI checker and complete architecture-policy self-tests without
+fail-fast, and all relocated dependency/production manifest tests. Require pinned
+tools, formatting, file-size, diff/local-link checks and independent exact-candidate
+review. The previous failing sweep remains preserved. Reconcile every unexecuted
+test after diagnostic limits; no earlier failure becomes a pass by changing records.
+This repair makes no performance claim and does not close the full phase gate.
+
+The first focused qualification at78d11 passes strict coverage, profile assignment,
+the whole-tree taxonomy and unsafe/ABI checks, and all56 architecture-policy
+self-tests. The separately invoked taxonomy unit suite exposes a stale helper
+name left by a85b56bb2; update that call to the existing renamed helper, preserving
+all positive and negative assertions. Dependency audits also require the pinned
+HTTP/application demo submodules, absent in the local checkout. Initialize those
+declared inputs before repeating qualification. Preserve the failed144.280s run;
+it is not a passing candidate. This remains a bounded verification reconciliation.
+
+The unchanged integrated sweep separately found SQL component provenance drift:
+PostgreSQL, MySQL and SQLite differ only in rootCargo.toml andCargo.lock after D1;
+words-component provenance is unchanged. These files also feed embedded component
+identities, so updating producer receipts alone would be invalid. Owner: this
+phase's production/verification identity boundary. Keep real artifact rebuilding
+and necessary invalidation until that boundary is repaired and qualified. This
+is separate from the inventory candidate; the complete phase gate stays open.

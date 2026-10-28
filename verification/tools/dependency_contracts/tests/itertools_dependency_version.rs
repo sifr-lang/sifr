@@ -22,7 +22,7 @@ const TRANSITIVE_ITERTOOLS_PACKAGE_HASH: &str =
     "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285";
 
 const WORKSPACE_MANIFEST: &str = include_str!("../../../../Cargo.toml");
-const CONTRACT_MANIFEST: &str = include_str!("../Cargo.toml");
+const AUDIT_MANIFEST: &str = include_str!("../Cargo.toml");
 const RUFF_MANIFEST: &str = include_str!("../../../../third_party/ruff/Cargo.toml");
 const WORKSPACE_LOCK: &str = include_str!("../../../../Cargo.lock");
 const ITERTOOLS_VENDOR_MANIFEST: &str = include_str!("../../../../vendor/itertools/Cargo.toml");
@@ -54,14 +54,14 @@ fn maintained_itertools_dependencies_use_the_latest_stable_policy() {
     );
     assert_eq!(string_array(dependency, "features"), ["use_std"]);
 
-    let contract: toml::Value =
-        toml::from_str(CONTRACT_MANIFEST).test_unwrap("contract manifest must parse");
-    let contract_dependency = contract
+    let audit: toml::Value =
+        toml::from_str(AUDIT_MANIFEST).test_unwrap("audit manifest must parse");
+    let audit_dependency = audit
         .get("dev-dependencies")
         .and_then(|dependencies| dependencies.get("itertools"))
         .test_unwrap("dependency certification must inherit Itertools");
     assert_eq!(
-        contract_dependency
+        audit_dependency
             .get("workspace")
             .and_then(toml::Value::as_bool),
         Some(true)

@@ -3,6 +3,208 @@
   "segment": "external",
   "sites": [
     {
+      "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::<module>::unsafe-allowance::1",
+      "fingerprint": "25b2ddbd7ff2f0d02a6b6ee1f5a93eafd4f73ff8f01685c4451e96ce8656545d",
+      "owner": "cache-owner",
+      "scope": "local",
+      "operation": "# [ allow ( unsafe_code ) ] fn fifo_payload_is_rejected_without_waiting_for_a_writer ( ) { use std :: { ffi :: CString , os :: unix :: ffi :: OsStrExt } ; let root = private_root ( ) ; let path = root . path ( ) . canonicalize ( ) . unwrap ( ) . join ( \"fifo\" ) ; let name = CString :: new ( path . as_os_str ( ) . as_bytes ( ) ) . unwrap ( ) ; assert_eq ! ( unsafe { libc :: mkfifo ( name . as_ptr ( ) , 0 o600 ) } , 0 ) ; assert ! ( read_owned_payload ( & path ) . is_err ( ) ) ; }",
+      "operation_family": "unsafe-allowance",
+      "source_evidence": "",
+      "contract": {
+        "thread": "The allowance is limited to one test function; FIFO creation has no thread affinity and uses a newly allocated private directory.",
+        "lifetime": "The function keeps its CString and temporary directory alive across the native creation call and rejection assertion.",
+        "alias": "Only the shared CString pointer crosses the native boundary; no Rust reference is mutated by the FIFO creation.",
+        "ownership": "The test owns the created filesystem entry through its temporary directory; no native descriptor or allocation is returned."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "bounded-allowance-thread",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "25b2ddbd7ff2f0d02a6b6ee1f5a93eafd4f73ff8f01685c4451e96ce8656545d",
+              "quote": "#[allow(unsafe_code)]\nfn fifo_payload_is_rejected_without_waiting_for_a_writer() {\n    use std::{ffi::CString, os::unix::ffi::OsStrExt};\n    let root = private_root();\n    let path = root.path().canonicalize().unwrap().join(\"fifo\");\n    let name = CString::new(path.as_os_str().as_bytes()).unwrap();\n    // SAFETY: name is a live NUL-terminated path in this test's private directory.\n    assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);\n    assert!(read_owned_payload(&path).is_err());\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "bounded-allowance-lifetime",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "25b2ddbd7ff2f0d02a6b6ee1f5a93eafd4f73ff8f01685c4451e96ce8656545d",
+              "quote": "#[allow(unsafe_code)]\nfn fifo_payload_is_rejected_without_waiting_for_a_writer() {\n    use std::{ffi::CString, os::unix::ffi::OsStrExt};\n    let root = private_root();\n    let path = root.path().canonicalize().unwrap().join(\"fifo\");\n    let name = CString::new(path.as_os_str().as_bytes()).unwrap();\n    // SAFETY: name is a live NUL-terminated path in this test's private directory.\n    assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);\n    assert!(read_owned_payload(&path).is_err());\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            }
+          ]
+        },
+        "alias": {
+          "rule": "bounded-allowance-alias",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "25b2ddbd7ff2f0d02a6b6ee1f5a93eafd4f73ff8f01685c4451e96ce8656545d",
+              "quote": "#[allow(unsafe_code)]\nfn fifo_payload_is_rejected_without_waiting_for_a_writer() {\n    use std::{ffi::CString, os::unix::ffi::OsStrExt};\n    let root = private_root();\n    let path = root.path().canonicalize().unwrap().join(\"fifo\");\n    let name = CString::new(path.as_os_str().as_bytes()).unwrap();\n    // SAFETY: name is a live NUL-terminated path in this test's private directory.\n    assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);\n    assert!(read_owned_payload(&path).is_err());\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "bounded-allowance-owner",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::<module>::unsafe-allowance::1",
+              "fingerprint": "25b2ddbd7ff2f0d02a6b6ee1f5a93eafd4f73ff8f01685c4451e96ce8656545d",
+              "quote": "#[allow(unsafe_code)]\nfn fifo_payload_is_rejected_without_waiting_for_a_writer() {\n    use std::{ffi::CString, os::unix::ffi::OsStrExt};\n    let root = private_root();\n    let path = root.path().canonicalize().unwrap().join(\"fifo\");\n    let name = CString::new(path.as_os_str().as_bytes()).unwrap();\n    // SAFETY: name is a live NUL-terminated path in this test's private directory.\n    assert_eq!(unsafe { libc::mkfifo(name.as_ptr(), 0o600) }, 0);\n    assert!(read_owned_payload(&path).is_err());\n}"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+      "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+      "owner": "cache-owner",
+      "scope": "local",
+      "operation": "unsafe { libc :: mkfifo ( name . as_ptr ( ) , 0 o600 ) }",
+      "operation_family": "raw-access",
+      "source_evidence": "// SAFETY: name is a live NUL-terminated path in this test's private directory.",
+      "contract": {
+        "thread": "mkfifo executes on the test caller and creates a unique pathname beneath the exclusively owned test directory.",
+        "lifetime": "name.as_ptr() refers to the live CString local for the synchronous mkfifo call, with a terminating NUL and no interior NUL.",
+        "alias": "mkfifo reads the C string without modifying or retaining its storage; the CString is not mutated during the call.",
+        "ownership": "A successful mkfifo creates a mode-0600 filesystem node owned by the test; TempDir removes it after read_owned_payload rejects the FIFO."
+      },
+      "obligations": {
+        "thread": {
+          "rule": "caller-thread",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "unsafe { libc::mkfifo(name.as_ptr(), 0o600) }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            },
+            {
+              "kind": "safety",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "// SAFETY: name is a live NUL-terminated path in this test's private directory."
+            }
+          ]
+        },
+        "lifetime": {
+          "rule": "allocation-live",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "unsafe { libc::mkfifo(name.as_ptr(), 0o600) }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            },
+            {
+              "kind": "safety",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "// SAFETY: name is a live NUL-terminated path in this test's private directory."
+            }
+          ]
+        },
+        "alias": {
+          "rule": "access-admitted",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "unsafe { libc::mkfifo(name.as_ptr(), 0o600) }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            },
+            {
+              "kind": "safety",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "// SAFETY: name is a live NUL-terminated path in this test's private directory."
+            }
+          ]
+        },
+        "ownership": {
+          "rule": "borrow-only",
+          "proofs": [
+            {
+              "kind": "operation",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "unsafe { libc::mkfifo(name.as_ptr(), 0o600) }"
+            },
+            {
+              "kind": "code",
+              "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+              "scope": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+              "quote": "libc::mkfifo(name.as_ptr(), 0o600)",
+              "context_fingerprint": "a161ded786ed87eb4693cde73f6f79eed83167b119a640e2172ad7a291052978"
+            },
+            {
+              "kind": "safety",
+              "site": "crates/sifr_cache_storage/src/owned_payload_tests.rs::fifo_payload_is_rejected_without_waiting_for_a_writer::unsafe-block::1",
+              "fingerprint": "8d5124ef3a807ee6465373512c29105a2591b719308bd3ae3db47380548a0155",
+              "quote": "// SAFETY: name is a live NUL-terminated path in this test's private directory."
+            }
+          ]
+        }
+      }
+    },
+    {
       "site": "crates/sifr_cache_storage/src/unix.rs::<module>::unsafe-allowance::1",
       "fingerprint": "1a0b858ee0c00688d4d66359434ea170525694788f824b7035d248513f107749",
       "owner": "cache-owner",

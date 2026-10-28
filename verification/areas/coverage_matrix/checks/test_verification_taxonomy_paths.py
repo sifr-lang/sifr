@@ -145,7 +145,7 @@ class AbiPolicyVocabularyTests(unittest.TestCase):
                 with self.subTest(identifier=identifier):
                     source.write_text('"' + identifier + '": "operation-specific-proof"\n')
                     self.assertEqual(taxonomy.validate_text(source, audit_root=root), [])
-            taxonomy.check_abi_policy_identifiers(root)
+            taxonomy.check_policy_technical_vocabulary(root)
 
     def test_registered_identifier_cannot_hide_unrelated_delivery_labels(self) -> None:
         identifiers = (taxonomy.RULES_ALIAS + '_ref', taxonomy.RULES_ALIAS.upper() + '_FIELDS')
