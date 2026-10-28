@@ -630,3 +630,49 @@ passes after the correction (0.11s execution, 14.156s with recompilation).
 The editor suite executes four controls: three pass, including admission and
 inherited payloads; the same host-utility failure remains. None of these local
 partial results substitutes for complete Linux qualification.
+
+#### D4 measured rejection and prospective bounded byte proof
+
+Candidate `c200fb10e39baa436da9fb78d2176feaf9d15a11` is draft PR #4515,
+not adopted. On the same private SSD scratch and unchanged allocation, the
+complete ordinary 4,097-publication test passes at 173.822s before and 114.317s
+after: 34.23% lower, below the prospective 50% threshold. User CPU changes from
+46.09s to47.70s while system CPU falls43.24s to22.30s. The unchanged ordinary
+driver baseline passes794 cases with82 ignored native/corpus obligations in
+705.444s. The candidate's subsequent ordinary run was cancelled at288.349s
+because the implementation failed its adoption criterion; editor/CLI stages were
+not executed. No partial result counts as complete qualification.
+
+The first new baseline was cancelled at152.877s after detecting rotational
+scratch, repeating a placement rejected in V0.6a1. Its evidence is preserved.
+The accepted comparison above explicitly uses SSD scratch without changing any
+fsync operation. The complete13-node preparation recovery passes independently;
+98 payloads are locally SHA-verified in dev-verify-d3-preparation-recovery.tar.gz
+(6ce38d5f5bb99a90e2507246b69ea71560135d61df6307bd0a7ea0d7e66a5312).
+Its5287.327s sum includes separately repeated prerequisites after cleanup; it is
+not ordinary latency, a test-execution pass, or a contiguous full gate.
+
+A targeted129-publication control passes under CPU sampling. The sample places
+36 of69 user-CPU samples in SHA-256 compression. This is an attribution lead,
+not a precise whole-test percentage. The outer diagnostic wrapper fails because
+its same-user session guard sees the privileged observer; preserve that failure
+and do not weaken the generic guard or count it as qualified execution.
+
+Before further implementation, extend D4's proof representation while preserving
+its acceptance threshold and semantic guarantees. Retain at most2MiB of already
+validated record bytes per existing Store-owned validation cache, in addition to
+the existing count bound and digest facts. Every lookup still reads current owned
+file bytes. Exact equality with the retained validated bytes proves the prior
+stored-identity/context validation still applies; unretained or changed bytes
+use the existing digest/semantic validation path. This replaces hashing on every
+small-record cache hit with a stronger exact-byte comparison, not metadata-only
+freshness or reuse of a cached compiler result. Oversized records retain the
+existing bounded digest facts. Do not change record hashes, serialization, public
+results, observations, filesystem durability, or the history-test workload.
+
+Add focused controls for the byte budget, byte-proof eviction with retained
+digest facts, oversized/zero-budget records, changed bytes and incorrect stored
+identities. Retain every existing same-mtime, corruption, context, recency and
+owner-lifetime control. Repeat complete matched history timing and complete
+ordinary-driver/editor/CLI qualification on the revised candidate before review.
+The original prototype remains a rejected performance experiment.
