@@ -19823,3 +19823,30 @@ Good enough: determine whether retained preparation is reused and locate the
 dominant compiler/native-build/runtime work before selecting a macro repair.
 If timing alone cannot attribute it, instrument one representative case only.
 No full-gate rerun is warranted by this diagnostic; all phase/V5 requirements remain.
+
+### V1cu concluded — isolated observations corroborate existing evidence
+
+The first diagnostic used the recorded parent PATH with direct Cargo rather
+than the effective uv launcher PATH. Stop it without drawing native reuse
+conclusions:159.350s, terminated, incomplete; its driver harness rebuild finished
+in99s. Preserve v1cu-native-fixture-diagnostic and its guard/correction record.
+The correction uses exactly one locked uv layer and asserts the effective PATH
+equals the recorded integrated launcher before any test.
+
+Source-frozen corrected run passes all three exact cases: preparation70.306s/
+18.625CPU, advanced-data assertion26.926s/9.986CPU, backend assertion10.194s/
+4.810CPU. Each reports exactly one executed pass, zero failures/ignored. Guard
+110.325s, no reserve stop, source drift or surviving process. No product edits.
+The preparation uses the retained driver binary after a1.21s Cargo check but
+does link the generated native root. An observed family executable is894150648
+bytes. ELF section inspection records substantial nonallocated debug data.
+
+These observations are not a matched improvement over R3's124.839s/161.217s:
+cache warmth, prior source changes and competing work differ. The executable
+size/publication reads and isolated-versus-integrated disparity corroborate
+V1bs and V1v/V1y/V1z; they are not new cache defects or grounds to repeat their
+compression/hash experiments. Family ownership intentionally serializes mutation,
+Cargo and capture. Do not remove locks or fresh byte checks on a timing guess.
+Stop this diagnostic and choose a macro structural change from the complete
+cost/coverage graph with a read-only architectural challenge of prior decisions.
+Complete gates and every V5 scenario remain OPEN.
