@@ -70,6 +70,7 @@ impl Fixture {
         let generation = generations.join(&generation_id);
         sifr_cache_storage::directory(generation.parent().unwrap()).unwrap();
         drop(sifr_cache_storage::open_entry_lock(&projects, &workspace_id, false).unwrap());
+        drop(sifr_cache_storage::open_entry_lock(&root, READER_ADMISSION, false).unwrap());
         drop(sifr_cache_storage::open_entry_lock(&generations, &generation_id, false).unwrap());
         let (device, inode) = file_identity(&workspace).unwrap();
         let created_ns = fs::metadata(&workspace)
@@ -137,7 +138,26 @@ impl Fixture {
             assert!(acquired.is_ok(), "{name} remains locked: {acquired:?}");
             lease.unlock().unwrap();
         }
+        let admission = existing_lease(
+            self.generation.parent().unwrap().parent().unwrap(),
+            READER_ADMISSION,
+        )
+        .unwrap();
+        admission.try_lock().unwrap();
+        admission.unlock().unwrap();
     }
+}
+
+#[test]
+fn saved_reader_cannot_enter_during_gc_reference_marking() {
+    let fixture = Fixture::new();
+    let root = fixture.generation.parent().unwrap().parent().unwrap();
+    let admission =
+        ProcessLease::exclusive(existing_lease(root, READER_ADMISSION).unwrap()).unwrap();
+    assert!(fixture.load().is_err());
+    drop(admission);
+    assert_eq!(fixture.load().unwrap().records.len(), 1);
+    fixture.assert_available();
 }
 
 struct PausedChild {

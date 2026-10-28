@@ -407,12 +407,14 @@ Only DX.13 introduces the full **project** generation protocol below, alongside 
 
 Readers keep a lease while they require an entry, including metadata or executables with dependent side files. GC requires exclusive ownership. A lease is a real lock/reference held through the relevant operation, not a PID string or a lock file's mere existence. Define lock ordering and test process death, contention and interrupted acquisition.
 
-Project-history GC holds the writer lease, then takes exclusive leases on idle
-generation candidates before marking references. It retains every payload owner
-named by the latest generation or an actively leased predecessor. An unreadable
-live manifest makes reclamation ambiguous and preserves generation candidates.
-Only after this complete mark may unreferenced candidates be removed. Old
-`projects` namespaces are neither consumed nor reclaimed by the v3 owner.
+Project-history GC holds the writer lease and a short exclusive reader-admission
+lease while marking references and reclaiming entries. New readers hold that
+admission lease shared only until their individual generation lease is acquired;
+existing readers keep working. GC retains every payload owner named by the latest
+generation or an actively leased predecessor. An unreadable live manifest makes
+reclamation ambiguous and preserves generation candidates. Entry leases are
+checked one at a time, bounding open descriptors independently of history size.
+Old `projects` namespaces are neither consumed nor reclaimed by the v3 owner.
 
 The supported persistence contract is for qualified local filesystems with working lock/atomic-publication semantics. Arbitrary shared/network filesystem behavior is not guaranteed. Failure to obtain safe project-cache persistence leaves normal uncached semantic computation available with a clear cache status. Required artifact preparation/materialization failures remain actionable errors. These are explicit supported behaviors, not alternative semantic implementations.
 

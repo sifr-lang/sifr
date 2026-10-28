@@ -588,3 +588,31 @@ frontend publication to make abandoned histories eligible. It preserves dry-run,
 actual reclamation, idempotence, post-prune checking and orphan-namespace checks;
 no cache metadata is fabricated. Count-bound eviction remains covered by the
 existing complete history and live-reader tests.
+
+
+D4 resource-bound correction: the first GC prototype held one descriptor for
+all inactive generation candidates. Under a 64-descriptor process limit the real
+reader/eviction regression failed to reclaim the evicted generation (3.642s),
+confirming the defect. Replace that design with one short context-level reader
+admission lease: new readers acquire it shared until their generation lease is
+held; GC holds it exclusively through marking and reclamation. Existing readers
+continue using their own leases. GC probes/rechecks entries one at a time. A
+checked-in subprocess control reruns the complete existing eviction/active-reader
+assertions at the low descriptor limit. Driver and editor both test admission.
+The prior low-descriptor 4,097-publication experiment was cancelled after 63.433s
+because its assertions did not require reclamation; its incomplete result is
+retained and is not a pass. Normal full-history coverage remains required.
+
+The local CLI diagnostic also exposed pre-existing stale DXF expectations for
+the cache inspection root and owner inventory. The affected contract now verifies
+the actual cache root, the complete owner namespace set, protected legacy owner,
+v3 pruning owner, and matching text/JSON descriptions. This is part of qualifying
+the changed cache CLI boundary, not a removal of empty-cache assertions.
+
+
+The repaired admission design passes all five focused bundle controls locally
+in 7.94s, including the exact low-descriptor eviction regression that failed
+against the first prototype. Retained preparation plus execution is 30.171s;
+19.62s is recompilation. This is correctness evidence, not the matched history
+speedup required for adoption. Full affected Linux validation and ordinary
+before/after timing remain pending.

@@ -14,6 +14,9 @@ pub const RECORD_LIMIT: u64 = 16 * 1024 * 1024;
 pub const MANIFEST_LIMIT: u64 = 1024 * 1024;
 pub const SCHEMA: u32 = 3;
 pub const PROJECTS: &str = "projects-v3";
+/// GC holds this context-level lease exclusively while marking references.
+/// Readers hold it shared only until their individual generation lease exists.
+pub const READER_ADMISSION: &str = "reader-admission";
 // Per-generation publication history. Old generations remain under explicit prune.
 pub const RECORD_COUNT: usize = 128;
 pub const HISTORY_BYTES: u64 = 64 * 1024 * 1024;

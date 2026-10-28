@@ -65,9 +65,20 @@ def qualify(binary, output, identity, *, environment):
         ["cache", "inspect", "--json", "--isolated", "--no-incremental"],
     ]):
         inspected = json.loads(invoke(f"global-{placement}", arguments).stdout)
-        assert inspected == {"root": str(native), "entries": [], "protected_roots": []}
+        assert set(inspected) == {"root", "entries", "protected_roots", "owners"}
+        assert inspected["root"] == str(cache)
+        assert inspected["entries"] == [] and inspected["protected_roots"] == []
+        owner_paths = {Path(row["path"]).relative_to(cache).as_posix() for row in inspected["owners"]}
+        assert owner_paths == {"native/artifacts", "native/artifacts/cargo_resolution",
+                               "native/artifacts/rust_bridge_probes", "native/families",
+                               "native/publications", "metadata", "projects", "projects-v3", "test-fixtures"}
+        by_path = {Path(row["path"]).relative_to(cache).as_posix(): row for row in inspected["owners"]}
+        assert by_path["projects"]["policy"] == "legacy owner namespace; protected"
+        assert by_path["projects-v3"]["policy"] == "cache prune-project owns exact workspace"
     text = invoke("inspect-text", ["cache", "inspect"]).stdout
-    assert text == f"cache: {native}\n"
+    expected = f"cache: {cache}\n" + "".join(
+        f"{row['path']} owner={row['owner']} policy={row['policy']}\n" for row in inspected["owners"])
+    assert text == expected
     for index, arguments in enumerate([
         ["cache"], ["cache", "bogus"], ["cache", "inspect", "--reserve-bytes", "1"],
         ["cache", "prune", "--json"], ["cache", "prune-project"],

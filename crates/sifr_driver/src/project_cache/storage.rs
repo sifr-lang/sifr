@@ -9,7 +9,7 @@ use sifr_cache_storage::ProcessLease;
 #[cfg(test)]
 pub(super) use sifr_compiler_services::project_history::MANIFEST_LIMIT;
 pub(super) use sifr_compiler_services::project_history::{
-    HISTORY_BYTES, Manifest, PROJECTS, Payload, RECORD_COUNT, RECORD_LIMIT, key,
+    HISTORY_BYTES, Manifest, PROJECTS, Payload, READER_ADMISSION, RECORD_COUNT, RECORD_LIMIT, key,
 };
 use sifr_frontend::persistence::{CompletedCheck, identity};
 use std::{
@@ -113,6 +113,8 @@ impl Store {
         let root = cache.join(PROJECTS).join(&workspace).join(context);
         storage::directory(&root)?;
         storage::directory(&root.join("generations"))?;
+        // Stable admission inode: readers never create ownership authority.
+        let _admission = storage::process_entry_lock(&root, READER_ADMISSION)?;
         Ok(Self {
             root,
             workspace_root,
@@ -161,7 +163,12 @@ impl Store {
             return Err(invalid("invalid generation identity"));
         }
         let parent = self.root.join("generations");
+        let admission = ProcessLease::shared(super::housekeeping::existing_lease(
+            &self.root,
+            READER_ADMISSION,
+        )?)?;
         let lease = ProcessLease::shared(super::housekeeping::existing_lease(&parent, id)?)?;
+        drop(admission);
         let path = parent.join(id);
         let manifest = self.generation_manifest(id)?;
         let generation = Generation {

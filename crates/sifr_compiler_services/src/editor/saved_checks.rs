@@ -1,7 +1,7 @@
 //! Read-only access to complete driver-published check generations.
 use crate::{
     CompilerContext,
-    project_history::{Manifest, PROJECTS, key},
+    project_history::{Manifest, PROJECTS, READER_ADMISSION, key},
 };
 use serde::Deserialize;
 use sifr_cache_storage::ProcessLease;
@@ -128,12 +128,17 @@ pub(super) fn load_generation(
             continue;
         }
         let parent = root.join("generations");
+        let Ok(admission) = existing_lease(&root, READER_ADMISSION).and_then(ProcessLease::shared)
+        else {
+            continue;
+        };
         let Ok(generation_lease) = existing_lease(&parent, &candidate.generation) else {
             continue;
         };
         let Ok(generation_lease) = ProcessLease::shared(generation_lease) else {
             continue;
         };
+        drop(admission);
         let path = parent.join(&candidate.generation);
         let Ok(records) =
             read_complete_generation(&path, &workspace_id, context, &candidate.generation)

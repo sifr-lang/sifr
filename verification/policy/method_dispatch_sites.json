@@ -56413,10 +56413,10 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-match::1",
-      "fingerprint": "08e859d66321fc40ebc28481153eee0dfd2e50755b5b72199f7805d21c46e6fc",
+      "fingerprint": "aed7845ef62f9c48cdca53429d22eb48e7348f0cad64025c8b2a87f0f5c70496",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
-      "operation": "matches ! ( child . file_name ( ) . and_then ( | v | v . to_str ( ) ) , Some ( \"native\" | \"metadata\" | \"projects\" | \"test-fixtures\" ) )",
+      "operation": "matches ! ( child . file_name ( ) . and_then ( | v | v . to_str ( ) ) , Some ( \"native\" | \"metadata\" | \"projects\" | \"test-fixtures\" | sifr_compiler_services :: project_history :: PROJECTS ) )",
       "inputs": "fn inspect ( )",
       "outputs": "io :: Result < CacheInspection >",
       "role": "select compiler policy by the recorded lexical operation",
@@ -56425,7 +56425,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-match::2",
-      "fingerprint": "d3e398d5f4ec9295746b4ea1874dd83d32c2964739ad0cde82d8762500ff8862",
+      "fingerprint": "34e4aad0028e6164cabec9cbf58dda246e938d9a492000a4c625f35033faf031",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "matches ! ( child . file_name ( ) . and_then ( | v | v . to_str ( ) ) , Some ( \"artifacts\" | \"families\" | \"publications\" ) )",
@@ -56437,7 +56437,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::1",
-      "fingerprint": "f46242e0b7f5a5ccf4deb458094507dafcf086233a28139ecb832f096bb200d5",
+      "fingerprint": "81fe2d6ae52bee88fad03a473bc08e3da41708f1bd45ef8aa653febc90762e75",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if family . file_name ( ) . is_some_and ( | name | name == \"cargo_resolution\" )",
@@ -56449,7 +56449,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::2",
-      "fingerprint": "dc5b5c856a928585a1c25f7c13f61a269c356b2c6ec8b08d16ddd6a19df8755b",
+      "fingerprint": "188365b0285cdd0ea5b2d74268252214343a959390e8b5a2ce51104936027248",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if key == \".locks\"",
@@ -56461,7 +56461,7 @@
     },
     {
       "site": "crates/sifr_driver/src/cache_storage.rs::inspect::literal-comparison::3",
-      "fingerprint": "dc5b5c856a928585a1c25f7c13f61a269c356b2c6ec8b08d16ddd6a19df8755b",
+      "fingerprint": "188365b0285cdd0ea5b2d74268252214343a959390e8b5a2ce51104936027248",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "if key == \".locks\"",

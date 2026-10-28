@@ -203,6 +203,13 @@ pub(super) fn prune_store(
     };
     let _writer = ProcessLease::exclusive(writer)?;
     let latest = store.latest();
+    // Freeze new reader admission while marking. Existing readers retain their
+    // generation leases; closing them can only make this mark conservative.
+    // This avoids retaining one descriptor per inactive generation.
+    let _admission = ProcessLease::exclusive(existing_lease(
+        &store.root,
+        super::storage::READER_ADMISSION,
+    )?)?;
     let parent = store.root.join("generations");
     if !safe_path(&parent) {
         return Ok(report);
@@ -243,7 +250,10 @@ pub(super) fn prune_store(
             continue;
         };
         match ProcessLease::exclusive(lease) {
-            Ok(lease) => candidates.push((entry.path(), key(name), lease)),
+            Ok(lease) => {
+                drop(lease);
+                candidates.push((entry.path(), key(name), name.to_owned()));
+            }
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                 if key(name) {
                     // A detached reader pins its history and every direct
@@ -261,15 +271,19 @@ pub(super) fn prune_store(
             Err(error) => return Err(error),
         };
     }
-    // Hold all admitted exclusive leases until marking and deletion complete.
-    // No reader can acquire a previously idle generation after its references
-    // were inspected. Failure to acquire resources above performs no deletion.
-    for (path, generation, _lease) in &candidates {
+    // Admission remains exclusive through deletion. Recheck each entry lease
+    // before reclaiming it, with a bounded number of descriptors throughout.
+    for (path, generation, name) in &candidates {
         if !protected.contains(path) && (!generation || !ambiguous) {
+            let Ok(lease) = existing_lease(&parent, name) else {
+                continue;
+            };
+            let Ok(_lease) = ProcessLease::exclusive(lease) else {
+                continue;
+            };
             report.reclaim(path, *generation, dry_run)?;
         }
     }
-    drop(candidates);
     // Only writer-serialized staging locks are ephemeral. Generation locks
     // remain permanent because readers may open them without the writer lock.
     let locks = parent.join(".locks");

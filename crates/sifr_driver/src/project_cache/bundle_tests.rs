@@ -111,3 +111,52 @@ fn legacy_namespace_is_neither_consumed_nor_reclaimed() {
     super::housekeeping::prune_workspace(&cache, file.parent().unwrap(), true, false).unwrap();
     assert_eq!(fs::read(legacy.join("latest")).unwrap(), b"legacy sentinel");
 }
+
+#[test]
+fn reader_admission_blocks_new_readers_but_preserves_existing_readers() {
+    let (_root, file, cache) = tests::fixture();
+    let store = tests::store(&cache, &file);
+    tests::publish_variants(&store, &file, 2);
+    let reader = store.latest().unwrap();
+    let admission = sifr_cache_storage::ProcessLease::exclusive(
+        super::housekeeping::existing_lease(&store.root, storage::READER_ADMISSION).unwrap(),
+    )
+    .unwrap();
+    assert!(store.latest().is_none());
+    assert!(reader.records().all(|record| record.is_ok()));
+    drop(admission);
+    assert!(store.latest().is_some());
+}
+
+#[cfg(unix)]
+#[test]
+fn reclamation_under_low_descriptor_limit_preserves_reader_and_latest() {
+    // Reuse the real eviction/reader assertions inside a process with fewer
+    // descriptors than the retained history has payload owners. No process-wide
+    // limits are changed in the test harness itself.
+    let result = std::process::Command::new("/bin/sh")
+        .args([
+            "-c",
+            "ulimit -n 64 && exec \"$@\"",
+            "history-descriptor-control",
+        ])
+        .arg(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "project_cache::history_tests::eviction_preserves_active_reader_and_latest",
+            "--test-threads=1",
+            "--nocapture",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}\n{}",
+        String::from_utf8_lossy(&result.stdout),
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&result.stdout)
+            .contains("test result: ok. 1 passed; 0 failed; 0 ignored;")
+    );
+}
