@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .process_execution import Outcome, execute
 from .command_progress import CommandProgress
+from .resource_scopes import cpu_scope
 import os
 import sys
 import json
@@ -35,8 +36,9 @@ def run_command(command: list[str], *, env: dict[str, str] | None = None) -> Out
             sys.stdout.write(f"[child:{stream}] {json.dumps(line, ensure_ascii=True)}\n")
             sys.stdout.flush()
     try:
-        outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit, heartbeat=progress.heartbeat,
-                          deadline_seconds=deadline)
+        with cpu_scope("command", progress.id):
+            outcome = execute(command, cwd=REPO_ROOT, env=env, emit=emit, heartbeat=progress.heartbeat,
+                              deadline_seconds=deadline)
     except BaseException as error:
         progress.error(error)
         raise

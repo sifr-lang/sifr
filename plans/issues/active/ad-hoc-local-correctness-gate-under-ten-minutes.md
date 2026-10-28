@@ -19692,3 +19692,188 @@ After closure, inspect one exact-profile clean SQL build with Cargo unit timings
 to identify its dominant generation/native/Rust/link work. Keep both independent
 clean builds and all version/runtime properties in the eventual solution;
 profiling is attribution evidence, not ordinary acceptance timing.
+
+### V1cr repair delivered — PR4510
+
+PR4510 https://github.com/sifr-lang/sifr/pull/4510 merged normally as
+4cc28fed710bafd0351ad857090b0aa190166914. Its tree equals reviewed and validated
+cc5b9a6b1efc2df96abb15f73143743a29b3b76b. All108 manifest-crate tests pass with
+zero failures/ignored; the3673-site filesystem guard and mutation self-test,
+formatting, size and diff checks pass. Focused guard84.241s; no source drift,
+capacity stop or surviving owned processes. The24-file locally verified archive
+is v1cr-repair-evidence.tar.gz, SHA256
+c3d11f4b2a73b59b10b91f582a01fbefdd6115c29c1aad1e5367db34944382ec.
+
+Independent Claude review:SATISFIED, no blocking findings. Response/disposition
+are outside Git, keyed by cc5b9a6b1. The reviewer created an external plan note
+but no repository changes. Its prose miscounts output operations as four;
+the exact accepted inventory has five output effects plus three identity reads.
+The optional output-directory classification suggestion changes no acceptance
+rule. Direct Cargo checks used the pinned prepared environment; final integrated
+validation retains the canonical facade. No broad rerun is justified by this
+record-only closure.
+
+At merge, local-first-create-pr fails before setup because
+SIFR_PERFORMANCE_REFERENCE is unset, confirmed in job122535232707 of run40602917106.
+This is the previously recorded performance-reference/CI admission owner, with
+unchanged workflow inputs. Lint/format, toolchain invariant and WASI build checks
+passed; other jobs were still running. Do not claim green CI. No admin bypass
+was used. Desktop PR attachment was attempted but refused at100 attachments;
+existing attachments were preserved. R3 remains failed and final phase gates/
+repeated V5 remain OPEN. This correction claims no performance improvement.
+
+### V1cs prospective diagnostic — exact-profile SQL clean-build attribution
+
+The current SQL category928.407s is dominated by its512.702s independent clean
+build protocol. Before changing code, execute one exact-current clean A build
+with Cargo's unit timing report. Keep all three linked native tools, locked/
+offline dependencies, explicit host target, current dev/package/build profiles,
+incremental setting and both constant path maps. Use an empty owned target on
+the same storage class as the R3 explicit-host protocol, four Cargo/Rayon jobs,
+20GiB disk/2GiB memory reserves and1750s cap. Retain artifacts, commands, hashes,
+Cargo messages/timing data and CPU/wall evidence. Do not mix this attribution
+run into ordinary acceptance timing or call one A build full reproducibility
+qualification; eventual qualification still requires clean A/reused A/clean B.
+
+Good enough for this diagnostic: identify the dominant actual Cargo units,
+their compilation/build-script roles and dependency critical path, separating
+overlapping unit wall times from total child CPU and complete build elapsed.
+Compare the measured constraints with already investigated/rejected hypotheses.
+Register a bounded architectural proposal and whole-protocol benefit threshold
+before production edits. Preserve runtime assertions, individual version
+coverage, optimized behavior where required, independent construction and
+source/input invalidation. No lowered profile, dependency version change,
+retained cold-build output reuse or coverage exemption is authorized by this
+diagnostic. The complete600s objective and every required V5 scenario stay OPEN.
+
+### V1cs diagnostic complete — cost is real compilation, not a stalled test
+
+Exact-profile clean A links all three tools in245.342s/927.947CPU; guard247.852s.
+All385 Cargo timing units are retained with current commands, profiles, features,
+outputs and hashes. Source2dedd5864facdd80d0aee95d8241944c0d82e404 stays frozen.
+No reserve stop or surviving process occurs. This is an attributed single build,
+not clean-A/reused-A/clean-B qualification or an ordinary speedup comparison.
+
+Largest unit wall spans overlap: AWS-LC native build78.41s; LALRPOP compilation
+55.37s (49.56s codegen); PostgreSQL native parser build42.16s; Syn2.0.11734.55s
+and Syn3.0.535.20s. The Syn units are different required versions, not proof of
+duplicate compatible artifacts. PostgreSQL's build ends227.42s; its Rust library,
+tool library and final bin then finish the build at245.26s. LALRPOP is not the
+last dependency, but occupies build capacity150.67–206.04s. Its actual MySQL
+generator invocation takes0.04s. Do not sum unit wall durations as CPU or claim
+that deleting one unit saves its full duration on the complete critical path.
+
+### V1ct prospective feasibility — optimize build time of the parser generator
+
+Root-cause hypothesis: optimizing the LALRPOP generator library is disproportionate
+to the tiny grammar-generation workload. First use an external Cargo configuration
+override for profile.dev.package.lalrpop.opt-level=0 in a separately owned empty
+target. Do not edit production Cargo.toml or generated parser sources yet.
+Keep the current explicit host target, all three tools, dev optimization of every
+application/runtime dependency, locked/offline versions, constant A/B path maps,
+four-job allocation and safety reserves. Do not change Syn, crypto or C compiler
+settings, merge distinct feature graphs or reuse cold-build outputs.
+
+First screen: another single clean A with the same Cargo unit instrumentation,
+compare complete build wall/CPU and generated MySQL Rust bytes with V1cs. Require
+at least15% lower complete elapsed and lower CPU, identical parser output, and
+proof from Cargo artifacts that only the generator optimization profile changed.
+Different owned target paths and docs-only candidate revisions are recorded;
+this screen alone is not ordinary acceptance timing.
+
+If the screen passes, run matched ordinary complete clean-A/reused-A/clean-B
+protocols for baseline and candidate, retaining independent empty construction.
+Require at least15% and60s lower complete protocol elapsed, no CPU regression,
+all original executable identity/byte-equality rejection controls, and unchanged
+generated parser bytes. Confirm the benefit in reverse order before production
+adoption. Reject a marginal result rather than expanding profile changes.
+
+Any production adoption must separately qualify all affected MySQL parser/runtime
+assertions, generator invalidation/provenance, exact selected profiles, and the
+canonical component rebuilds required by a root-manifest change; keep optimized
+generated programs and product behavior intact. Register that bounded production
+scope only after feasibility. Complete phase gates/repeated V5 remain OPEN.
+
+### V1ct rejected — insufficient complete-build gain
+
+The generator-only override linked all three tools in236.174s/884.352CPU versus
+245.342s/927.947CPU. Whole-build improvement3.737% misses the predeclared15%
+screen. LALRPOP55.37s to13.23s does not transfer to the complete critical path.
+Both191385-byte generated parsers have SHA256
+b13346bef9e66f8c81a3a7c7d5e779dec950cf6da6a8b07432c0b7d09cb06e24.
+Cargo profiles/features/versions match except the generator optimization override.
+Reject adoption and further qualification; production manifests remain unchanged.
+Evidence: v1cs-sql-clean-unit-diagnostic, v1ct-sql-clean-unit-diagnostic,
+v1ct-screen-result.json and both guard directories. These instrumented single
+clean-A builds are attribution, not full-protocol acceptance.
+
+### V1cu prospective diagnostic — native fixture preparation versus execution
+
+R3 advanced-data preparation29.388s was followed by its runtime assertion124.839s;
+backend loopback161.217s is another large native case. Reusable fixture isolation
+already exists, so do not presume the historical temporary-directory cache bug.
+Execute current exact preparation, advanced-data runtime assertion and backend
+runtime assertion sequentially, retaining targets and all assertions. Add libtest
+nocapture only; record command wall/CPU and emitted cache/build diagnostics.
+Use the actual driver Cargo graph, two Cargo/Rayon jobs per native worker,
+one test thread, no other heavy work,1750s per-command cap and20GiB disk/2GiB
+memory reserves. Check source ownership/capacity before and after. No production
+edits or cache deletion; separate warmed isolated evidence from integrated R3.
+Good enough: determine whether retained preparation is reused and locate the
+dominant compiler/native-build/runtime work before selecting a macro repair.
+If timing alone cannot attribute it, instrument one representative case only.
+No full-gate rerun is warranted by this diagnostic; all phase/V5 requirements remain.
+
+### V1cu concluded — isolated observations corroborate existing evidence
+
+The first diagnostic used the recorded parent PATH with direct Cargo rather
+than the effective uv launcher PATH. Stop it without drawing native reuse
+conclusions:159.350s, terminated, incomplete; its driver harness rebuild finished
+in99s. Preserve v1cu-native-fixture-diagnostic and its guard/correction record.
+The correction uses exactly one locked uv layer and asserts the effective PATH
+equals the recorded integrated launcher before any test.
+
+Source-frozen corrected run passes all three exact cases: preparation70.306s/
+18.625CPU, advanced-data assertion26.926s/9.986CPU, backend assertion10.194s/
+4.810CPU. Each reports exactly one executed pass, zero failures/ignored. Guard
+110.325s, no reserve stop, source drift or surviving process. No product edits.
+The preparation uses the retained driver binary after a1.21s Cargo check but
+does link the generated native root. An observed family executable is894150648
+bytes. ELF section inspection records substantial nonallocated debug data.
+
+These observations are not a matched improvement over R3's124.839s/161.217s:
+cache warmth, prior source changes and competing work differ. The executable
+size/publication reads and isolated-versus-integrated disparity corroborate
+V1bs and V1v/V1y/V1z; they are not new cache defects or grounds to repeat their
+compression/hash experiments. Family ownership intentionally serializes mutation,
+Cargo and capture. Do not remove locks or fresh byte checks on a timing guess.
+Stop this diagnostic and choose a macro structural change from the complete
+cost/coverage graph with a read-only architectural challenge of prior decisions.
+Complete gates and every V5 scenario remain OPEN.
+
+### V1cv prospective — CPU ownership at category boundaries
+
+Read-only architectural challenge retained externally in v1cu-macro-review.l_c3m_c0.
+Reject its proposed third-party seeded SQL B build: that removes independent
+third-party path/determinism coverage. Its Cargo unit-wall proportions are not
+CPU measurements, and estimated per-category CPU savings are not accepted facts.
+The complete R3 CPU bound still motivates reducing work, not only scheduling.
+
+Add small resource-accounting scopes to the existing POSIX Python verification
+orchestrator, using process-self plus waited-child CPU deltas at serial ownership
+boundaries. Cover preparation nodes, scalar steps, crate configurations and
+serial commands. Parallel areas measure inside their separate worker processes;
+never attribute a parent's overlapping RUSAGE_CHILDREN delta to one sibling.
+Keep nested inclusive scopes distinguishable with parent IDs and process IDs.
+No Popen/waitpid overrides, new launcher layers, changed environments, selection,
+profiles, cached test results or weakened acceptance. No per-child peak RSS or
+lock-wait inference from aggregate counters. CPU for killed/unwaited descendants
+is explicitly outside the counter's guarantee; missing work remains incomplete.
+
+Good enough: deterministic counter tests and real child/grandchild CPU controls,
+independent worker isolation, exception/nesting accounting and fake-child-log
+separation pass. Existing process/batch/area/preparation/progress contracts and
+file-size/diff checks pass; emitted plans remain identical. Independently review
+the exact candidate under the approved intermediate policy. This item measures
+cost and claims no speedup. Use the next justified integrated run to populate
+the current cost graph; do not rerun expensive tests just to test arithmetic.

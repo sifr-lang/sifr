@@ -5,6 +5,7 @@ import time
 from typing import Callable
 
 from .profile_commands import CommandFailed
+from .resource_scopes import measure_cpu
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,7 @@ class PreparationRun:
                 continue
             start = time.monotonic_ns()
             try:
-                node.callback()
+                measure_cpu("preparation", node.name, node.callback)
             except (CommandFailed, ValueError, RuntimeError, OSError) as error:
                 cause = getattr(error, "cause", None)
                 self.record(node, "fail", (time.monotonic_ns() - start) // 1_000_000,

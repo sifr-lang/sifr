@@ -548,3 +548,20 @@ Failed batch directories are retained and their location is reported. Successful
 private directories are removed after every output is checked. Public scalar CLI,
 generated-program execution and independently constructed certification remain
 separate assertions.
+
+CPU attribution is recorded separately in `[sifr-resource-scope]` events and the
+report's `resource_scopes` object. Preparation nodes, scalar steps, crate
+configurations and serial commands measure their owning process plus descendants
+whose resource usage has been reaped. Parallel areas measure inside each worker;
+native batches are measured as whole configurations, not by subtracting shared
+parent counters for overlapping children. No launcher, test selection or outcome
+changes are implied.
+
+Each scope records its process ID, scope ID and same-process parent ID. Nested
+CPU and wall measurements are inclusive: never sum a parent with its children,
+and never sum overlapping wall durations. CPU includes orchestration within the
+scope; it differs from the profile time file's child-only CPU. The counters do not
+measure aggregate peak memory, lock waiting, or work in abandoned/unwaited
+descendants. A returned scope is not a correctness pass. Raised scopes retain
+observed work; blocked work has no measurement. Child-emitted scopes remain
+separate observations and cannot establish gate status.
