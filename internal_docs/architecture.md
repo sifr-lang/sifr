@@ -2,6 +2,13 @@
 
 ## Architecture Scope
 
+- Production compiler identities use the package manifest's `package.metadata.sifr-build.production-inputs`
+  and optional `production-workspace-inputs`. Source roots, build scripts and embedded/generated
+  asset inputs are explicit; root Cargo configuration, lock and toolchain identity remain included.
+  Private unit modules can live under `tests/unit` and stay inside the same Rust test target through
+  `#[cfg(test)]` path declarations. Production reuse never authorizes reuse of test results:
+  verification evidence still binds its complete test and fixture inputs.
+
 - Source method-call HIR carries an explicit typed dispatch authority alongside receiver convention, checked mutable places and source ranges. Typed lowering assigns builtin/intrinsic, protocol, local or inherited nominal, imported, or Rust-adapted authority from the resolved receiver and declaration before publishing HIR; unsupported pairs receive diagnostics, and an unclassified call cannot leave lowering. The indexed metadata v5 wire record round-trips that authority and rejects older or malformed authority records.
   The validated builtin `len(...)` producer assigns builtin authority for its supported optional payloads while retaining the optional receiver representation. This admission does not extend to direct optional methods. Codegen routes typed defaultdict bucket mutations to the canonical insertion authority before plain-dict representation shortcuts.
 - LSP embedding entrypoints require the caller's explicit compiler context (or product identity for the identity entrypoint), carried into session/workspace construction before any queries. Dependency-bound test identity construction is confined to the test session constructor.

@@ -25,7 +25,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_project_build_check.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_project_build_check.rs",
         "test_name": "test_build_cached_package_project_links_direct_rust_interop_dependency"
       }
     }

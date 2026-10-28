@@ -2,6 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
+- Latest delivery: D5 bounded ordinary driver concurrency; D6 production-input ownership next
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1081,3 +1082,167 @@ Full phase correctness, coverage, invalidation and repeated480-second timing
 qualification remain open. The SQL511.420s independent-clean protocol and native
 build allocation remain macro priorities; do not sum gains across different
 candidates or call these separate category runs an integrated gate pass.
+
+#### D5 closure
+
+Merged [PR #4517](https://github.com/sifr-lang/sifr/pull/4517). Qualified and reviewed
+final candidate `3a9fd8388c622b22ce35fb3047c21b55efa6066a`; normal merge
+`7ae4903dce3531c547c5dbb7bb0e847c6692b04a`. Final input binding passed after canonical
+Cargo preparation, which remained fresh. All3,735 filesystem ownership sites pass.
+The first binding helper failed before tests because its external import path
+omitted the repository; the corrected invocation passes and both are retained.
+
+Independent read-only Claude Opus review: **SATISFIED, no blocking findings**,
+`dev-verify-d5-review-76_kg5dr/response.md`. Evidence archive
+`dev-verify-d5-qualified-evidence.tar.gz` has SHA-256
+`c0a28fc9503db26c27f4bd6092c57a92c4ac21c338869ffff5bc282992c442c7`;
+all52 payloads verified after transfer. All12 local documentation destinations
+resolve. CI is not claimed passing. Follow-ups: ad hoc execution without prior
+preparation compiles the driver with the nested job allocation; document that
+preparation assumption if exposing such an entry point. The child test's libtest
+summary check fails closed if Rust changes its human-readable output format.
+
+### D6 — explicit production inputs and private test ownership (prospective)
+
+The current local-token producer hashes the complete package, and the executable
+aggregate hashes every file under crates. Consequently private assertion edits
+can change production identities and invalidate downstream products even when
+Rust excludes those assertions from production compilation. D1 removed one
+verification-only crate from that namespace; it did not repair this general
+ownership boundary.
+
+Establish positive production input roots for first-party packages using their
+manifests as the ownership authority. Include manifests, build scripts, generated
+source inputs and declared embedded assets. Keep the existing conservative
+toolchain/configuration/dependency identities. Do not derive identity from a
+previous build's dep-info, a Git-only file list, or a blanket test-name exclusion.
+Missing or invalid ownership must fail closed. Source archives must work.
+
+Move private test modules outside production roots while preserving Rust module
+privacy, discovery IDs, assertions, fixtures and snapshot order. Begin with the
+driver and identity ownership boundary, then expand only through verified module
+ownership. Keep distinct build configurations and required native semantics.
+Do not introduce many integration crates or replace native execution with mocks.
+Reconcile the affected policy inventories without changing classifications.
+
+Acceptance requires actual Cargo builds and consumer execution, not just stable
+digests: assertion/shared-test-support and fixture edits rebuild the correct test
+products without changing production identity; production implementation/assets,
+input addition/deletion, features and toolchains still invalidate the required
+products. Compare discovered test identities, all affected focused controls and
+complete driver coverage. Check observed rustc/build-script input paths against
+the declared roots as an independent omission check. Retain cold preparation
+separately from representative edit-cycle timing. Require a material complete
+cycle improvement before adoption, plus exact-candidate independent review.
+
+This item does not yet remove root manifest/lock invalidation or qualify the
+SQL provenance repair. Do not update existing component producer receipts without
+rebuilding their artifacts. Full phase gates, complete coverage/invalidation and
+repeated480-second qualification remain open.
+
+#### D6 implementation checkpoint
+
+Baseline at3a9fd838: canonical production CLI build plus the same focused parser
+test took1.315s unchanged,16.476s after an assertion-only edit,13.548s after restoring
+it. The production binary hash changed for the assertion edit and returned exactly
+on restoration. Separate initial preparation took22.126s. These are narrow edit
+cycles, not full gate timings; raw results remain `dev-verify-d6-baseline-*`.
+
+The prototype declares positive package-relative production roots in first-party
+Cargo manifests, plus explicit workspace-relative roots for parser/vendor inputs
+and generated/embedded assets. Both local and aggregate identities use this
+authority; build-script extra-input lists move into the same manifest ownership.
+The aggregate enumerates explicit production workspace members instead of watching
+the entire crates directory. Global Cargo/lock/toolchain inputs remain conservative.
+Identity framing advances to v2; no old-identity fallback is introduced.
+
+All56 files in the driver's central private test module tree are relocated
+byte-for-byte to tests/unit at the same depth. Identity tests are likewise outside
+src. Existing module names/privacy remain intact. Other crates' inline/private
+test content remains conservatively owned until separately migrated; this is not
+a claim that every assertion in the workspace is already separated.
+
+Independent include inspection found standard-library sources embedded by
+sifr_stdlib_manifest outside its package directory. Their workspace root is now
+explicitly declared. Declared embedded Markdown must be hashed like any other
+asset; the prior extension exclusion is removed. Source-archive Cargo controls
+prove unchanged/private-test freshness, feature separation, asset addition/removal
+and external embedded-asset invalidation with actual consumer execution. Nine
+identity controls are being qualified; complete-driver comparison and independent
+review remain pending. The metadata consumer audit now includes private tests/unit
+sources and has a regression preventing their silent disappearance after relocation.
+
+#### D6 namespace correction and interrupted preparation — 2026-10-29
+
+The initial candidate1f6af6c6 is not qualified. Its first preparation was interrupted
+by an execution-host reboot after the production build, while driver tests were
+still compiling. On return the checkout was clean and retained targets/caches were
+present. Preserve the incomplete logs; no terminal passing receipt exists. This
+also separates the earlier baseline from the new boot for timing interpretation.
+
+The resumed attempt was deliberately cancelled after116.027s, with an empty owned
+session, after code inspection found a namespace conflict: application discovery
+already owns package.metadata.sifr and rejects unknown keys. Compiler build-input
+ownership now uses the separate package.metadata.sifr-build namespace. A focused
+package regression proves compiler metadata does not claim application discovery,
+can coexist with valid application metadata, and cannot weaken rejection of invalid
+application fields. Its source lives outside production roots under tests/unit.
+Nine identity controls pass again after the namespace correction.
+
+Before adoption, run the revised candidate's actual edit cycle and full affected
+coverage. In addition to the historical baseline, use a same-boot causal control:
+temporarily declare the private unit directory as a production input, reproduce
+the assertion-triggered production rebuild, then restore exact manifest/test bytes
+and the original production binary. This isolates the ownership effect without
+attributing host-reboot effects to the implementation. It is a counterfactual
+ownership variant, not a claim to rerun the historical implementation. The complete
+observed-input audit and independent review remain required.
+
+#### D6 retained edit-cycle and coverage checkpoint
+
+Runtime candidate `f6c7255f97963af0444fb544807b94fd7daea686` passed the same-boot
+ownership intervention. With private tests separated, the assertion edit plus
+production build and focused test took5.065s: no production compilation, unchanged
+production binary, and an actual driver test rebuild. Temporarily including
+`tests/unit` in the driver's declared production inputs reproduced the unwanted
+rebuild and took22.676s for the same edit cycle (77.66% lower when separated).
+The intervention is a controlled variant of this candidate, not the historical
+implementation. Exact original manifest/assertion bytes and production binary were
+restored. Initial candidate preparation357.983s remains separate from these timings.
+
+The independent observed-input audit covers3,347 source-input entries and451
+absolute build-script watches for the actual native CLI configuration, with zero
+undeclared inputs. It does not claim coverage of unbuilt feature/platform graphs.
+All31 prior build-script extra-input sets are retained; all56 relocated driver test
+files remain byte-identical to the base. Driver discovery matches the D5 inventory
+exactly. Complete ordinary driver execution passes805 tests,0 failures,82 ignored,
+in215.700s category time (217.043s outer guard). The ignored preparation helper
+passes separately in68.510s; the81 generated assertion cases remain under execution.
+These results do not constitute the final phase gate or a warm-category speedup.
+
+Source-archive controls additionally execute real consumers across the pinned
+Rust1.98.1 and the installed1.99.0-nightly toolchain: source identity remains stable,
+configured identity changes, and restoration recovers the original identities.
+An actual production-code edit and a build-script-generated Rust dependency both
+invalidate and execute their changed behavior. The first auxiliary fixture omitted
+optional watched roots and failed a freshness assertion; the corrected fixture's
+attempt with1.98.0 was correctly rejected by the minimum Rust version. Both failed
+attempts remain preserved beside the successful controls. These isolated experiments
+do not change the project's pinned qualification toolchain.
+
+No compiler, test, fixture or build inputs change after this runtime candidate.
+The final correction retains `package.metadata.sifr` for the application package
+example, distinct from compiler build ownership `package.metadata.sifr-build`.
+A final policy check exposed two stale method-inventory fingerprints after the
+namespace correction. Only those fingerprints are refreshed: the reviewed lexical
+operations, classifications, owners and obligations remain identical. The method
+inventory check now passes6,458 sites and235 reviewed nodes; the original failure
+is preserved. Final format, file size, unsafe, filesystem and metadata checks also
+pass (4,567 files,410 unsafe sites and3,742 filesystem sites respectively).
+
+Bind final review to the final commit and retain the actual runtime candidate.
+Before reusing runtime evidence, compare all tracked/submodule inputs, allowing
+only this prose, the architecture prose and the two reviewed inventory fingerprint
+fields; require byte-identical driver executable and unchanged discovery after
+canonical Cargo preparation at the final commit. Complete generated execution, shared-helper/fixture edit controls,
+independent review and final phase qualification remain pending.

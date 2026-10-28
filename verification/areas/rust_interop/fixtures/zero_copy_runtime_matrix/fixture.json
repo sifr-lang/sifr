@@ -12,7 +12,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_zero_copy_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_zero_copy_support.rs",
         "test_name": "test_check_zero_copy_borrow_escape_and_invalid_mutability_rejected"
       }
     },
@@ -25,7 +25,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_zero_copy_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_zero_copy_support.rs",
         "test_name": "test_build_zero_copy_crate_backed_view_lifecycle"
       }
     }

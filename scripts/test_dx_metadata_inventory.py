@@ -10,6 +10,18 @@ from check_dx_metadata_inventory import check_external_fields
 
 
 class MetadataInventoryTests(unittest.TestCase):
+    def test_private_unit_modules_remain_discovered_after_production_separation(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            relative = "crates/sifr_driver/tests/unit/consumer.rs"
+            path = root / relative
+            path.parent.mkdir(parents=True)
+            path.write_text("fn parity(external_defs: ExternalDefs) { consume(external_defs); }")
+            with patch.object(inventory, "ROOT", root), patch.object(inventory, "OWNERS", ("sifr_driver",)), patch.object(inventory, "SHARED_TEST_SOURCES", ()):
+                result = inventory.sites()
+                self.assertIn(relative, result)
+                self.assertIn("| read | test setup/parity |", result)
+
     def test_shared_oracle_is_discovered_and_semantic_drift_changes_inventory(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)

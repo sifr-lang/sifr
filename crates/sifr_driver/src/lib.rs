@@ -96,6 +96,7 @@ pub(crate) use test_runner::{build_test_runner_project, execute_test_runner_proj
 pub(crate) use test_runner::{compose_test_runner_lib, generate_test_runner_cargo_toml};
 
 #[cfg(test)]
+#[path = "../tests/unit/mod.rs"]
 mod tests;
 
 mod compiled_identity;

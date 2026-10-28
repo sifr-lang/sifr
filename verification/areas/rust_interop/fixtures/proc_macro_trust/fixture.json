@@ -12,7 +12,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
         "test_name": "test_check_untrusted_proc_macro_rejected_pre_execution"
       }
     },
@@ -25,7 +25,7 @@
         "profile": "merge",
         "step": "crate_tests",
         "suite_id": "sifr_driver_generated_builds",
-        "test_file": "crates/sifr_driver/src/tests/package_rust_interop_proc_macro_support.rs",
+        "test_file": "crates/sifr_driver/tests/unit/package_rust_interop_proc_macro_support.rs",
         "test_name": "test_build_trusted_proc_macro_and_deterministic_codegen"
       }
     }

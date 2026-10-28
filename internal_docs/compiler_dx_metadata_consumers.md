@@ -720,91 +720,91 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_driver/src/test_runner/interop_tests.rs:33` `stdlib_interop_test_project_materializes_selected_contracts` | read, enumerate | test setup/parity | 33, 52, 65 |
 | `crates/sifr_driver/src/test_runner/interop_tests.rs:94` `stdlib_interop_test_project_empty_demand_stays_empty` | read | test setup/parity | 94, 108, 111 |
 | `crates/sifr_driver/src/test_runner/orchestrator.rs:81` `build_test_runner_project_with_package` | read, enumerate, clone projection | layered view + demanded record handles | 106, 108, 109, 111, 117, 164, 176, 205, 218, 221 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:76` `compile_with_contract` | read, clone projection | test setup/parity | 81, 85 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:90` `required_const_and_factory_defaults_finalize_constructor_parameters` | read | test setup/parity | 103, 114 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:140` `provisional_descriptor_defaults_do_not_reject_later_required_fields` | read, enumerate | test setup/parity | 151 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:165` `descriptor_arguments_evaluate_nested_imported_const_calls` | read | test setup/parity | 175 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:187` `descriptor_arguments_evaluate_reexported_const_calls` | read, clone projection | test setup/parity | 210, 214, 217 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:229` `adapter_identities_ignore_source_movement_and_distinguish_default_states` | read | test setup/parity | 233 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:278` `unrelated_declaration_order_does_not_change_adapter_identity` | read | test setup/parity | 287 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:311` `relevant_adapter_edits_invalidate_invocation_and_post_adapter_identity` | read | test setup/parity | 325 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:339` `inherited_fields_keep_parent_identity_and_concrete_generic_types` | read | test setup/parity | 355 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:369` `imported_concrete_generic_parent_keeps_provider_and_field_identity` | read, clone projection | test setup/parity | 393, 397, 400 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:411` `incompatible_inherited_field_reannotation_is_rejected` | read, enumerate, clone projection | test setup/parity | 429, 433 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:444` `compatible_inherited_reannotation_preserves_local_default_ordering` | read | test setup/parity | 458 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:468` `reexported_default_descriptors_finalize_constructor_parameters` | read, enumerate, clone projection | test setup/parity | 508, 512, 515 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:527` `checked_default_factories_support_functions_static_methods_and_constructors` | read, enumerate | test setup/parity | 550, 562 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:576` `adapted_factory_defaults_retain_static_specialization_output` | read, enumerate, clone projection | test setup/parity | 621, 625, 628, 635 |
-| `crates/sifr_driver/src/tests/adapter_defaults.rs:643` `invalid_constant_and_factory_defaults_are_rejected_by_the_adapter_boundary` | read, enumerate, clone projection | test setup/parity | 673, 677 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:16` `check_example` | read | test setup/parity | 17, 21 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:65` `async_python_error_channel_retains_stdlib_ancestry_without_data_parent` | read, enumerate | test setup/parity | 65, 66, 67 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:88` `async_python_error_channel_preserves_local_and_imported_error_ancestry` | read | test setup/parity | 103, 104, 106 |
-| `crates/sifr_driver/src/tests/async_python_error_channel.rs:126` `async_python_error_channel_preserves_same_named_stdlib_root_ancestry` | read | test setup/parity | 126 |
-| `crates/sifr_driver/src/tests/async_python_error_channel_native.rs:69` `async_python_error_channel_native_stdlib_nominal_collisions` | read | test setup/parity | 69 |
-| `crates/sifr_driver/src/tests/attached_api_aliases.rs:6` `local_generic_type_alias_forwards_attached_type_calls` | read, clone projection | test setup/parity | 24, 28, 31 |
-| `crates/sifr_driver/src/tests/attached_api_codegen.rs:54` `attached_type_api_codegen_keeps_the_concrete_owner_and_exact_bounds` | read, enumerate | test setup/parity | 69, 70, 72, 76, 78, 79 |
-| `crates/sifr_driver/src/tests/discovery_and_workspace.rs:368` `test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import` | read | test setup/parity | 368 |
-| `crates/sifr_driver/src/tests/discovery_and_workspace.rs:410` `test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match` | read | test setup/parity | 410 |
-| `crates/sifr_driver/src/tests/discovery_and_workspace.rs:445` `test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution` | read | test setup/parity | 445 |
-| `crates/sifr_driver/src/tests/early_adapters/identity_tests.rs:4` `adapter_edits_but_not_consumer_source_movement_invalidate_program_identity` | read, clone projection | test setup/parity | 7, 11, 14, 21 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:76` `compile_errors` | read, clone projection | test setup/parity | 80, 84 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:135` `attached_api_owner_accepts_method_slots_bound` | read, clone projection | test setup/parity | 163, 167 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:172` `erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost` | read, enumerate, clone projection | test setup/parity | 187, 191, 195, 201, 219, 231, 241, 250 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:264` `adapter_plan_retains_selected_attached_api_set` | read, enumerate, clone projection | test setup/parity | 281, 285, 288, 301 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:468` `unbound_generic_adapter_declaration_does_not_request_a_static_program` | read, clone projection | test setup/parity | 483, 487 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:492` `concrete_generic_adapted_child_receives_concrete_attached_signature` | read, enumerate, clone projection | test setup/parity | 520, 524, 527, 534, 550 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:683` `marker_reexports_keep_canonical_selection_but_not_runtime_imports` | read, enumerate, clone projection | test setup/parity | 698, 702, 705, 712 |
-| `crates/sifr_driver/src/tests/early_adapters.rs:770` `marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity` | read, enumerate, clone projection | test setup/parity | 787, 791, 794, 800 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:62` `compile_errors` | read, clone projection | test setup/parity | 63, 67 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:74` `handler_descriptors_select_checked_receivers_in_declaration_order` | read, enumerate, clone projection | test setup/parity | 105, 109, 112, 141 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:276` `inherited_handlers_precede_local_handlers_deterministically` | read, enumerate, clone projection | test setup/parity | 298, 302, 305, 327 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:343` `imported_inherited_handler_keeps_its_checked_owner` | read, enumerate, clone projection | test setup/parity | 374, 378, 381 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:426` `handler_target_changes_static_program_identity` | read, clone projection | test setup/parity | 441, 445, 448 |
-| `crates/sifr_driver/src/tests/handler_descriptors.rs:484` `self_annotation_keeps_the_current_generic_specialization` | read, enumerate, clone projection | test setup/parity | 494, 498, 501 |
-| `crates/sifr_driver/src/tests/imported_attached_apis.rs:30` `imported_selected_owner_uses_finalized_set_through_type_and_instance_aliases` | read, clone projection | test setup/parity | 47, 51, 54 |
-| `crates/sifr_driver/src/tests/imported_attached_apis.rs:78` `imported_generic_type_alias_forwards_attached_type_calls` | read, clone projection | test setup/parity | 96, 100, 103 |
-| `crates/sifr_driver/src/tests/inheritance_metadata.rs:6` `imported_parent_defaults_are_flattened_into_child_hir` | read, enumerate | test setup/parity | 19, 20, 22 |
-| `crates/sifr_driver/src/tests/package_visibility_tests.rs:4` `test_check_package_project_rejects_private_dependency_module` | read | test setup/parity | 49, 74, 77 |
-| `crates/sifr_driver/src/tests/project_build_check.rs:734` `test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest` | read | test setup/parity | 734 |
-| `crates/sifr_driver/src/tests/project_build_check.rs:775` `test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates` | read | test setup/parity | 775 |
-| `crates/sifr_driver/src/tests/project_generic_identity.rs:93` `test_build_project_centralizes_stdlib_nominal_union_payload` | read | test setup/parity | 93 |
-| `crates/sifr_driver/src/tests/project_graph.rs:13` `test_compile_frontend_modules_uses_explicit_diagnostic_style` | read, enumerate, clone projection | test setup/parity | 25, 29, 36 |
-| `crates/sifr_driver/src/tests/project_graph.rs:55` `test_check_and_project_lowering_share_typecheck_rules` | read | test setup/parity | 65, 66, 67 |
-| `crates/sifr_driver/src/tests/project_graph.rs:85` `test_project_lowering_propagates_imported_rust_opaque_close_ownership` | read, enumerate | test setup/parity | 113, 114, 116 |
-| `crates/sifr_driver/src/tests/project_graph.rs:128` `test_project_lowering_propagates_reexported_rust_opaque_close_ownership` | read, enumerate | test setup/parity | 160, 161, 163 |
-| `crates/sifr_driver/src/tests/project_graph.rs:175` `test_collect_project_modules_supports_single_level_relative_import` | read | test setup/parity | 198, 199, 200, 202, 203 |
-| `crates/sifr_driver/src/tests/project_graph.rs:207` `test_collect_project_modules_allows_non_main_stdlib_imports` | read | test setup/parity | 207, 232, 233, 234, 236, 237 |
-| `crates/sifr_driver/src/tests/project_graph.rs:241` `test_collect_project_modules_resolves_non_main_local_dependencies` | read | test setup/parity | 275, 276, 277, 279, 280, 281 |
-| `crates/sifr_driver/src/tests/project_graph.rs:458` `test_collect_project_modules_reports_unknown_module_in_non_main` | read, enumerate | test setup/parity | 483, 484, 485 |
-| `crates/sifr_driver/src/tests/project_graph.rs:495` `test_project_lowering_preserves_retained_callback_contract_through_reexports` | read, enumerate | test setup/parity | 542, 543, 544 |
-| `crates/sifr_driver/src/tests/project_graph.rs:556` `test_project_lowering_preserves_imported_method_callback_contract` | read, enumerate | test setup/parity | 594, 595, 596 |
-| `crates/sifr_driver/src/tests/project_graph.rs:608` `test_collect_project_modules_cycle_reports_error` | read, enumerate | test setup/parity | 644, 645, 646 |
-| `crates/sifr_driver/src/tests/project_graph_constants.rs:4` `test_collect_project_modules_exports_local_constants` | read | test setup/parity | 37, 38, 39, 42, 48 |
-| `crates/sifr_driver/src/tests/project_graph_constants.rs:61` `test_project_lowering_fits_imported_integer_constants` | read, enumerate | test setup/parity | 84, 85, 86, 89 |
-| `crates/sifr_driver/src/tests/project_graph_constants.rs:105` `test_project_lowering_does_not_fold_shadowed_imported_integer_constant` | read, enumerate | test setup/parity | 128, 129, 130 |
-| `crates/sifr_driver/src/tests/single_file_frontend.rs:328` `test_callback_error_union_same_basename_identities_compile_distinctly` | read | test setup/parity | 349 |
-| `crates/sifr_driver/src/tests/single_file_frontend.rs:617` `test_source_python_error_contract_without_interop_has_no_runtime_bridge` | read | test setup/parity | 630 |
-| `crates/sifr_driver/src/tests/single_file_frontend.rs:634` `test_source_python_error_contract_with_interop_gets_runtime_bridge` | read | test setup/parity | 649 |
-| `crates/sifr_driver/src/tests/single_file_frontend.rs:655` `test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge` | read | test setup/parity | 685 |
-| `crates/sifr_driver/src/tests/stdlib_exports.rs:8` `compiled_stdlib_exports_match_public_reference` | read, enumerate, clone projection | test setup/parity | 8, 9 |
-| `crates/sifr_driver/src/tests/stdlib_exports.rs:96` `compiled_stdlib_same_operation_groups_have_one_public_name` | read, enumerate | test setup/parity | 96, 97 |
-| `crates/sifr_driver/src/tests/stdlib_exports.rs:134` `stdlib_heapq_exports_allowlisted_private_max_heap_helpers` | read | test setup/parity | 134, 135 |
-| `crates/sifr_driver/src/tests/stdlib_exports.rs:152` `stdlib_integer_constants_fold_in_project_fixed_width_initializers` | read, enumerate | test setup/parity | 152, 167, 168, 172, 175 |
-| `crates/sifr_driver/src/tests/test_runner.rs:134` `test_run_tests_support_module_named_main_imports_root_owned_unions` | read | test setup/parity | 175, 177, 182 |
-| `crates/sifr_driver/src/tests/test_runner.rs:550` `test_generate_test_runner_cargo_toml_includes_required_features` | read | test setup/parity | 551, 553, 554, 555, 556, 559 |
-| `crates/sifr_driver/src/tests/test_runner.rs:570` `test_generate_test_runner_cargo_toml_preserves_stdlib_deps` | read | test setup/parity | 570, 571, 574 |
-| `crates/sifr_driver/src/tests/test_runner.rs:582` `test_generate_test_runner_cargo_toml_uses_stdlib_toml_feature` | read | test setup/parity | 582, 583, 586 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:72` `descriptor_calls_in_runtime_locations_are_rejected` | read, enumerate, clone projection | test setup/parity | 81, 85 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:98` `descriptor_const_failure_uses_stable_meta_diagnostic` | read, enumerate, clone projection | test setup/parity | 107, 111 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:122` `descriptor_const_budget_failure_is_stable` | read, enumerate, clone projection | test setup/parity | 131, 135 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:148` `mixed_canonical_providers_fail_before_descriptor_evaluation` | read, enumerate, clone projection | test setup/parity | 186, 190 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:206` `typed_descriptor_project_preserves_all_kinds_and_callable_identity` | read, enumerate, clone projection | test setup/parity | 225, 229, 233, 239, 246, 277 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:288` `nested_annotated_descriptors_flatten_inner_to_outer_before_rhs` | read, enumerate, clone projection | test setup/parity | 298, 302, 305 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:325` `unrelated_same_basename_is_not_a_descriptor` | read, clone projection | test setup/parity | 344, 348, 352 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:359` `callable_identities_support_static_methods_and_type_constructors` | read, enumerate, clone projection | test setup/parity | 377, 381, 384 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:414` `ordinary_class_assignment_keeps_its_existing_diagnostic` | read, enumerate, clone projection | test setup/parity | 424, 428 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:437` `provider_descriptor_union_accepts_assignable_record_members` | read, enumerate, clone projection | test setup/parity | 487, 491, 494 |
-| `crates/sifr_driver/src/tests/typed_descriptors.rs:506` `descriptor_return_type_is_checked_against_provider_before_use` | read, enumerate, clone projection | test setup/parity | 526, 530 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:76` `compile_with_contract` | read, clone projection | test setup/parity | 81, 85 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:90` `required_const_and_factory_defaults_finalize_constructor_parameters` | read | test setup/parity | 103, 114 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:140` `provisional_descriptor_defaults_do_not_reject_later_required_fields` | read, enumerate | test setup/parity | 151 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:165` `descriptor_arguments_evaluate_nested_imported_const_calls` | read | test setup/parity | 175 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:187` `descriptor_arguments_evaluate_reexported_const_calls` | read, clone projection | test setup/parity | 210, 214, 217 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:229` `adapter_identities_ignore_source_movement_and_distinguish_default_states` | read | test setup/parity | 233 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:278` `unrelated_declaration_order_does_not_change_adapter_identity` | read | test setup/parity | 287 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:311` `relevant_adapter_edits_invalidate_invocation_and_post_adapter_identity` | read | test setup/parity | 325 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:339` `inherited_fields_keep_parent_identity_and_concrete_generic_types` | read | test setup/parity | 355 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:369` `imported_concrete_generic_parent_keeps_provider_and_field_identity` | read, clone projection | test setup/parity | 393, 397, 400 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:411` `incompatible_inherited_field_reannotation_is_rejected` | read, enumerate, clone projection | test setup/parity | 429, 433 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:444` `compatible_inherited_reannotation_preserves_local_default_ordering` | read | test setup/parity | 458 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:468` `reexported_default_descriptors_finalize_constructor_parameters` | read, enumerate, clone projection | test setup/parity | 508, 512, 515 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:527` `checked_default_factories_support_functions_static_methods_and_constructors` | read, enumerate | test setup/parity | 550, 562 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:576` `adapted_factory_defaults_retain_static_specialization_output` | read, enumerate, clone projection | test setup/parity | 621, 625, 628, 635 |
+| `crates/sifr_driver/tests/unit/adapter_defaults.rs:643` `invalid_constant_and_factory_defaults_are_rejected_by_the_adapter_boundary` | read, enumerate, clone projection | test setup/parity | 673, 677 |
+| `crates/sifr_driver/tests/unit/async_python_error_channel.rs:16` `check_example` | read | test setup/parity | 17, 21 |
+| `crates/sifr_driver/tests/unit/async_python_error_channel.rs:65` `async_python_error_channel_retains_stdlib_ancestry_without_data_parent` | read, enumerate | test setup/parity | 65, 66, 67 |
+| `crates/sifr_driver/tests/unit/async_python_error_channel.rs:88` `async_python_error_channel_preserves_local_and_imported_error_ancestry` | read | test setup/parity | 103, 104, 106 |
+| `crates/sifr_driver/tests/unit/async_python_error_channel.rs:126` `async_python_error_channel_preserves_same_named_stdlib_root_ancestry` | read | test setup/parity | 126 |
+| `crates/sifr_driver/tests/unit/async_python_error_channel_native.rs:69` `async_python_error_channel_native_stdlib_nominal_collisions` | read | test setup/parity | 69 |
+| `crates/sifr_driver/tests/unit/attached_api_aliases.rs:6` `local_generic_type_alias_forwards_attached_type_calls` | read, clone projection | test setup/parity | 24, 28, 31 |
+| `crates/sifr_driver/tests/unit/attached_api_codegen.rs:54` `attached_type_api_codegen_keeps_the_concrete_owner_and_exact_bounds` | read, enumerate | test setup/parity | 69, 70, 72, 76, 78, 79 |
+| `crates/sifr_driver/tests/unit/discovery_and_workspace.rs:368` `test_workspace_resolver_reclassifies_unresolved_bare_stdlib_import` | read | test setup/parity | 368 |
+| `crates/sifr_driver/tests/unit/discovery_and_workspace.rs:410` `test_workspace_resolver_prefers_real_user_module_over_bare_stdlib_match` | read | test setup/parity | 410 |
+| `crates/sifr_driver/tests/unit/discovery_and_workspace.rs:445` `test_workspace_resolver_keeps_stdlib_imports_out_of_filesystem_resolution` | read | test setup/parity | 445 |
+| `crates/sifr_driver/tests/unit/early_adapters/identity_tests.rs:4` `adapter_edits_but_not_consumer_source_movement_invalidate_program_identity` | read, clone projection | test setup/parity | 7, 11, 14, 21 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:76` `compile_errors` | read, clone projection | test setup/parity | 80, 84 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:135` `attached_api_owner_accepts_method_slots_bound` | read, clone projection | test setup/parity | 163, 167 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:172` `erased_marker_runs_adapter_and_specializes_without_layout_or_constructor_cost` | read, enumerate, clone projection | test setup/parity | 187, 191, 195, 201, 219, 231, 241, 250 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:264` `adapter_plan_retains_selected_attached_api_set` | read, enumerate, clone projection | test setup/parity | 281, 285, 288, 301 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:468` `unbound_generic_adapter_declaration_does_not_request_a_static_program` | read, clone projection | test setup/parity | 483, 487 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:492` `concrete_generic_adapted_child_receives_concrete_attached_signature` | read, enumerate, clone projection | test setup/parity | 520, 524, 527, 534, 550 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:683` `marker_reexports_keep_canonical_selection_but_not_runtime_imports` | read, enumerate, clone projection | test setup/parity | 698, 702, 705, 712 |
+| `crates/sifr_driver/tests/unit/early_adapters.rs:770` `marker_does_not_consume_the_optional_data_parent_and_adapter_sees_its_identity` | read, enumerate, clone projection | test setup/parity | 787, 791, 794, 800 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:62` `compile_errors` | read, clone projection | test setup/parity | 63, 67 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:74` `handler_descriptors_select_checked_receivers_in_declaration_order` | read, enumerate, clone projection | test setup/parity | 105, 109, 112, 141 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:276` `inherited_handlers_precede_local_handlers_deterministically` | read, enumerate, clone projection | test setup/parity | 298, 302, 305, 327 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:343` `imported_inherited_handler_keeps_its_checked_owner` | read, enumerate, clone projection | test setup/parity | 374, 378, 381 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:426` `handler_target_changes_static_program_identity` | read, clone projection | test setup/parity | 441, 445, 448 |
+| `crates/sifr_driver/tests/unit/handler_descriptors.rs:484` `self_annotation_keeps_the_current_generic_specialization` | read, enumerate, clone projection | test setup/parity | 494, 498, 501 |
+| `crates/sifr_driver/tests/unit/imported_attached_apis.rs:30` `imported_selected_owner_uses_finalized_set_through_type_and_instance_aliases` | read, clone projection | test setup/parity | 47, 51, 54 |
+| `crates/sifr_driver/tests/unit/imported_attached_apis.rs:78` `imported_generic_type_alias_forwards_attached_type_calls` | read, clone projection | test setup/parity | 96, 100, 103 |
+| `crates/sifr_driver/tests/unit/inheritance_metadata.rs:6` `imported_parent_defaults_are_flattened_into_child_hir` | read, enumerate | test setup/parity | 19, 20, 22 |
+| `crates/sifr_driver/tests/unit/package_visibility_tests.rs:4` `test_check_package_project_rejects_private_dependency_module` | read | test setup/parity | 49, 74, 77 |
+| `crates/sifr_driver/tests/unit/project_build_check.rs:734` `test_build_project_includes_reachable_support_module_stdlib_crates_in_manifest` | read | test setup/parity | 734 |
+| `crates/sifr_driver/tests/unit/project_build_check.rs:775` `test_build_project_manifest_ignores_unreachable_support_module_stdlib_crates` | read | test setup/parity | 775 |
+| `crates/sifr_driver/tests/unit/project_generic_identity.rs:93` `test_build_project_centralizes_stdlib_nominal_union_payload` | read | test setup/parity | 93 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:13` `test_compile_frontend_modules_uses_explicit_diagnostic_style` | read, enumerate, clone projection | test setup/parity | 25, 29, 36 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:55` `test_check_and_project_lowering_share_typecheck_rules` | read | test setup/parity | 65, 66, 67 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:85` `test_project_lowering_propagates_imported_rust_opaque_close_ownership` | read, enumerate | test setup/parity | 113, 114, 116 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:128` `test_project_lowering_propagates_reexported_rust_opaque_close_ownership` | read, enumerate | test setup/parity | 160, 161, 163 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:175` `test_collect_project_modules_supports_single_level_relative_import` | read | test setup/parity | 198, 199, 200, 202, 203 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:207` `test_collect_project_modules_allows_non_main_stdlib_imports` | read | test setup/parity | 207, 232, 233, 234, 236, 237 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:241` `test_collect_project_modules_resolves_non_main_local_dependencies` | read | test setup/parity | 275, 276, 277, 279, 280, 281 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:458` `test_collect_project_modules_reports_unknown_module_in_non_main` | read, enumerate | test setup/parity | 483, 484, 485 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:495` `test_project_lowering_preserves_retained_callback_contract_through_reexports` | read, enumerate | test setup/parity | 542, 543, 544 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:556` `test_project_lowering_preserves_imported_method_callback_contract` | read, enumerate | test setup/parity | 594, 595, 596 |
+| `crates/sifr_driver/tests/unit/project_graph.rs:608` `test_collect_project_modules_cycle_reports_error` | read, enumerate | test setup/parity | 644, 645, 646 |
+| `crates/sifr_driver/tests/unit/project_graph_constants.rs:4` `test_collect_project_modules_exports_local_constants` | read | test setup/parity | 37, 38, 39, 42, 48 |
+| `crates/sifr_driver/tests/unit/project_graph_constants.rs:61` `test_project_lowering_fits_imported_integer_constants` | read, enumerate | test setup/parity | 84, 85, 86, 89 |
+| `crates/sifr_driver/tests/unit/project_graph_constants.rs:105` `test_project_lowering_does_not_fold_shadowed_imported_integer_constant` | read, enumerate | test setup/parity | 128, 129, 130 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:328` `test_callback_error_union_same_basename_identities_compile_distinctly` | read | test setup/parity | 349 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:617` `test_source_python_error_contract_without_interop_has_no_runtime_bridge` | read | test setup/parity | 630 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:634` `test_source_python_error_contract_with_interop_gets_runtime_bridge` | read | test setup/parity | 649 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:655` `test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge` | read | test setup/parity | 685 |
+| `crates/sifr_driver/tests/unit/stdlib_exports.rs:8` `compiled_stdlib_exports_match_public_reference` | read, enumerate, clone projection | test setup/parity | 8, 9 |
+| `crates/sifr_driver/tests/unit/stdlib_exports.rs:96` `compiled_stdlib_same_operation_groups_have_one_public_name` | read, enumerate | test setup/parity | 96, 97 |
+| `crates/sifr_driver/tests/unit/stdlib_exports.rs:134` `stdlib_heapq_exports_allowlisted_private_max_heap_helpers` | read | test setup/parity | 134, 135 |
+| `crates/sifr_driver/tests/unit/stdlib_exports.rs:152` `stdlib_integer_constants_fold_in_project_fixed_width_initializers` | read, enumerate | test setup/parity | 152, 167, 168, 172, 175 |
+| `crates/sifr_driver/tests/unit/test_runner.rs:134` `test_run_tests_support_module_named_main_imports_root_owned_unions` | read | test setup/parity | 175, 177, 182 |
+| `crates/sifr_driver/tests/unit/test_runner.rs:550` `test_generate_test_runner_cargo_toml_includes_required_features` | read | test setup/parity | 551, 553, 554, 555, 556, 559 |
+| `crates/sifr_driver/tests/unit/test_runner.rs:570` `test_generate_test_runner_cargo_toml_preserves_stdlib_deps` | read | test setup/parity | 570, 571, 574 |
+| `crates/sifr_driver/tests/unit/test_runner.rs:582` `test_generate_test_runner_cargo_toml_uses_stdlib_toml_feature` | read | test setup/parity | 582, 583, 586 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:72` `descriptor_calls_in_runtime_locations_are_rejected` | read, enumerate, clone projection | test setup/parity | 81, 85 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:98` `descriptor_const_failure_uses_stable_meta_diagnostic` | read, enumerate, clone projection | test setup/parity | 107, 111 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:122` `descriptor_const_budget_failure_is_stable` | read, enumerate, clone projection | test setup/parity | 131, 135 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:148` `mixed_canonical_providers_fail_before_descriptor_evaluation` | read, enumerate, clone projection | test setup/parity | 186, 190 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:206` `typed_descriptor_project_preserves_all_kinds_and_callable_identity` | read, enumerate, clone projection | test setup/parity | 225, 229, 233, 239, 246, 277 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:288` `nested_annotated_descriptors_flatten_inner_to_outer_before_rhs` | read, enumerate, clone projection | test setup/parity | 298, 302, 305 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:325` `unrelated_same_basename_is_not_a_descriptor` | read, clone projection | test setup/parity | 344, 348, 352 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:359` `callable_identities_support_static_methods_and_type_constructors` | read, enumerate, clone projection | test setup/parity | 377, 381, 384 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:414` `ordinary_class_assignment_keeps_its_existing_diagnostic` | read, enumerate, clone projection | test setup/parity | 424, 428 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:437` `provider_descriptor_union_accepts_assignable_record_members` | read, enumerate, clone projection | test setup/parity | 487, 491, 494 |
+| `crates/sifr_driver/tests/unit/typed_descriptors.rs:506` `descriptor_return_type_is_checked_against_provider_before_use` | read, enumerate, clone projection | test setup/parity | 526, 530 |
 | `crates/sifr_codegen/src/body_analysis/call_conventions.rs:8` `collect_call_param_conventions` | read, enumerate | layered view + demanded record handles | 10, 12, 21 |
 | `crates/sifr_codegen/src/body_analysis/call_conventions.rs:25` `collect_local_call_param_conventions` | read, enumerate | layered view + demanded record handles | 27, 38, 60 |
 | `crates/sifr_codegen/src/body_analysis.rs:57` `build` | read | layered view + demanded record handles | 59, 61 |

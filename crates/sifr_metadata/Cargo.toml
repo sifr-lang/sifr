@@ -19,3 +19,6 @@ sifr_identity = { workspace = true, features = ["build"] }
 
 [lints]
 workspace = true
+
+[package.metadata.sifr-build]
+production-inputs = ["src", "build.rs"]

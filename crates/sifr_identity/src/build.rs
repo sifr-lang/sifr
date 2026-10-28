@@ -2,44 +2,17 @@
 #![allow(clippy::print_stdout)]
 use crate::IdentityEncoder;
 use std::{
-    env, fs, io,
+    env, io,
     path::{Path, PathBuf},
     process::Command,
 };
 
-fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
-    // Cargo recursively watches directory roots, including additions/removals and symlinks.
-    // Emitting every descendant repeats the same scan for each ancestor and bloats Cargo metadata.
-    println!("cargo:rerun-if-changed={}", path.display());
-    hash_tree(root, path, hash)
-}
-
-fn hash_tree(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
-    if path.is_dir() {
-        let mut children = fs::read_dir(path)?
-            .map(|e| e.map(|e| e.path()))
-            .collect::<io::Result<Vec<_>>>()?;
-        children.sort();
-        for child in children {
-            let name = child.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if matches!(name, ".git" | "target" | "__pycache__") {
-                continue;
-            }
-            hash_tree(root, &child, hash)?;
-        }
-    } else if path.is_file() {
-        let extension = path.extension().and_then(|s| s.to_str()).unwrap_or("");
-        if matches!(extension, "md" | "mdx") {
-            return Ok(());
-        }
-        let relative = path.strip_prefix(root).map_err(io::Error::other)?;
-        let name = relative
-            .to_str()
-            .ok_or_else(|| io::Error::other("non-UTF8 compiler input"))?;
-        hash.field(name, &fs::read(path)?);
-    }
-    Ok(())
-}
+#[path = "input_tree.rs"]
+mod input_tree;
+#[path = "production_inputs.rs"]
+mod production_inputs;
+use input_tree::visit;
+use production_inputs::{visit_package, workspace_packages};
 
 fn configuration(hash: &mut IdentityEncoder) -> io::Result<()> {
     let mut settings: Vec<_> = env::vars_os()
@@ -76,8 +49,8 @@ fn configuration(hash: &mut IdentityEncoder) -> io::Result<()> {
     Ok(())
 }
 
-/// Emit a package-local token. Its caller owns additional generated/parser inputs.
-pub fn emit_local_token(extra_roots: &[&str]) -> io::Result<()> {
+/// Emit a package-local token from manifest-owned production inputs.
+pub fn emit_local_token() -> io::Result<()> {
     let package = PathBuf::from(
         env::var_os("CARGO_MANIFEST_DIR")
             .ok_or_else(|| io::Error::other("missing package root"))?,
@@ -86,20 +59,12 @@ pub fn emit_local_token(extra_roots: &[&str]) -> io::Result<()> {
         .parent()
         .and_then(Path::parent)
         .ok_or_else(|| io::Error::other("missing workspace root"))?;
-    let mut hash = IdentityEncoder::new("compiled-package-inputs-v1");
-    visit(root, &package, &mut hash)?;
-    for input in [
-        "Cargo.toml",
-        "Cargo.lock",
-        "rust-toolchain.toml",
-        ".cargo",
-        "crates/sifr_identity",
-    ] {
+    let mut hash = IdentityEncoder::new("compiled-package-inputs-v2");
+    visit_package(root, &package, &mut hash)?;
+    for input in ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo"] {
         visit(root, &root.join(input), &mut hash)?;
     }
-    for input in extra_roots {
-        visit(root, &root.join(input), &mut hash)?;
-    }
+    visit_package(root, &root.join("crates/sifr_identity"), &mut hash)?;
     println!(
         "cargo:rustc-env=SIFR_PORTABLE_SOURCE_TOKEN={}",
         hash.clone().finish()
@@ -124,16 +89,18 @@ pub fn emit_product_identity() -> io::Result<()> {
         .parent()
         .and_then(Path::parent)
         .ok_or_else(|| io::Error::other("missing workspace root"))?;
-    let mut hash = IdentityEncoder::new("compiler-build-v1");
+    let mut hash = IdentityEncoder::new("compiler-build-v2");
     for input in [
         "Cargo.toml",
         "Cargo.lock",
         "rust-toolchain.toml",
         ".cargo",
-        "crates",
         "third_party",
     ] {
         visit(root, &root.join(input), &mut hash)?;
+    }
+    for package in workspace_packages(root)? {
+        visit_package(root, &package, &mut hash)?;
     }
     // Pair canonical compiler sources across native-tool feature/profile selections.
     // This is source identity, not permission to execute a helper or package authentication.
@@ -159,5 +126,5 @@ fn dependency_tokens(hash: &mut IdentityEncoder) {
 }
 
 #[cfg(test)]
-#[path = "build_tests.rs"]
+#[path = "../tests/unit/build_tests.rs"]
 mod tests;

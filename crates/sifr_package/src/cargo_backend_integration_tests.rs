@@ -1,5 +1,7 @@
 mod compiler_components;
 mod identity;
+#[path = "../tests/unit/production_metadata.rs"]
+mod production_metadata;
 
 use crate::test_support::{TestExpectErr as _, TestUnwrap as _};
 

@@ -1,5 +1,5 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    sifr_identity::build::emit_local_token(&[])?;
+    sifr_identity::build::emit_local_token()?;
 
     println!("cargo:rerun-if-env-changed=SIFR_RELEASE_VERSION");
     let version = std::env::var("SIFR_RELEASE_VERSION")

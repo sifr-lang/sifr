@@ -38,8 +38,9 @@ def functions(text: str):
 
 def consumer_sources():
     for owner in OWNERS:
-        for path in sorted((ROOT / "crates" / owner / "src").rglob("*.rs")):
-            yield owner, path, False
+        for directory in ("src", "tests/unit"):
+            for path in sorted((ROOT / "crates" / owner / directory).rglob("*.rs")):
+                yield owner, path, directory == "tests/unit"
     for relative in SHARED_TEST_SOURCES:
         path = ROOT / relative
         if not path.is_file():
