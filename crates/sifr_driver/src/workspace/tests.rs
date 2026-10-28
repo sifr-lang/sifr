@@ -1,32 +1,6 @@
 use super::*;
 use sifr_frontend::{DiskSourceProvider, SourceProvider};
-use std::sync::{Mutex, MutexGuard, OnceLock};
-
-static CWD_TEST_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-
-struct CurrentDirGuard {
-    previous: PathBuf,
-    _lock: MutexGuard<'static, ()>,
-}
-
-impl Drop for CurrentDirGuard {
-    fn drop(&mut self) {
-        std::env::set_current_dir(&self.previous).expect("restore cwd");
-    }
-}
-
-fn enter_test_cwd(path: &Path) -> CurrentDirGuard {
-    let lock = CWD_TEST_LOCK
-        .get_or_init(|| Mutex::new(()))
-        .lock()
-        .expect("cwd test lock should not be poisoned");
-    let previous = std::env::current_dir().expect("cwd exists");
-    std::env::set_current_dir(path).expect("chdir to test cwd");
-    CurrentDirGuard {
-        previous,
-        _lock: lock,
-    }
-}
+use std::process::Command;
 
 struct TempWorkspace {
     path: PathBuf,
@@ -105,15 +79,41 @@ fn test_find_workspace_root_returns_nearest_manifest() {
 
 #[test]
 fn test_find_workspace_root_normalizes_relative_root_manifest_to_curdir() {
+    const CHILD: &str = "SIFR_WORKSPACE_RELATIVE_ROOT_CHILD";
+    if let Some(expected_cwd) = std::env::var_os(CHILD) {
+        assert_eq!(
+            std::env::current_dir().expect("child cwd exists"),
+            PathBuf::from(expected_cwd)
+        );
+        let root = discovered(Path::new("src/main.sifr"), &mut DiskSourceProvider::new());
+        assert_eq!(root.dir, PathBuf::from("."));
+        assert_eq!(root.config.package_name.as_deref(), Some("relative"));
+        return;
+    }
+
     let tmp = TempWorkspace::new("relative_root");
     tmp.write("sifr.toml", "[package]\nname = \"relative\"\n");
     tmp.write("src/main.sifr", "");
-    let _cwd = enter_test_cwd(tmp.path());
-
-    let root = discovered(Path::new("src/main.sifr"), &mut DiskSourceProvider::new());
-
-    assert_eq!(root.dir, PathBuf::from("."));
-    assert_eq!(root.config.package_name.as_deref(), Some("relative"));
+    // A lock private to this test cannot protect unrelated compiler consumers.
+    // Set only the child's cwd, leaving the concurrent libtest process untouched.
+    let cwd = std::env::current_dir().expect("parent cwd exists");
+    let output = Command::new(std::env::current_exe().expect("test executable"))
+        .args([
+            "--exact",
+            "workspace::tests::test_find_workspace_root_normalizes_relative_root_manifest_to_curdir",
+            "--nocapture",
+        ])
+        .current_dir(tmp.path())
+        .env(CHILD, tmp.path().canonicalize().expect("fixture cwd exists"))
+        .output()
+        .expect("relative-path test child starts");
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success() && stdout.contains("1 passed; 0 failed"),
+        "relative-path child did not execute its assertion: {stdout}\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(std::env::current_dir().expect("parent cwd exists"), cwd);
 }
 
 #[test]

@@ -914,3 +914,42 @@ provenance failures remain open. Finish the diagnostic, account for every missin
 execution, and use controlled same-binary/context probes to choose the next macro
 improvement. Full phase correctness, coverage, invalidation and repeated480-second
 qualification remain outstanding.
+
+### D5 — isolated ordinary driver tests and bounded concurrency (investigation)
+
+The frozen integrated diagnostic executes ordinary driver tests with
+`RUST_TEST_THREADS=1`. Its independent metadata producer/recovery assertions
+perform real production repeatedly, so serial execution is a material cost.
+This observation is about the recorded diagnostic configuration, not proof that
+every normal developer invocation is serial. The local 30-test stateless stdlib
+codegen diagnostic took10.430s; optimizing that smaller group is deprioritized.
+
+Before comparing complete ordinary driver execution at one versus four workers,
+remove the one process-wide cwd mutation in the workspace relative-path test.
+Its private mutex does not protect unrelated tests. Run the exact existing
+relative-path assertion in a child with an explicit cwd; require a successful,
+nonempty libtest result and verify the parent's cwd remains unchanged. Keep the
+test's discovery identity and all assertions. No global compiler/context cache
+or source/input identity relaxation is part of this item.
+
+Then measure the same candidate's complete ordinary driver selection with
+retained products. Bound nested Cargo and Rayon work along with outer libtest
+workers, retain reserve monitoring and the diagnostic cap, and record actual
+elapsed time, CPU, peak process-tree memory, all passed/failed/ignored identities,
+and preparation separately. Inspect failure modes rather than retrying unchanged
+failures. Adopt a default scheduling change only after all assertions pass and
+complete-category elapsed time improves by at least15% without unsafe resource
+oversubscription. Compare emitted gate selections and affected runner self-tests
+if policy changes; otherwise retain this as a measured experiment. Independent
+exact-candidate review and focused workspace/driver regressions remain required.
+
+The remote integrated source stays frozen until its evidence is archived. This
+local preparation does not alter that run. Full correctness, coverage, invalidation
+and480-second phase qualification remain outstanding; SQL's511.420s independent
+clean build protocol is still a separate critical-path problem.
+
+The local focused workspace check passes all three selected discovery tests with
+four libtest threads, including the subprocess relative-path assertion. Cargo
+preparation took16.73s; total guarded invocation19.492s. Formatting, file-size
+guardrails (4,561 files) and diff checks pass. No concurrency policy is adopted
+yet; whole-category comparison is still required.
