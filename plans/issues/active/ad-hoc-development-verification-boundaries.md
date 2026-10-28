@@ -1197,3 +1197,43 @@ and the original production binary. This isolates the ownership effect without
 attributing host-reboot effects to the implementation. It is a counterfactual
 ownership variant, not a claim to rerun the historical implementation. The complete
 observed-input audit and independent review remain required.
+
+#### D6 retained edit-cycle and coverage checkpoint
+
+Runtime candidate `f6c7255f97963af0444fb544807b94fd7daea686` passed the same-boot
+ownership intervention. With private tests separated, the assertion edit plus
+production build and focused test took5.065s: no production compilation, unchanged
+production binary, and an actual driver test rebuild. Temporarily including
+`tests/unit` in the driver's declared production inputs reproduced the unwanted
+rebuild and took22.676s for the same edit cycle (77.66% lower when separated).
+The intervention is a controlled variant of this candidate, not the historical
+implementation. Exact original manifest/assertion bytes and production binary were
+restored. Initial candidate preparation357.983s remains separate from these timings.
+
+The independent observed-input audit covers3,347 source-input entries and451
+absolute build-script watches for the actual native CLI configuration, with zero
+undeclared inputs. It does not claim coverage of unbuilt feature/platform graphs.
+All31 prior build-script extra-input sets are retained; all56 relocated driver test
+files remain byte-identical to the base. Driver discovery matches the D5 inventory
+exactly. Complete ordinary driver execution passes805 tests,0 failures,82 ignored,
+in215.700s category time (217.043s outer guard). The ignored preparation helper
+passes separately in68.510s; the81 generated assertion cases remain under execution.
+These results do not constitute the final phase gate or a warm-category speedup.
+
+Source-archive controls additionally execute real consumers across the pinned
+Rust1.98.1 and the installed1.99.0-nightly toolchain: source identity remains stable,
+configured identity changes, and restoration recovers the original identities.
+An actual production-code edit and a build-script-generated Rust dependency both
+invalidate and execute their changed behavior. The first auxiliary fixture omitted
+optional watched roots and failed a freshness assertion; the corrected fixture's
+attempt with1.98.0 was correctly rejected by the minimum Rust version. Both failed
+attempts remain preserved beside the successful controls. These isolated experiments
+do not change the project's pinned qualification toolchain.
+
+Only documentation corrections follow this runtime candidate: the architecture's
+application package example must remain `package.metadata.sifr`, distinct from
+compiler build ownership `package.metadata.sifr-build`, plus this execution record.
+Bind final review to the final commit and retain the actual runtime candidate;
+reuse affected runtime evidence only after verifying all non-documentation inputs
+are identical. Complete generated execution, shared-helper/fixture edit controls,
+independent review and final phase qualification remain pending.
