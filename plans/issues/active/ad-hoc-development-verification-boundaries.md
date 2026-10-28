@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1, D2 and D4 delivered; D3 complete integrated discovery next
+- Status: in progress; D1, D2 and D4 delivered; D3 integrated discovery and inventory reconciliation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -291,7 +291,7 @@ independent review; complete final correctness, coverage and timing qualificatio
 remain required. This sequencing does not accept the proposed ordinary/expanded
 qualification split in section 11 or waive LOCAL-GATE invalidation scenarios.
 
-### D1 — dependency contract ownership (in progress)
+### D1 — dependency contract ownership (delivered)
 
 Move the 17 repository dependency integration targets, support code and evidence
 from the production manifest crate to `verification/tools/dependency_contracts`.
@@ -838,3 +838,30 @@ numbers changed; symbols, operations, classifications and payload fields are
 unchanged. Refresh those two documentation rows and run the inventory checker
 and its13 self-tests before retrying. The failed sweep, lane report and all
 blocked categories remain preserved; no main test execution is claimed.
+
+#### D3 integrated inventory reconciliation (prospective)
+
+The second sweep remains frozen at `7285e1fb34cef95eba226799fc175e71fc0b5078`.
+Its all-category failure continuation exposed integration omissions from D1/D4:
+the coverage matrix still classifies the 17 relocated dependency targets under
+their former production crate; four new audit identifiers violate the existing
+naming policy; and two FIFO-test unsafe sites lack local inventory records.
+The last omission also stops the architecture-policy self-tests after 35 tests.
+These are actual failed checks, not timing failures or cancelled execution.
+
+Prepare one bounded reconciliation while the unchanged remote sweep continues:
+move those exact 17 classification records to the verification package, rename
+only the rejected local audit identifiers, and author the FIFO allowance/call
+records with source-bound thread, lifetime, alias and ownership obligations.
+Preserve every assertion, target classification and profile assignment. Do not
+change the scanner, weaken the naming rule, or grant a broad unsafe allowance.
+The two FIFO records belong to the existing cache-owned external partition.
+
+Before merging this follow-up, run the current strict coverage readiness check,
+its negative self-tests, profile-assignment matrix, taxonomy and its self-tests,
+whole-tree unsafe/ABI checker and complete architecture-policy self-tests without
+fail-fast, and all relocated dependency/production manifest tests. Require pinned
+tools, formatting, file-size, diff/local-link checks and independent exact-candidate
+review. The previous failing sweep remains preserved. Reconcile every unexecuted
+test after diagnostic limits; no earlier failure becomes a pass by changing records.
+This repair makes no performance claim and does not close the full phase gate.
