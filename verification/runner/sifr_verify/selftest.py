@@ -37,6 +37,7 @@ from .dx4_fixture_checks import policy_checks as dx4_fixture_checks
 from .dx3_process_checks import policy_checks as dx3_process_checks
 from .profile_area_steps import run_selected_area
 from .python_interop_segmentation_checks import policy_checks as python_interop_segmentation_checks
+from .prepared_compiler_checks import policy_checks as prepared_compiler_checks
 from .profile_results import AreaResultError, validate_area_result
 from .area_result_checks import passing_case, policy_checks as area_result_checks
 from .profile_runner import timed_step
@@ -89,6 +90,7 @@ def run_all() -> list[str]:
         ("generated materialization completeness", generated_materialization_checks),
         ("fresh generated quality corpus ownership", generated_quality_batch_checks),
         ("Python interop segmented profile checks", python_interop_segmentation_checks),
+        ("Prepared compiler ownership checks", prepared_compiler_checks),
         ("generated Cargo setup policy checks", generated_cargo_setup_policy_checks),
         ("performance reference admission ordering", reference_admission_policy_checks),
         ("local correctness selection and evidence", execution_scope_checks),

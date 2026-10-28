@@ -43,7 +43,8 @@ from .step_budgets import (
 
 sys.path.insert(0, str(REPO_ROOT / "verification" / "areas" / "common"))
 
-from sifr_binary import resolve_sifr_binary  # noqa: E402
+from sifr_binary import PREPARE_COMMAND, prepare_sifr_binary, resolve_sifr_binary  # noqa: E402
+from prepared_compiler import PreparedCompilerSession, REFERENCE_ENV  # noqa: E402
 
 
 class ProfileRunnerError(VerificationError):
@@ -131,6 +132,16 @@ class ProfileRunner:
         self.env["SIFR_RUST_BRIDGE_PROBE_CACHE_DIR"] = str(probe_cache_root)
 
     def run(self) -> int:
+        # A new invocation must qualify its own producer, never inherit a prior run.
+        self.env.pop(REFERENCE_ENV, None)
+        with PreparedCompilerSession(REPO_ROOT) as products:
+            self.prepared_compiler = products
+            try:
+                return self.run_steps()
+            finally:
+                self.env.pop(REFERENCE_ENV, None)
+
+    def run_steps(self) -> int:
         self.print_header()
         if any(area["area"] == "performance" and set(area["suites"]).intersection(
                 {"rules", "smoke", "representative", "full"})
@@ -268,10 +279,29 @@ class ProfileRunner:
         run_command([sys.executable, str(script)], env=self.env)
 
     def prepare_compiler_identity(self):
-        binary = resolve_sifr_binary(REPO_ROOT, env=self.env)
+        from .fixture_execution import run_process
+        binary = prepare_sifr_binary(REPO_ROOT, env=self.env)
+        def identity(path):
+            result = run_process([str(path), "--print", "compiler-identity", "--json"],
+                                 cwd=REPO_ROOT, env=self.env)
+            if result.returncode or result.cause != "exit" or result.truncated:
+                raise RuntimeError("prepared compiler did not report its identity")
+            value = json.loads(result.stdout)
+            if not isinstance(value, dict) or value.get("identity_kind") != "product":
+                raise RuntimeError("prepared compiler identity is not a product")
+            return value.get("compiler_build_id")
+
+        binary = self.prepared_compiler.publish(
+            binary, identity_reader=identity,
+            producer={"command": list(PREPARE_COMMAND), "executable": str(binary)})
+        self.env[REFERENCE_ENV] = self.prepared_compiler.token
         for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
             if os.environ.get(variable):
                 resolve_sifr_binary(REPO_ROOT, explicit_env_var=variable, env=self.env)
+        # A copied development executable may live behind an external target
+        # symlink. Keep its source sysroot explicit for temporary-project consumers.
+        self.env.setdefault("SIFR_SYSROOT", str(REPO_ROOT))
+        for variable in ("SIFR_GCQ_BIN", "SIFR_RUNTIME_PLATFORM_BIN"):
             self.env[variable] = str(binary)
 
     def prepare_cargo_cache(self) -> None:
@@ -384,6 +414,7 @@ class ProfileRunner:
             run_segmented_python_interop(
                 suites=suites, profile_name=self.evidence_name,
                 command_runner=lambda command: run_command(command, env=self.env),
+                no_fail_fast=self.no_fail_fast,
             )
             return
         result_slug = CRITICAL_RESULT_SLUGS.get(area, area.replace("_", "-"))
