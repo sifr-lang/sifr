@@ -19850,3 +19850,30 @@ Cargo and capture. Do not remove locks or fresh byte checks on a timing guess.
 Stop this diagnostic and choose a macro structural change from the complete
 cost/coverage graph with a read-only architectural challenge of prior decisions.
 Complete gates and every V5 scenario remain OPEN.
+
+### V1cv prospective — CPU ownership at category boundaries
+
+Read-only architectural challenge retained externally in v1cu-macro-review.l_c3m_c0.
+Reject its proposed third-party seeded SQL B build: that removes independent
+third-party path/determinism coverage. Its Cargo unit-wall proportions are not
+CPU measurements, and estimated per-category CPU savings are not accepted facts.
+The complete R3 CPU bound still motivates reducing work, not only scheduling.
+
+Add small resource-accounting scopes to the existing POSIX Python verification
+orchestrator, using process-self plus waited-child CPU deltas at serial ownership
+boundaries. Cover preparation nodes, scalar steps, crate configurations and
+serial commands. Parallel areas measure inside their separate worker processes;
+never attribute a parent's overlapping RUSAGE_CHILDREN delta to one sibling.
+Keep nested inclusive scopes distinguishable with parent IDs and process IDs.
+No Popen/waitpid overrides, new launcher layers, changed environments, selection,
+profiles, cached test results or weakened acceptance. No per-child peak RSS or
+lock-wait inference from aggregate counters. CPU for killed/unwaited descendants
+is explicitly outside the counter's guarantee; missing work remains incomplete.
+
+Good enough: deterministic counter tests and real child/grandchild CPU controls,
+independent worker isolation, exception/nesting accounting and fake-child-log
+separation pass. Existing process/batch/area/preparation/progress contracts and
+file-size/diff checks pass; emitted plans remain identical. Independently review
+the exact candidate under the approved intermediate policy. This item measures
+cost and claims no speedup. Use the next justified integrated run to populate
+the current cost graph; do not rerun expensive tests just to test arithmetic.
