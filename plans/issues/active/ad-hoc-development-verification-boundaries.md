@@ -865,3 +865,20 @@ tools, formatting, file-size, diff/local-link checks and independent exact-candi
 review. The previous failing sweep remains preserved. Reconcile every unexecuted
 test after diagnostic limits; no earlier failure becomes a pass by changing records.
 This repair makes no performance claim and does not close the full phase gate.
+
+The first focused qualification at78d11 passes strict coverage, profile assignment,
+the whole-tree taxonomy and unsafe/ABI checks, and all56 architecture-policy
+self-tests. The separately invoked taxonomy unit suite exposes a stale helper
+name left by a85b56bb2; update that call to the existing renamed helper, preserving
+all positive and negative assertions. Dependency audits also require the pinned
+HTTP/application demo submodules, absent in the local checkout. Initialize those
+declared inputs before repeating qualification. Preserve the failed144.280s run;
+it is not a passing candidate. This remains a bounded verification reconciliation.
+
+The unchanged integrated sweep separately found SQL component provenance drift:
+PostgreSQL, MySQL and SQLite differ only in rootCargo.toml andCargo.lock after D1;
+words-component provenance is unchanged. These files also feed embedded component
+identities, so updating producer receipts alone would be invalid. Owner: this
+phase's production/verification identity boundary. Keep real artifact rebuilding
+and necessary invalidation until that boundary is repaired and qualified. This
+is separate from the inventory candidate; the complete phase gate stays open.
