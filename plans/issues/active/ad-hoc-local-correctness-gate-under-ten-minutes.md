@@ -19877,3 +19877,56 @@ file-size/diff checks pass; emitted plans remain identical. Independently review
 the exact candidate under the approved intermediate policy. This item measures
 cost and claims no speedup. Use the next justified integrated run to populate
 the current cost graph; do not rerun expensive tests just to test arithmetic.
+
+### V1cv delivered — PR4511
+
+PR4511 https://github.com/sifr-lang/sifr/pull/4511 merged normally as
+72212bc18219dcd1716dcd216218cc7f5c451a95. Its tree equals independently reviewed
+328663b1faabd8a9f0c3a4443e1691e5e64840cd. All93 affected tests and36 runner
+foundation groups pass; the foundation command takes75.764s. Profile, size and
+diff checks pass. The entire emitted merge-correctness plan equals retained R3.
+
+Preserve the initial failed output-count self-test and its correction to count
+canonical case records, still asserting all three pass/fail outcomes. The second
+external guard ends98.258s/exit1 only because its finalizer referenced nonexistent
+context.plan after all six commands passed. Read-only recovery compares the
+actual emitted-plan.json and confirms equality; no tests repeated for reporting.
+Both sessions finish empty, with frozen source and no reserve stop.
+The39-file verified archive v1cv-evidence.tar.gz has SHA256
+62cc46d2a5626da8a3d48b2036af7386060e766bdeea191b608d0f4394588b62.
+
+Independent Claude verdict SATISFIED, no blockers; response/disposition outside
+Git keyed by328663b1f. The review source export stayed byte-identical. Follow-up
+guidance: use enrolled worker logs for area observations; returned is not pass;
+nested scopes overlap. Reviewer prose line references are not exact coordinates.
+CI create-PR job122555850939 still fails before setup at unset
+SIFR_PERFORMANCE_REFERENCE; existing CI admission ownership, not green CI.
+Lint/format, uv invariant and WASI checks passed; other jobs were still running.
+No admin bypass. Desktop attachment again refused at100; no attachment removed.
+This accounting-only delivery claims no runtime gain. Final gates/V5 remain OPEN.
+
+### V1cw prospective — integrated correctness and CPU work reconciliation
+
+Run one current complete correctness-only merge diagnostic with failure
+continuation and the new CPU scopes. R3's inventory failures have focused repair,
+but that historical run remains failed. This run supplies a current integrated
+correctness result and missing category CPU attribution, not repeated timing
+qualification or an expectation of600s. Retain every selected preparation,
+configuration, area, runtime assertion, independent SQL build and invalidation
+contract. Publish the frozen candidate before portable graph preparation.
+
+Check exact launcher PATH, pinned tools, emitted selection equality, target
+storage/size, free disk, CPU/memory allocation and reserves. Retain prepared
+artifacts; no tracing, source edits or competing heavy work during measurement.
+Each category keeps1750s safety within the user's30-minute diagnostic cap;
+overall envelope4hours. Block consumers of failed preparation, continue independent
+failures, and explicitly account for any unexecuted category.
+
+Archive prior reports first. Reconcile all coverage and canonical outcomes, then
+join inclusive CPU scopes by kind/process/parent without adding parent and child.
+For parallel areas parse each enrolled worker's own saved stdout; deeper quoted
+records stay observations. Do not infer lock wait or memory from CPU deltas,
+and do not treat missing/killed descendant work as measured zero. Compare totals
+only under their declared self/child inclusion rules. Use current measured work
+and critical path to choose one next macro architecture with explicit retained
+properties and whole-category acceptance; do not revive rejected micro experiments.
