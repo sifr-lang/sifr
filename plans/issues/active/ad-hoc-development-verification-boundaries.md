@@ -699,3 +699,35 @@ bytes. No durability operation, retained-history bound, record hash, publication
 count, lease or corruption assertion is removed. Three direct opened-object
 controls and all six bundle controls pass locally. Repeat the unchanged complete
 history comparison before accepting this candidate; the 50% threshold remains.
+
+#### D4 single immutable commit authority (prospective)
+
+Candidate `ec70ed8f93683711086e5590ac60aeeda2f04d64` passes in101.492s
+(41.61% below the173.822s baseline), still below adoption. User/system CPU are
+31.01s/25.15s. Do not repeat it unchanged. The syscall control establishes four
+fsyncs per publication: durable bundle and directory, then durable pointer and
+directory. The next design removes the separate mutable cache pointer, rather
+than relaxing either committed data durability or fresh-byte validation.
+
+Use a writer-serialized monotonic sequence plus manifest digest as the committed
+bundle name. The shared driver/editor reader selects the highest committed name;
+its sequence, digest, context and complete current payloads must validate. A
+corrupt highest commit is a miss, never implicit reuse of a lower generation.
+Staging/prepared names are outside the committed index. Flush the complete staged
+bundle, validate it, then atomically rename and synchronize the commit directory.
+That rename is the visibility point; successful directory synchronization is the
+durability boundary. Keep the workspace hint advisory. Old committed bundles
+remain independently discoverable after an interrupted publication. No database,
+mutable append log, metadata freshness shortcut, or compatibility reader is added.
+
+Preserve the existing process-death controls at precommit preparation boundaries,
+and add death after durable commit, sequence/digest mismatch, overflow, ambiguous
+head and malformed-name controls. GC must retain an invalid highest commit and
+all ambiguous references, preserve live readers, and never let pruning roll back
+the valid head. Preserve every existing 4,097 publication, current-byte, bounds,
+read-only, reader-admission, low-descriptor and CLI assertion, adapting only
+representation-specific operations. Enumerating commit names adds work
+proportional to unpruned directory entries; measure this explicitly with4,097
+unpruned names and bound memory to one selected head. Do not claim constant-time
+head discovery. The existing >=50% complete-history adoption criterion, full
+ordinary-driver contribution, affected qualification and independent review remain.
