@@ -25721,20 +25721,6 @@
     },
     {
       "path": "crates/sifr_compiler_services/src/project_history/bundle.rs",
-      "symbol": "open",
-      "operation": "metadata",
-      "site": "let metadata = file.metadata()?;",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_compiler_services/src/project_history/bundle.rs",
-      "symbol": "open",
-      "operation": "is_file",
-      "site": "if !metadata.is_file() || metadata.len() > HEADER_BYTES + RECORD_LIMIT + MANIFEST_LIMIT {",
-      "classification": "build-identity"
-    },
-    {
-      "path": "crates/sifr_compiler_services/src/project_history/bundle.rs",
       "symbol": "write",
       "operation": "sync_all",
       "site": "file.sync_all()",
@@ -25872,6 +25858,153 @@
       "operation": "exists",
       "site": "assert!(retained.iter().all(|(_, path, _)| !path.exists()));",
       "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "canonicalize",
+      "site": "let root = root.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "write",
+      "site": "fs::write(&path, b\"original\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "rename",
+      "site": "fs::rename(&path, root.join(\"retained\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "write",
+      "site": "fs::write(&path, b\"replacement\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "metadata",
+      "site": "assert_eq!(metadata.ino(), file.metadata().unwrap().ino());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_handle_binds_bytes_and_metadata_across_path_replacement",
+      "operation": "metadata",
+      "site": "assert_ne!(metadata.ino(), fs::metadata(&path).unwrap().ino());",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "canonicalize",
+      "site": "let root = root.path().canonicalize().unwrap();",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "create_dir",
+      "site": "fs::create_dir(&parent).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "write",
+      "site": "fs::write(&path, b\"private\").unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, Permissions::from_mode(0o666)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&path, Permissions::from_mode(0o600)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&parent, Permissions::from_mode(0o777)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "set_permissions",
+      "site": "fs::set_permissions(&parent, Permissions::from_mode(0o700)).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "symlink",
+      "site": "symlink(&path, parent.join(\"alias\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "payload_rejects_unsafe_parent_file_symlinks_and_directories",
+      "operation": "symlink",
+      "site": "symlink(&parent, root.join(\"alias\")).unwrap();",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/owned_payload_tests.rs",
+      "symbol": "fifo_payload_is_rejected_without_waiting_for_a_writer",
+      "operation": "canonicalize",
+      "site": "let path = root.path().canonicalize().unwrap().join(\"fifo\");",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "open",
+      "site": ".open(path)?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "metadata",
+      "site": "let metadata = file.metadata()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/unix.rs",
+      "symbol": "read_owned_payload",
+      "operation": "is_file",
+      "site": "if !metadata.is_file() || metadata.uid() != uid() || metadata.permissions().mode() & 0o022 != 0",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_owned_payload",
+      "operation": "metadata",
+      "site": "let metadata = file.metadata()?;",
+      "classification": "build-identity"
+    },
+    {
+      "path": "crates/sifr_cache_storage/src/windows.rs",
+      "symbol": "read_owned_payload",
+      "operation": "is_file",
+      "site": "if !metadata.is_file() {",
+      "classification": "build-identity"
     }
   ]
 }

@@ -17,3 +17,6 @@ pub use child_lease::{inherit_lease_for_command, inherit_lease_for_private_comma
 
 mod process_lease;
 pub use process_lease::ProcessLease;
+
+#[cfg(all(test, unix))]
+mod owned_payload_tests;

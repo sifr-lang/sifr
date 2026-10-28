@@ -11,35 +11,32 @@ use std::{
 const MAGIC: &[u8; 8] = b"SIFRPH03";
 const HEADER_BYTES: u64 = 16;
 
-fn open(path: &Path) -> io::Result<(File, u64)> {
-    let parent = path
-        .parent()
-        .ok_or_else(|| invalid("missing bundle parent"))?;
-    let name = path
-        .file_name()
-        .ok_or_else(|| invalid("missing bundle name"))?;
-    storage::payload(parent, Path::new(name))?;
-    let mut file = storage::read_private_file(path)?;
-    let metadata = file.metadata()?;
-    if !metadata.is_file() || metadata.len() > HEADER_BYTES + RECORD_LIMIT + MANIFEST_LIMIT {
+fn open_file(path: &Path) -> io::Result<(File, u64)> {
+    let (file, metadata) = storage::read_owned_payload(path)?;
+    if metadata.len() > HEADER_BYTES + RECORD_LIMIT + MANIFEST_LIMIT {
         return Err(invalid("project bundle size limit"));
     }
-    let mut header = [0; HEADER_BYTES as usize];
-    file.read_exact(&mut header)?;
+    Ok((file, metadata.len()))
+}
+
+fn payload_length(header: &[u8; HEADER_BYTES as usize], file_length: u64) -> io::Result<u64> {
     if &header[..8] != MAGIC {
         return Err(invalid("invalid project bundle format"));
     }
     let mut length = [0; 8];
     length.copy_from_slice(&header[8..]);
     let length = u64::from_le_bytes(length);
-    if length > RECORD_LIMIT || metadata.len() < HEADER_BYTES + length {
+    if length > RECORD_LIMIT || file_length < HEADER_BYTES + length {
         return Err(invalid("invalid project bundle payload length"));
     }
-    Ok((file, length))
+    Ok(length)
 }
 
 pub(super) fn manifest(path: &Path) -> io::Result<Manifest> {
-    let (mut file, length) = open(path)?;
+    let (mut file, file_length) = open_file(path)?;
+    let mut header = [0; HEADER_BYTES as usize];
+    file.read_exact(&mut header)?;
+    let length = payload_length(&header, file_length)?;
     file.seek(SeekFrom::Start(HEADER_BYTES + length))?;
     let mut bytes = Vec::new();
     file.take(MANIFEST_LIMIT + 1).read_to_end(&mut bytes)?;
@@ -58,13 +55,26 @@ pub(super) fn manifest(path: &Path) -> io::Result<Manifest> {
 }
 
 pub(super) fn payload(path: &Path, expected: u64) -> io::Result<Vec<u8>> {
-    let (mut file, length) = open(path)?;
-    if length != expected {
-        return Err(invalid("changed immutable payload length"));
+    if expected > RECORD_LIMIT {
+        return Err(invalid("project bundle size limit"));
     }
-    let size = usize::try_from(length).map_err(|_| invalid("payload exceeds address space"))?;
+    let (mut file, file_length) = open_file(path)?;
+    if file_length < HEADER_BYTES + expected {
+        return Err(invalid("truncated immutable payload"));
+    }
+    let size = usize::try_from(HEADER_BYTES + expected)
+        .map_err(|_| invalid("payload exceeds address space"))?;
     let mut bytes = vec![0; size];
     file.read_exact(&mut bytes)?;
+    let mut header = [0; HEADER_BYTES as usize];
+    header.copy_from_slice(&bytes[..HEADER_BYTES as usize]);
+    if payload_length(&header, file_length)? != expected {
+        return Err(invalid("changed immutable payload length"));
+    }
+    // One bounded read includes the header and payload. Remove the small header
+    // in place rather than issuing a separate filesystem read for every record.
+    bytes.copy_within(HEADER_BYTES as usize.., 0);
+    bytes.truncate(size - HEADER_BYTES as usize);
     Ok(bytes)
 }
 

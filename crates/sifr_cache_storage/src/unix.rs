@@ -466,6 +466,25 @@ pub fn read_private_file(path: &Path) -> io::Result<File> {
         .open(path)
 }
 
+/// Read a direct child of an owned directory, checking the opened object rather
+/// than a pathname observation that could describe a different file.
+pub fn read_owned_payload(path: &Path) -> io::Result<(File, fs::Metadata)> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| invalid("missing payload parent"))?;
+    check_owned(parent)?;
+    let file = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+        .open(path)?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.uid() != uid() || metadata.permissions().mode() & 0o022 != 0
+    {
+        return Err(invalid("unsafe opened cache payload"));
+    }
+    Ok((file, metadata))
+}
+
 /// Open an existing stable lease without following a final symlink.
 pub fn read_write_private_file(path: &Path) -> io::Result<File> {
     check_owned(path)?;

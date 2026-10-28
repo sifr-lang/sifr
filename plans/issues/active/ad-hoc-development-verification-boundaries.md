@@ -676,3 +676,26 @@ identities. Retain every existing same-mtime, corruption, context, recency and
 owner-lifetime control. Repeat complete matched history timing and complete
 ordinary-driver/editor/CLI qualification on the revised candidate before review.
 The original prototype remains a rejected performance experiment.
+
+#### D4 opened-payload consolidation (under qualification)
+
+Candidate `138a714aa403075951e780e5ecc747550adfe91f` passes the unchanged
+4,097-publication test in 105.862s (39.10% below baseline), so adoption remains
+rejected. User CPU falls to 31.67s; system CPU is 28.47s. All nine local validator
+controls pass. The dependent ordinary-driver/editor/CLI sequence did not start.
+A corrected independently bounded observer passes its session guard: the real
+129-publication control passes, with 323 user samples and no lost samples;
+SHA-256 accounts for 19.20%. A separate syscall diagnostic passes and records
+79,306 metadata queries and 20,042 opens. Instrumented durations are not timing
+qualification. These observations justify consolidating repeated payload reads.
+
+The next candidate checks the actual opened Unix file's ownership, permissions
+and regular-file type, avoiding the redundant pathname metadata check before
+opening it. The parent directory remains checked on every read; final symlinks
+are forbidden. Nonblocking open permits rejecting FIFOs without hanging. Windows
+retains its existing ACL/reparse checks. The history reader reads the bounded
+header and expected payload together, then verifies the header before returning
+bytes. No durability operation, retained-history bound, record hash, publication
+count, lease or corruption assertion is removed. Three direct opened-object
+controls and all six bundle controls pass locally. Repeat the unchanged complete
+history comparison before accepting this candidate; the 50% threshold remains.
