@@ -98,7 +98,7 @@ fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
 }
 
 #[test]
-fn directory_watches_preserve_framing_order_and_own_embedded_assets() {
+fn directory_watch_refactor_preserves_hash_framing_order_and_exclusions() {
     let tree = Scratch::new();
     for (name, bytes) in [
         ("inputs/z.rs", "last"),
