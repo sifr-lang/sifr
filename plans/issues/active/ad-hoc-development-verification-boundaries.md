@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
-- Latest delivery: D5 bounded ordinary driver concurrency; D6 production-input ownership next
+- Latest delivery: D6 production-input ownership; D7 native corpus execution investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1246,3 +1246,68 @@ only this prose, the architecture prose and the two reviewed inventory fingerpri
 fields; require byte-identical driver executable and unchanged discovery after
 canonical Cargo preparation at the final commit. Complete generated execution, shared-helper/fixture edit controls,
 independent review and final phase qualification remain pending.
+
+
+#### D6 closure — 2026-10-29
+
+Merged [PR #4518](https://github.com/sifr-lang/sifr/pull/4518), final candidate
+`d389315721d73d723d4d00989f7ff35d65246084`, merge
+`4e90fb72c2cf5b312944a0c296514d5dee3fb6cb`. Independent read-only Claude review:
+**SATISFIED, no blocking findings**, `dev-verify-d6-review-e_28luh7/response.md`.
+The complete driver coverage and ownership checks are qualified; the full phase
+remains open.
+
+All81 generated assertion cases pass in439.735s outer-guard time, with their
+preparation helper passing separately. Shared-helper and embedded-fixture edits
+rebuild and execute the affected test while preserving production bytes, in14.685s
+and5.788s respectively; originals are restored and re-executed. Final binding
+passes after canonical Cargo preparation: all tracked/submodule inputs are unchanged
+except the documented prose and two inventory fingerprints; the driver binary is
+byte-identical (`4c289ad236e862e4c5686a146f66a53cdd290d2a4eb3608e5cb5672c37357a15`),
+as are discovery and emitted correctness plan. Runtime remains labeledf6c7255f;
+no false final-SHA execution claim is made. The final method inventory passes.
+
+`dev-verify-d6-qualified-evidence.tar.gz` has SHA-256
+`ad258e0b9c7e587e3b45a7212b954c5f62c7e1250800d0d477fb6fc591138b48`;
+all129 payloads verified after transfer. Earlier failed, cancelled and interrupted
+attempts remain included. Supplemental local source-archive controls and the final
+review are retained alongside it. CI is not claimed passing.
+
+Review follow-ups: make the external dep-info auditor recursively consume package
+ownership, and consider guarding unregistered build-script reads. Manual source
+inspection found no current omissions. The unconsumed tracked
+`crates/sifr/tmp_hashlib_api_subset.txt` remains with its original owner. Other
+private tests under src, root-manifest/lock invalidation, SQL component provenance,
+other configurations and full phase qualification remain open.
+
+### D7 — native corpus execution ownership and scheduling (prospective)
+
+Establish the current complete732-fixture native-corpus cost before adopting more
+architecture. Its latest recovery574.829s included0/186 cache hits and an actual
+native dependency rebuild, so it is not a representative retained baseline. The
+current harness serializes native groups and invokes Cargo separately for each,
+with one Cargo job despite a four-slot verification allocation.
+
+First prepare the exact current E2E test configuration and account separately for
+any reconstruction. Use the retained owned native cache. Measure normal complete
+runs, every fixture and native assertion intact, with the existing one-Cargo-job
+setting and then the admitted Cargo budget if the baseline exceeds the90s native
+corpus design budget. Keep all other inputs/profiles identical, report cache hits,
+frontend/native/runtime costs and resource reserves, and do not call reconstruction
+an optimization baseline. If the current retained category already meets its
+budget, record that and move to the next larger cost; no change is required merely
+to consume the investigation budget.
+
+If repeated per-group process/root-unit scheduling remains material, investigate
+one Cargo invocation for units proven to have the same native dependency and feature
+configuration, retaining distinct executable targets and each fixture's process.
+Preserve typed dependency-plan authority; do not unify unrelated feature sets or
+replace assertions. Shared mutable targets retain a single build owner. Source
+failure isolation, original batch failures, locked/offline resolution, stale/corrupt
+artifacts, interruption and safe lifetime/cleanup remain required. Do not introduce
+a second dependency resolver or treat cached output existence as fresh validation.
+
+Any implementation requires complete-category improvement, affected harness and
+allocation/failure regressions, unchanged selected coverage and independent review.
+The existing focused intermediate policy applies. This item does not alter the
+mandatory SQL independent-clean-build obligation or close final480-second acceptance.
