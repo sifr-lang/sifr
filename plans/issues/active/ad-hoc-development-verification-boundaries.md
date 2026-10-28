@@ -1018,3 +1018,66 @@ process-group signals; three are existing progress checks and one is the new
 reserve-monitor integration control. Preserve that failure and qualify these
 checks in the prepared execution environment. No passing cancellation claim is
 made. Formatting, file-size guardrails (4,563 files) and diff checks pass.
+
+#### Missing-category recovery and D5 complete comparison
+
+The frozen7285 recovery is complete. Generated-driver execution passed all81
+selected ignored tests in690.963s, with53.799s separate advanced preparation
+(747.674s guarded total). Native E2E passed all732 fixtures across186 native groups
+in574.829s (575.591s guarded):41.108s frontend,0.046s planning,519.492s native
+builds and12.205s execution. It had0/186 native cache hits and includes artifact
+reconstruction; this is coverage recovery, not warm timing acceptance. Previously
+interrupted trust-revocation and trusted-build-script cases now pass. The original
+integrated run remains failed/incomplete; separate recovery cannot relabel it.
+
+All94 recovery archive payloads were verified locally. Archive SHA-256:
+`d6e3b15703a2b6643f9397fe44e6d09040cb244fafe836e597453f2734ee14fe`.
+The source/installed-CLI diagnostic also passes18 invocations with exact matching
+outputs. Its small per-invocation savings are not a whole-gate forecast.
+
+D5 runtime qualification observed the exact candidate
+`f008ad7d3ddac04e3bc6d4b94c54e33be2f3d605` with unchanged tracked sources,
+canonical pinned uv entry, retained targets and four admitted resource slots.
+Both complete ordinary-driver runs passed805 tests,0 failed,82 ignored,0 filtered.
+Those82 ignored entries remain separately owned; D5 changes no test selection.
+
+| Measurement | Serial diagnostic allocation | Bounded parallel allocation |
+|---|---:|---:|
+| libtest / nested Cargo / Rayon workers | 1 / 4 / 4 | 4 / 1 / 1 |
+| Complete category elapsed | 498.296s | 161.236s |
+| Guarded invocation elapsed | 499.318s | 161.838s |
+| Inclusive category CPU | 447.392s | 515.356s |
+| Peak sampled session RSS | 1,486,778,368 bytes | 1,883,725,824 bytes |
+| Minimum available memory | 9,690,161,152 bytes | 9,182,781,440 bytes |
+
+Elapsed time improved67.64%, exceeding the prospective15% criterion. CPU grew
+15.19%; this is a bounded concurrency improvement, not elimination of equivalent
+CPU work. Sampling sums session RSS and may double-count shared pages. Both
+sessions ended empty with no reserve violation. Separate canonical preparation
+took38.599s, including three passing workspace discovery assertions. Forty
+allocation, selection, build-budget, progress/cancellation and native-allocation
+self-tests pass, including actual owned-process teardown. Pinned profile checks,
+formatting and file-size checks also pass. This qualifies the category relative
+to the recorded explicit serial configuration; the old unset libtest default
+could already parallelize, so this is not a measured gain for every prior default.
+
+The whole-tree filesystem-effect guard found one missing ownership record for
+the subprocess test's new canonicalize call. The correction classifies that exact
+call as tooling-input; all3,735 sites then pass. Coverage readiness, profile
+assignment and taxonomy checks pass. Preserve the initial failed guard and the
+earlier local cancellation failures rather than replacing their evidence.
+
+The final inventory-and-prose update uses the prospective input-binding protocol
+recorded before updating the measured candidate. Runtime evidence remains labeled
+f008ad7d. Reuse requires unchanged tracked/submodule inputs except the exact new
+inventory row and this phase prose, identical emitted plan and discovered tests,
+and a byte-identical driver executable after canonical Cargo preparation. Rerun
+the affected ownership guard on the final candidate. A failed binding requires
+affected runtime qualification again. The measured executable SHA-256 is
+`033c223b9f6ab8cb1d60a0d6e6553dc21704ce2838307a7c15f1e39963761b96`.
+Independent review of the final candidate remains required before adopting D5.
+
+Full phase correctness, coverage, invalidation and repeated480-second timing
+qualification remain open. The SQL511.420s independent-clean protocol and native
+build allocation remain macro priorities; do not sum gains across different
+candidates or call these separate category runs an integrated gate pass.

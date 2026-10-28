@@ -17096,6 +17096,13 @@
       "classification": "output-effect"
     },
     {
+      "path": "crates/sifr_driver/src/workspace/tests.rs",
+      "symbol": "test_find_workspace_root_normalizes_relative_root_manifest_to_curdir",
+      "operation": "canonicalize",
+      "site": ".env(CHILD, tmp.path().canonicalize().expect(\"fixture cwd exists\"))",
+      "classification": "tooling-input"
+    },
+    {
       "path": "crates/sifr_format/src/config.rs",
       "symbol": "discover_sifr_toml",
       "operation": "canonicalize",
