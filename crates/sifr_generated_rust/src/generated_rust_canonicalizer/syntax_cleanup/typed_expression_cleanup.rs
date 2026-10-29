@@ -74,16 +74,36 @@ pub(super) fn rewrite_with_facts(file: &mut syn::File, facts: &ProjectTypeFacts)
     .visit_file_mut(file);
 }
 
-include!("typed_initializer_cleanup.rs");
-include!("typed_expression_facts.rs");
-include!("typed_control_flow_facts.rs");
-include!("typed_local_type_facts.rs");
-include!("typed_generic_calls.rs");
-include!("typed_expression_types.rs");
-include!("typed_iterator_facts.rs");
-include!("typed_field_cleanup.rs");
-include!("typed_string_cleanup.rs");
-include!("typed_integer_cleanup.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_initializer_cleanup.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_facts.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_control_flow_facts.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_local_type_facts.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_generic_calls.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_types.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_iterator_facts.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_field_cleanup.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_string_cleanup.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_integer_cleanup.rs"
+);
 
 struct Rewriter<'facts> {
     iteration_dispatch_closed: bool,
@@ -102,7 +122,9 @@ struct Rewriter<'facts> {
     float_expectations: crate::generated_rust_canonicalizer::source_expectations::FloatExpectations,
 }
 
-include!("typed_type_shapes.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_type_shapes.rs"
+);
 
 impl Rewriter<'_> {
     fn bind(&mut self, pattern: &syn::Pat, ty: Option<syn::Type>) {
@@ -873,7 +895,9 @@ impl VisitMut for Rewriter<'_> {
     }
 }
 
-include!("typed_expression_tests.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_expression_tests.rs"
+);
 
 #[cfg(test)]
 #[path = "../../../tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs"]

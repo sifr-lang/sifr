@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D14; final phase qualification open
-- Latest delivery: D14 bounded CLI allocation; corrected matched performance qualification
+- Status: in progress; intermediate deliveries through D16; final phase qualification open
+- Latest delivery: D16 codegen test ownership; D17 compiler boundary investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2470,9 +2470,14 @@ validation above supplies the completed evidence.
 The 272-payload complete archive is SHA-256 verified:
 `dev-verify-d16-qualification.tar.gz`,
 `92ef330c99bd6192391db06e45b6099f1b52eb4a08d411713dd4de8f7954f2e4`.
-Draft PR #4528 awaits independent exact-candidate review and merge. Later
-qualification-record/README clarification edits are documentation only; they do
-not change the validated implementation inputs.
+PR [#4528](https://github.com/sifr-lang/sifr/pull/4528) merged as
+`a7cae3e12add975767e3dea1e9f0c3aa6a191b35`. Independent Claude Opus review of
+`e919b8f14e4f43a64138b1ce9488c82d88cad475` returned SATISFIED with no blockers.
+The final qualification-record/README edits are documentation only; reviewed and
+validated implementation inputs match. Review response SHA-256:
+`7554e589d8f5fdc1b54efbfe02438e9b83dde00e2d6edf5a4794cf10a69dd30a`.
+The unused shared helper and existing CLI lint warnings are deferred follow-ups,
+not reasons to repeat completed qualification.
 
 The 149.777s unit-target assertion and 453.473s implementation cycle remain above
 the preparation design budget. The next macro item must address substantial
@@ -2481,3 +2486,32 @@ measured units and coherent ownership before choosing crate extraction. Do not
 keep optimizing the already short public-contract cycle. The 90s preparation
 and 480s complete gate targets, complete phase gates, invalidation qualification,
 and any unresolved coverage obligations remain open.
+
+### D17 investigation — generated Rust compilation ownership
+
+The D16 implementation edit rebuilds a codegen unit-test executable and two normal
+codegen library configurations. The normal libraries use identical codegen features
+and optimization settings but differ in nine direct dependency fingerprints.
+This is an isolated codegen-test/CLI sequence: the canonical gate already groups
+additive compiler packages. Do not claim the complete gate lacks that grouping,
+or align unrelated feature configurations merely to force cache reuse.
+
+The generated Rust normalizer contains 107 source files and 26,951 lines. Its
+syntax transformations are coupled to adjacent generated-support filtering and
+visibility rules, plus compiler-owned nominal naming and builtin-error catalogs.
+Investigate a single generated-Rust responsibility with a narrow production API;
+keep language identities in their existing authority and pass resolved names or
+explicit catalogs across the boundary. Do not copy catalogs, introduce test-only
+public APIs, or drag HIR/type-system dependencies into a purported syntax-only
+owner. Existing production-workspace-inputs package ownership recursively respects
+the dependency's production-inputs, so relocated tests must remain excluded.
+
+A candidate must retain optimization semantics, every existing assertion and
+native ABI check, complete coverage selection, source-bound identity, private
+invariant tests, and byte-equivalent generated outputs. Reconcile test discovery
+across owners. Compare complete retained implementation and test-edit cycles with
+D16, not initial configuration preparation. Require a material measured saving
+before adoption; use the 90s preparation budget to decide whether more work is
+needed, and stop optimizing categories already within budget. Run applicable
+policy/identity regressions and independent exact-candidate review. Full phase
+coverage, ordinary invalidation scenarios and the 480s gate remain open.

@@ -11,9 +11,7 @@ pub(crate) fn rewrite_project_borrowed_string_literals(
     rewrite_named_project_borrows(&mut named)
 }
 
-pub(crate) fn rewrite_named_project_borrows(
-    sources: &mut [(&str, &mut String)],
-) -> Result<(), String> {
+pub fn rewrite_named_project_borrows(sources: &mut [(&str, &mut String)]) -> Result<(), String> {
     let mut files = sources
         .iter()
         .map(|(name, source)| {

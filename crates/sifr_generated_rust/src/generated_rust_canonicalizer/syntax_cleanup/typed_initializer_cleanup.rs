@@ -173,4 +173,4 @@ impl Rewriter<'_> {
     }
 }
 
-include!("typed_string_choices.rs");
+include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_string_choices.rs");

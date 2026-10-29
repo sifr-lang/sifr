@@ -335,7 +335,9 @@ impl SignatureAndBodyRewriter<'_> {
     }
 }
 
-include!("borrowed_scalar_parameters/call_rewriter.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/call_rewriter.rs"
+);
 
 fn rewrite_borrowed_argument(argument: &mut syn::Expr, borrowed_bindings: &HashSet<String>) {
     if expression_is_borrowed_binding(argument, borrowed_bindings) {
@@ -786,10 +788,22 @@ fn collect_sifr_int_bindings(signature: &syn::Signature, body: &syn::Block) -> H
     names
 }
 
-include!("borrowed_scalar_parameters/type_facts.rs");
-include!("borrowed_scalar_parameters/optional_parameters.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/type_facts.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/optional_parameters.rs"
+);
 
-include!("borrowed_scalar_parameters/call_identity.rs");
-include!("borrowed_scalar_parameters/callable_values.rs");
-include!("borrowed_scalar_parameters/lexical_conditions.rs");
-include!("borrowed_scalar_parameters/patterns.rs");
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/call_identity.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/callable_values.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/lexical_conditions.rs"
+);
+include!(
+    "../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/borrowed_scalar_parameters/patterns.rs"
+);

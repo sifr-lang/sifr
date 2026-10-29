@@ -1,4 +1,16 @@
-use super::{import_project_prelude_bindings, prune_generated_project_owners};
+use super::import_project_prelude_bindings;
+fn prune_generated_project_owners(
+    prelude: &str,
+    support: &str,
+    consumers: &[&str],
+) -> Result<(String, String), String> {
+    super::prune_generated_project_owners(
+        prelude,
+        support,
+        consumers,
+        sifr_type_system::BUILTIN_ERROR_CLASSES,
+    )
+}
 
 #[test]
 fn project_nominal_methods_retain_their_transitive_support_helpers() {

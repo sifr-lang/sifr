@@ -2,11 +2,11 @@
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 
-pub(crate) type InherentMethods = HashSet<(String, String)>;
+pub type InherentMethods = HashSet<(String, String)>;
 
 // Only centralized, compiler-owned stdlib nominal names are globally unambiguous.
 // Ordinary user type basenames can identify different types in separate modules.
-pub(crate) fn collect_inherent_methods(file: &syn::File, methods: &mut InherentMethods) {
+pub fn collect_inherent_methods(file: &syn::File, methods: &mut InherentMethods) {
     let owner = crate::canonicalize_generated_rust_identifier("__sifr_project_nominals");
     for item in &file.items {
         let syn::Item::Mod(module) = item else {

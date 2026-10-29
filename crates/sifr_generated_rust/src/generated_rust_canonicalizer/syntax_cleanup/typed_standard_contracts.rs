@@ -1,4 +1,4 @@
-include!("typed_option_defaults.rs");
+include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_option_defaults.rs");
 // Resolve standard-type cleanup against declarations, imports, and opaque scopes.
 // A local type with a standard spelling keeps its own methods and conversions.
 impl Rewriter<'_> {
@@ -124,4 +124,4 @@ impl Rewriter<'_> {
     }
 }
 
-include!("typed_float_contracts.rs");
+include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_float_contracts.rs");

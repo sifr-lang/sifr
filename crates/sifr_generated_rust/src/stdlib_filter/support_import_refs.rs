@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use syn::parse::Parser;
 use syn::visit::{self, Visit};
 
-pub(crate) fn rust_source_unqualified_item_names(
+pub fn rust_source_unqualified_item_names(
     source: &str,
     candidates: &HashSet<String>,
 ) -> Result<HashSet<String>, String> {

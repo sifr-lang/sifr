@@ -2,7 +2,6 @@ use super::dedup_keys::dedup_impl_key;
 use super::item_refs::referenced_item_names_via_ast;
 use proc_macro2::{Group, Ident, TokenStream, TokenTree};
 use quote::ToTokens;
-use sifr_type_system::{is_global_rust_nominal_identity, stdlib_class_rust_name};
 use std::collections::{HashMap, HashSet};
 use syn::visit::{self, Visit};
 use syn::visit_mut::{self, VisitMut};
@@ -27,27 +26,27 @@ struct StdlibIrFile {
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub(crate) struct SharedPreludeNeeds {
-    pub(crate) collections: SharedPreludeCollectionNeeds,
-    pub(crate) file_handles: SharedPreludeFileHandleNeeds,
+pub struct SharedPreludeNeeds {
+    pub collections: SharedPreludeCollectionNeeds,
+    pub file_handles: SharedPreludeFileHandleNeeds,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub(crate) struct SharedPreludeCollectionNeeds {
-    pub(crate) needs_hashmap: bool,
-    pub(crate) needs_hashset: bool,
-    pub(crate) needs_vecdeque: bool,
+pub struct SharedPreludeCollectionNeeds {
+    pub needs_hashmap: bool,
+    pub needs_hashset: bool,
+    pub needs_vecdeque: bool,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
-pub(crate) struct SharedPreludeFileHandleNeeds {
-    pub(crate) needs_file_handles: bool,
-    pub(crate) provides_file_handle_struct: bool,
+pub struct SharedPreludeFileHandleNeeds {
+    pub needs_file_handles: bool,
+    pub provides_file_handle_struct: bool,
 }
 
-pub(crate) struct PreparedStdlibModule {
-    pub(crate) stripped_code: String,
-    pub(crate) shared_needs: SharedPreludeNeeds,
+pub struct PreparedStdlibModule {
+    pub stripped_code: String,
+    pub shared_needs: SharedPreludeNeeds,
 }
 
 /// Move canonical stdlib declarations behind compiler-owned Rust names.
@@ -56,20 +55,14 @@ pub(crate) struct PreparedStdlibModule {
 /// identity still permits a user class to share a stdlib basename. Renaming the
 /// canonical declarations and every stdlib reference before concatenation keeps
 /// those two source-level identities distinct in Rust as well.
-pub(crate) fn seal_canonical_stdlib_names(
+pub fn seal_canonical_stdlib_names(
     rust_code: &str,
-    module: &str,
-    nominal_types: &HashSet<String>,
+    replacements: &HashMap<String, String>,
 ) -> String {
-    let replacements = nominal_types
-        .iter()
-        .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
-        .map(|name| (name.clone(), stdlib_class_rust_name(module, name)))
-        .collect::<HashMap<_, _>>();
     let Ok(tokens) = rust_code.parse::<TokenStream>() else {
         return rust_code.to_string();
     };
-    let rewritten = rewrite_canonical_stdlib_tokens(tokens, &replacements, false);
+    let rewritten = rewrite_canonical_stdlib_tokens(tokens, replacements, false);
     let Ok(parsed) = syn::parse_file(&rewritten.to_string()) else {
         return rust_code.to_string();
     };
@@ -78,7 +71,7 @@ pub(crate) fn seal_canonical_stdlib_names(
 
 /// Make generated stdlib references to external runtime crates immune to
 /// source declarations with the same Rust identifier.
-pub(crate) fn absolutize_external_crate_paths(rust_code: &str) -> String {
+pub fn absolutize_external_crate_paths(rust_code: &str) -> String {
     let Ok(mut parsed) = syn::parse_file(rust_code) else {
         return rust_code.to_string();
     };
@@ -171,10 +164,7 @@ fn rewrite_canonical_stdlib_tokens(
 
 /// Rewrite Rust identifier tokens in a compiler-owned source fragment without
 /// touching string literals, character literals, or comments.
-pub(crate) fn rewrite_rust_identifiers(
-    rust_code: &str,
-    replacements: &HashMap<String, String>,
-) -> String {
+pub fn rewrite_rust_identifiers(rust_code: &str, replacements: &HashMap<String, String>) -> String {
     rust_code.parse::<TokenStream>().map_or_else(
         |_| rust_code.to_string(),
         |tokens| rewrite_canonical_stdlib_tokens(tokens, replacements, true).to_string(),
@@ -214,7 +204,7 @@ const GLOBAL_INFRA_TYPES: &[&str] = &[
 ];
 
 /// Strip per-module shared imports/infrastructure and return dependency flags.
-pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
+pub fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlibModule {
     let Ok(parsed) = syn::parse_file(filtered) else {
         return PreparedStdlibModule {
             stripped_code: filtered.to_string(),
@@ -236,10 +226,7 @@ pub(crate) fn collect_and_strip_shared_prelude(filtered: &str) -> PreparedStdlib
 }
 
 /// Run stdlib IR DCE over compiled Rust source and keep only transitively-needed items.
-pub(crate) fn filter_stdlib_ir_to_needed(
-    rust_code: &str,
-    imported_names: &HashSet<String>,
-) -> String {
+pub fn filter_stdlib_ir_to_needed(rust_code: &str, imported_names: &HashSet<String>) -> String {
     let Some(ir) = parse_stdlib_ir_file(rust_code) else {
         return rust_code.to_string();
     };
@@ -255,21 +242,15 @@ pub(crate) fn filter_stdlib_ir_to_needed(
 /// expressions can contain `__SifrStdlib_*` references before the module-wide
 /// sealing pass. The item filter must normalize those references or it cannot
 /// discover dependencies on still-source-named declarations.
-pub(crate) fn filter_canonical_stdlib_ir_to_needed(
+pub fn filter_canonical_stdlib_ir_to_needed(
     rust_code: &str,
     imported_names: &HashSet<String>,
-    module: &str,
-    nominal_types: &HashSet<String>,
+    replacements: &HashMap<String, String>,
 ) -> String {
-    let replacements = nominal_types
-        .iter()
-        .filter(|name| !is_global_rust_nominal_identity(&format!("{module}.{name}")))
-        .map(|name| (stdlib_class_rust_name(module, name), name.clone()))
-        .collect::<HashMap<_, _>>();
     let Ok(tokens) = rust_code.parse::<TokenStream>() else {
         return filter_stdlib_ir_to_needed(rust_code, imported_names);
     };
-    let restored = rewrite_canonical_stdlib_tokens(tokens, &replacements, true).to_string();
+    let restored = rewrite_canonical_stdlib_tokens(tokens, replacements, true).to_string();
     filter_stdlib_ir_to_needed(&restored, imported_names)
 }
 
@@ -284,11 +265,11 @@ pub(crate) fn filter_canonical_stdlib_ir_to_needed(
 /// The `skip_types` set contains type names (e.g., "`IOError`") for which ALL items
 /// (struct, impl, trait impls) should be unconditionally stripped.
 #[derive(Default)]
-pub(crate) struct RustItemDeduper {
+pub struct RustItemDeduper {
     fingerprints: HashMap<String, String>,
 }
 
-pub(crate) fn dedup_rust_items(
+pub fn dedup_rust_items(
     rust_code: &str,
     emitted_items: &mut RustItemDeduper,
     skip_types: &HashSet<String>,
@@ -392,7 +373,7 @@ fn is_redundant_forwarding_adapter(item: &Item, previous: &str) -> bool {
         })
 }
 
-pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> String {
+pub fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> String {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return rust_code.to_string();
     };
@@ -410,10 +391,7 @@ pub(crate) fn strip_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -
     render_items(&kept_items)
 }
 
-pub(crate) fn partition_rust_items_by_name(
-    rust_code: &str,
-    names: &HashSet<&str>,
-) -> (String, String) {
+pub fn partition_rust_items_by_name(rust_code: &str, names: &HashSet<&str>) -> (String, String) {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return (String::new(), rust_code.to_string());
     };
@@ -425,7 +403,7 @@ pub(crate) fn partition_rust_items_by_name(
     (render_items(&selected), render_items(&remaining))
 }
 
-pub(crate) fn rust_source_references_item_name(rust_code: &str, name: &str) -> bool {
+pub fn rust_source_references_item_name(rust_code: &str, name: &str) -> bool {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return false;
     };
@@ -438,7 +416,7 @@ pub(crate) fn rust_source_references_item_name(rust_code: &str, name: &str) -> b
     })
 }
 
-pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
+pub fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
     syn::parse_file(rust_code).is_ok_and(|parsed| {
         parsed
             .items
@@ -447,7 +425,7 @@ pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool
     })
 }
 
-pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String> {
+pub fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String> {
     syn::parse_file(rust_code).map_or_else(
         |_| HashSet::new(),
         |parsed| {
@@ -463,7 +441,7 @@ pub(crate) fn rust_source_defined_item_names(rust_code: &str) -> HashSet<String>
     )
 }
 
-pub(crate) fn rust_source_identifier_names(rust_code: &str) -> HashSet<String> {
+pub fn rust_source_identifier_names(rust_code: &str) -> HashSet<String> {
     let Ok(parsed) = syn::parse_file(rust_code) else {
         return HashSet::new();
     };

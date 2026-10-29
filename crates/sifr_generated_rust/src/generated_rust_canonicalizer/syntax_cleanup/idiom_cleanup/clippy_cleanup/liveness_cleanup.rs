@@ -339,7 +339,7 @@ fn simple_pattern_name(pattern: &syn::Pat) -> Option<String> {
     }
 }
 
-include!("lexical_uses.rs");
+include!("../../../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/lexical_uses.rs");
 
 struct LastUseCloneRemover<'names> {
     movable: &'names HashSet<String>,
@@ -435,7 +435,7 @@ fn collect_owned_pattern_names(pattern: &syn::Pat, owned: &mut HashSet<String>) 
     }
 }
 
-include!("borrowed_loop_binding.rs");
+include!("../../../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/borrowed_loop_binding.rs");
 
 impl VisitMut for LastUseCloneRemover<'_> {
     fn visit_arm_mut(&mut self, arm: &mut syn::Arm) {
@@ -649,7 +649,7 @@ fn terminal_clone_root(expression: &syn::Expr) -> Option<String> {
         .flatten()
 }
 
-include!("loop_control_facts.rs");
+include!("../../../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/loop_control_facts.rs");
 
 fn expression_root_name(expression: &syn::Expr) -> Option<String> {
     match expression {

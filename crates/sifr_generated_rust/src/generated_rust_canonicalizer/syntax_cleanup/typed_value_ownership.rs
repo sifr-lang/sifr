@@ -1,4 +1,4 @@
-include!("typed_local_transfer.rs");
+include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_local_transfer.rs");
 
 // Stored values with only compiler-known Clone and Drop behavior.
 impl Rewriter<'_> {

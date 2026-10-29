@@ -667,6 +667,20 @@
         ],
         "status": "blocking",
         "executed_in_merge": true
+      },
+      {
+        "id": "sifr_generated_rust",
+        "package": "sifr_generated_rust",
+        "command": [
+          "test",
+          "-p",
+          "sifr_generated_rust"
+        ],
+        "modes": [
+          "full"
+        ],
+        "status": "blocking",
+        "executed_in_merge": true
       }
     ]
   },

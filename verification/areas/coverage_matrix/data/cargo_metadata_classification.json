@@ -129,6 +129,12 @@
       "features": [{"name": "test-support", "profile_assignment": "test-fixture", "classification": "test_fixture"}]
     },
     {
+      "name": "sifr_generated_rust",
+      "classification": "first_party_compiler",
+      "targets": [{"name": "sifr_generated_rust", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}],
+      "features": []
+    },
+    {
       "name": "sifr_codegen",
       "classification": "first_party_compiler",
       "targets": [{"name": "sifr_codegen", "kind": "lib", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "build-script-build", "kind": "custom-build", "classification": "first_party_compiler", "profile_assignment": "merge"}, {"name": "project_slice_abi", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}, {"name": "emission_contracts", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}],

@@ -5,7 +5,7 @@ use syn::visit::{self, Visit};
 
 /// Return references from `rust_code` to names defined by a separate generated
 /// support owner. Declaration identifiers and local bindings are not references.
-pub(crate) fn rust_source_referenced_item_names(
+pub fn rust_source_referenced_item_names(
     rust_code: &str,
     candidate_names: &HashSet<String>,
 ) -> HashSet<String> {
@@ -67,7 +67,7 @@ impl<'ast> Visit<'ast> for ExternalItemRefCollector<'_> {
 /// Return support traits that a consumer may require solely through method-call
 /// syntax. Rust method resolution requires those traits to be in scope even
 /// though the generated call does not contain the trait identifier.
-pub(crate) fn rust_source_required_trait_names(
+pub fn rust_source_required_trait_names(
     consumer_source: &str,
     support_source: &str,
 ) -> Result<HashSet<String>, String> {
@@ -78,7 +78,7 @@ pub(crate) fn rust_source_required_trait_names(
     )
 }
 
-pub(crate) fn rust_source_required_trait_names_with_inherent(
+pub fn rust_source_required_trait_names_with_inherent(
     consumer_source: &str,
     support_source: &str,
     inherent: &InherentMethods,

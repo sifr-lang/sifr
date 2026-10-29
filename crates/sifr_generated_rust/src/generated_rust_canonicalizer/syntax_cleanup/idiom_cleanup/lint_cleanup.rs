@@ -227,7 +227,9 @@ fn is_impossible_error_check(statement: &syn::Stmt, name: &str) -> bool {
     }
 }
 
-include!("initialization_cleanup.rs");
+include!(
+    "../../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/initialization_cleanup.rs"
+);
 
 fn expression_references_name(expression: &syn::Expr, name: &str) -> bool {
     super::super::identifier_collection::expression_may_reference_name(expression, name)
