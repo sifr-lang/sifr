@@ -193,10 +193,10 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:662` `test_str_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 662 |
 | `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:702` `test_tuple_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 702 |
 | `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:854` `test_generic_type_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 854 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:702` `test_defaultdict_list_call_resolves_with_explicit_import` | read | test setup/parity | 703 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:714` `test_defaultdict_alias_call_resolves_with_explicit_import` | read | test setup/parity | 715 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:726` `test_defaultdict_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 726, 728 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:739` `test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 739, 741 |
+| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:689` `test_defaultdict_list_call_resolves_with_explicit_import` | read | test setup/parity | 690 |
+| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:701` `test_defaultdict_alias_call_resolves_with_explicit_import` | read | test setup/parity | 702 |
+| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:713` `test_defaultdict_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 713, 715 |
+| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:726` `test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 726, 728 |
 | `crates/sifr_lowering/src/lower/expressions_tests/support.rs:13` `lower_source_with_externals` | read, borrow/retain | layered view + demanded record handles | 15, 18 |
 | `crates/sifr_lowering/src/lower/expressions_tests/support.rs:21` `lower_source_with_stdlib_collections` | read, mutate overlay/producer | layered view + demanded record handles | 21, 25, 26, 30 |
 | `crates/sifr_lowering/src/lower/external_defs.rs:23` `attached_api_set_membership_checks_the_stored_canonical_identity` | read | test setup/parity | 24 |
@@ -787,10 +787,10 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_driver/tests/unit/project_graph_constants.rs:4` `test_collect_project_modules_exports_local_constants` | read | test setup/parity | 37, 38, 39, 42, 48 |
 | `crates/sifr_driver/tests/unit/project_graph_constants.rs:61` `test_project_lowering_fits_imported_integer_constants` | read, enumerate | test setup/parity | 84, 85, 86, 89 |
 | `crates/sifr_driver/tests/unit/project_graph_constants.rs:105` `test_project_lowering_does_not_fold_shadowed_imported_integer_constant` | read, enumerate | test setup/parity | 128, 129, 130 |
-| `crates/sifr_driver/tests/unit/single_file_frontend.rs:328` `test_callback_error_union_same_basename_identities_compile_distinctly` | read | test setup/parity | 349 |
-| `crates/sifr_driver/tests/unit/single_file_frontend.rs:617` `test_source_python_error_contract_without_interop_has_no_runtime_bridge` | read | test setup/parity | 630 |
-| `crates/sifr_driver/tests/unit/single_file_frontend.rs:634` `test_source_python_error_contract_with_interop_gets_runtime_bridge` | read | test setup/parity | 649 |
-| `crates/sifr_driver/tests/unit/single_file_frontend.rs:655` `test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge` | read | test setup/parity | 685 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:341` `test_callback_error_union_same_basename_identities_compile_distinctly` | read | test setup/parity | 362 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:630` `test_source_python_error_contract_without_interop_has_no_runtime_bridge` | read | test setup/parity | 643 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:647` `test_source_python_error_contract_with_interop_gets_runtime_bridge` | read | test setup/parity | 662 |
+| `crates/sifr_driver/tests/unit/single_file_frontend.rs:668` `test_raw_python_generic_conversion_and_object_methods_share_runtime_bridge` | read | test setup/parity | 698 |
 | `crates/sifr_driver/tests/unit/stdlib_exports.rs:8` `compiled_stdlib_exports_match_public_reference` | read, enumerate, clone projection | test setup/parity | 8, 9 |
 | `crates/sifr_driver/tests/unit/stdlib_exports.rs:96` `compiled_stdlib_same_operation_groups_have_one_public_name` | read, enumerate | test setup/parity | 96, 97 |
 | `crates/sifr_driver/tests/unit/stdlib_exports.rs:134` `stdlib_heapq_exports_allowlisted_private_max_heap_helpers` | read | test setup/parity | 134, 135 |
@@ -1318,7 +1318,7 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:3` `compiled_case_for_test` | read | test setup/parity | 8, 11, 19 |
 | `crates/sifr/tests/e2e_support/harness_model.rs:407` `dependency_plan_matches_metadata` | read, enumerate | test setup/parity | 408, 410 |
 | `crates/sifr/tests/e2e_support/session_tests.rs:9` `equivalent` | read | test setup/parity | 15, 23 |
-| `crates/sifr/tests/runtime_observability_boundary.rs:55` `standalone_runtime_diagnostics_use_only_the_stdlib_boundary` | read | test setup/parity | 55 |
+| `crates/sifr/tests/runtime_observability_boundary.rs:48` `standalone_runtime_diagnostics_use_only_the_stdlib_boundary` | read | test setup/parity | 48 |
 | `crates/sifr/tests/sysroot_cli.rs:125` `write_skeleton` | read | test setup/parity | 147 |
 | `verification/tools/corpus_oracle/src/lib.rs:4` `full_corpus_exact_emission` | read, enumerate | test setup/parity | 7, 8, 9, 22, 66, 85, 89, 91, 94, 115, 152 |
 

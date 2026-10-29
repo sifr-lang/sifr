@@ -3182,3 +3182,40 @@ roles and complete-cycle impact before changing it; no profile or optimization
 change is authorized by this observation alone. Prefer the largest demonstrated
 repeated work after this integrated diagnostic. Full phase correctness, invalidation,
 repeated timing and final merge qualification remain open.
+
+
+D23 first discovery on `7b19e10c90cbd5d699c6912ba7f21872a6ba8668` stops at
+metadata-inventory admission before preparation or main tests. Guarded elapsed
+50.736s; five guard steps pass, one fails and all dependent work remains blocked.
+The 20-payload failure archive is verified: `dev-verify-d23-discovery-guard-evidence.tar.gz`,
+SHA-256 `c4bfbbb9ed79a1a246ff3bf1c2e9a592b45a328271adf7ed9f0cdea469f495ae`.
+The optional recursive native-cache size census was separately stopped after more
+than 80s; this is neither test execution nor a test timeout. Capacity admission
+retains the measured 168GiB compiler target, approximately 33GiB free build storage,
+216GiB free native storage and 10GiB available memory.
+
+The admission mismatch is exactly nine Markdown line-anchor updates from D20/D22.
+An ordered audit proves all 1,171 consumer identities, operations, classifications
+and matching-anchor multiplicities unchanged. No new consumer was introduced;
+the initial progress hypothesis is corrected by this audit. Refresh only those
+anchors through the canonical generator, then run the actual guard and its 15
+mutation/self-tests. These are record-only changes, not a policy relaxation or a
+reason to rerun already-qualified compiler tests. Before retrying integration,
+check the related source inventories too. Keep this first failed run immutable.
+
+
+The related-inventory audit additionally finds D20 omissions before another sweep:
+eight existing SQL fixture literal-comparison fingerprints changed with their
+enclosing fixture context; three filesystem effects moved into the new CLI owner
+helper; four manual create/remove calls disappeared when TempDir took ownership.
+Retain all eight test-assertion/test-owner classifications and refresh only their
+fingerprints. Classify the helper's two canonicalizations as tooling-input and its
+create_dir_all as output-effect; remove only the four nonexistent old calls.
+All other policy records remain byte-equivalent. The unsafe ABI inventory already
+passes all 410 sites. Preserve these failed inventory checks. This reconciliation
+changes policy records, so it requires affected guard/self-tests and independent
+review, unlike the Markdown anchor-only refresh. Runtime code and test sources
+remain the already-qualified D20/D22 inputs; no duplicate runtime qualification is
+needed if an exact changed-path audit proves that binding on the final candidate.
+For subsequent source-fixture edits, run these dependent inventories with focused
+validation before review; do not rely only on frontend ownership classification.

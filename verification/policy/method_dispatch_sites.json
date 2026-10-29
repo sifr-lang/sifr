@@ -7658,7 +7658,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::1",
-      "fingerprint": "c43ec476c173acf1b2b319d5c3387bde80aec0b51e2eb4ae4651a4e9bbcf0fb1",
+      "fingerprint": "803a3baf6983b4d5f1a5285e3313c7a9e20b33cb5081fe9c5b4b60774ce80593",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "let series = if family == \"postgresql\"",
@@ -7670,7 +7670,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::2",
-      "fingerprint": "5c6555bd59cd05447b345dc1e5f0bab6b891d1b126f1fb04ea7127461ce9755d",
+      "fingerprint": "7b91b9c1c33cbf4881e5b81bd65932e61ba3ba89ea4d80354c32ae757dc51b5a",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "else if family == \"mysql\"",
@@ -7682,7 +7682,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::3",
-      "fingerprint": "47ca6ad12605403538b92c93f74ff4ec0705c551c70270e801929cfde5d2140b",
+      "fingerprint": "bd23ae838bf712f68897777164d7b6b9264f06ae98520240048f14b901c1edab",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "let namespace = if family == \"postgresql\"",
@@ -7694,7 +7694,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::4",
-      "fingerprint": "5c6555bd59cd05447b345dc1e5f0bab6b891d1b126f1fb04ea7127461ce9755d",
+      "fingerprint": "7b91b9c1c33cbf4881e5b81bd65932e61ba3ba89ea4d80354c32ae757dc51b5a",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "else if family == \"mysql\"",
@@ -7706,7 +7706,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::5",
-      "fingerprint": "426ef467f7e76234ef71ee4c20e0d860f4c98eb5217497c547e8acf8e1703917",
+      "fingerprint": "df6e1aed52862b037796331fd7bd47cfcc5c0c9d9323ec389cc7369b181f6a12",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if family == \"postgresql\"",
@@ -7718,7 +7718,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::6",
-      "fingerprint": "5c6555bd59cd05447b345dc1e5f0bab6b891d1b126f1fb04ea7127461ce9755d",
+      "fingerprint": "7b91b9c1c33cbf4881e5b81bd65932e61ba3ba89ea4d80354c32ae757dc51b5a",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "else if family == \"mysql\"",
@@ -7730,7 +7730,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::7",
-      "fingerprint": "426ef467f7e76234ef71ee4c20e0d860f4c98eb5217497c547e8acf8e1703917",
+      "fingerprint": "df6e1aed52862b037796331fd7bd47cfcc5c0c9d9323ec389cc7369b181f6a12",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if family == \"postgresql\"",
@@ -7742,7 +7742,7 @@
     },
     {
       "site": "crates/sifr/tests/sql_native_application.rs::with_provider::literal-comparison::8",
-      "fingerprint": "05a52b18c2ab810ae90385f78d0508fd74c2418ab8aac13548283dd8cf00ec81",
+      "fingerprint": "9d1252df5580e7f6b6fda9a0e9e879df4cbdafeb3cb90d1d1ac1ad92c3a7a826",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "if family == \"mysql\"",
