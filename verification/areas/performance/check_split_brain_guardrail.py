@@ -319,6 +319,15 @@ def run_cargo_roles_self_test() -> None:
             return violations(sorted(root.rglob("*.rs")), repo_root=root)
 
         assert not findings(), "automatic Cargo test and owned support rejected"
+        manifest.write_text(package + '[[test]]\nname = "other"\npath = "src/lib.rs"\n')
+        assert findings(), "legacy explicitly targeted package inferred an unowned test"
+        manifest.write_text(package + 'autotests = true\n[[test]]\nname = "other"\npath = "src/lib.rs"\n')
+        assert not findings(), "explicit automatic-test override rejected"
+        manifest.write_text(package + 'edition.workspace = true\n'
+                            '[[test]]\nname = "other"\npath = "src/lib.rs"\n'
+                            '[workspace.package]\nedition = "2024"\n')
+        assert not findings(), "inherited modern edition lost automatic test targets"
+        manifest.write_text(package)
         library.write_text('#[path = "../support/shared.rs"]\nmod shared;\n')
         assert findings(), "support shared with production escaped"
         library.write_text('include!("../tests/contract.rs");\n')

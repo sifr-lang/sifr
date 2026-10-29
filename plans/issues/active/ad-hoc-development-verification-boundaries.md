@@ -2914,3 +2914,14 @@ on the diagnostic checkout. These artifact-provenance failures belong to SQL
 component qualification and need a separate bounded repair/requalification after
 D19; do not rewrite hashes to bless stale products. The continuing main-test sweep
 and final integrated acceptance remain incomplete at this checkpoint.
+
+An independent D19 control using pinned Cargo metadata catches the Rust 2015
+explicit-target auto-discovery rule before review. The guard now resolves inherited
+editions and follows per-target-kind legacy defaults while honoring explicit
+`auto*` overrides. Eight real temporary-package configurations exactly match
+Cargo's test and production target paths without compiling. The affected guard,
+self-tests, file-size and diff checks pass after this correction; prior unrelated
+checks remain applicable because their implementation inputs are unchanged.
+Control evidence: `dev-verify-d19-cargo-role-control.json`. Its first harness attempt
+stopped on macOS temporary-path canonicalization before producing a verdict; that
+incomplete attempt is retained and does not count as a pass.
