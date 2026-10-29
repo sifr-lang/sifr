@@ -156,8 +156,8 @@ class CrateRule:
 RULES = (
     CrateRule(
         crate="sifr_generated_rust",
-        allowed_normal_dependencies=frozenset({"syn", "quote", "proc_macro2", "prettyplease", "unicode_ident"}),
-        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_generated_rust"}),
+        allowed_normal_dependencies=frozenset({"syn", "quote", "proc-macro2", "prettyplease", "unicode-ident"}),
+        forbidden_source_references=frozenset({"sifr_ir", "sifr_type_system", "sifr_lowering", "sifr_frontend", "sifr_driver"}),
         skip_test_sources=True,
     ),
     CrateRule(
