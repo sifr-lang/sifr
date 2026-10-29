@@ -14,19 +14,32 @@ fn owner() -> &'static Path {
         let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
             .canonicalize()
             .expect("CLI source owner");
-        let key = format!("{:x}", Sha256::digest(checkout.as_os_str().as_encoded_bytes()));
-        let parent = std::env::temp_dir().join("sifr-cli-fixture-owners").join(key);
+        let key = format!(
+            "{:x}",
+            Sha256::digest(checkout.as_os_str().as_encoded_bytes())
+        );
+        let parent = std::env::temp_dir()
+            .join("sifr-cli-fixture-owners")
+            .join(key);
         std::fs::create_dir_all(&parent).expect("CLI fixture owner directory");
         let parent = parent.canonicalize().expect("canonical CLI fixture owner");
         let status = Command::new("git")
-            .args(["init", "--quiet", "--template=", "--initial-branch=sifr-fixtures"])
+            .args([
+                "init",
+                "--quiet",
+                "--template=",
+                "--initial-branch=sifr-fixtures",
+            ])
             .arg(&parent)
             .env_remove("GIT_DIR")
             .env_remove("GIT_WORK_TREE")
             .env_remove("GIT_INDEX_FILE")
             .status()
             .expect("initialize independent fixture repository");
-        assert!(status.success(), "initialize independent fixture repository");
+        assert!(
+            status.success(),
+            "initialize independent fixture repository"
+        );
         parent
     })
 }
