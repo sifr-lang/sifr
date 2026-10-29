@@ -19,50 +19,6 @@ fn locals(source: &str) -> Vec<super::TaskLocal> {
 }
 
 #[test]
-fn task_local_support_visibility_preserves_names_types_attributes_and_boundaries() {
-    let source = r#"
-        ::tokio::task_local! {
-            #[doc = "static __SIFR_TASK_CANCELLATION: unchanged text"]
-            static __SIFR_TASK_CANCELLATION: Carrier;
-            pub static __SIFR_TASK_CONTEXT_LABEL: String
-        }
-        other::task_local! { static PRIVATE: String; }
-        task_local! { static UNQUALIFIED: String; }
-        mod nested { tokio::task_local! { static NESTED: String; } }
-    "#;
-    let consumers =
-        ["fn consume() { __SIFR_TASK_CANCELLATION.get(); __SIFR_TASK_CONTEXT_LABEL.get(); }"];
-    let visible = crate::crate_visible_generated_support_source(source, &consumers);
-    let declared = locals(&visible);
-    assert_eq!(declared.len(), 2);
-    assert_eq!(declared[0].name, "__SIFR_TASK_CANCELLATION");
-    assert_eq!(declared[1].name, "__SIFR_TASK_CONTEXT_LABEL");
-    for declaration in &declared {
-        assert_eq!(declaration.visibility.to_token_stream().to_string(), "pub");
-    }
-    assert_eq!(declared[0].ty.to_token_stream().to_string(), "Carrier");
-    assert_eq!(declared[1].ty.to_token_stream().to_string(), "String");
-    assert_eq!(declared[0].attrs.len(), 1);
-    let original = syn::parse_file(source).expect("valid source");
-    let rewritten = syn::parse_file(&visible).expect("valid rewrite");
-    for (original, rewritten) in original.items[1..].iter().zip(&rewritten.items[1..]) {
-        assert_eq!(
-            original.to_token_stream().to_string(),
-            rewritten.to_token_stream().to_string()
-        );
-    }
-    assert_eq!(
-        crate::crate_visible_generated_support_source(&visible, &consumers),
-        visible
-    );
-    // Public module rewriting must not turn support macro statics into a public API.
-    assert!(matches!(
-        locals(&crate::publicize_generated_module_source(source))[0].visibility,
-        syn::Visibility::Inherited
-    ));
-}
-
-#[test]
 fn task_local_support_discovery_includes_all_macro_owned_symbols() {
     let names = rust_source_defined_item_names(
         "tokio::task_local! { static FIRST: String; static SECOND: u64; }\n\

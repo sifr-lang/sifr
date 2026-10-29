@@ -89,3 +89,7 @@ pub fn split_declarations(item: syn::Item) -> Vec<syn::Item> {
     }
     vec![item]
 }
+
+#[cfg(test)]
+#[path = "../tests/unit/task_local_support_tests.rs"]
+mod tests;
