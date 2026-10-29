@@ -15,7 +15,7 @@ from typing import Any
 from verification.json_schema_202012 import lint_schema
 
 from .native_test_allocation_checks import policy_checks as native_test_allocation_checks
-from .driver_test_allocation_checks import policy_checks as driver_test_allocation_checks
+from .libtest_allocation_checks import policy_checks as libtest_allocation_checks
 from .sql_editor_checks import policy_checks as sql_editor_checks
 from .batch_execution_checks import policy_checks as batch_execution_checks
 from .area_group_checks import policy_checks as area_group_checks
@@ -88,7 +88,7 @@ def run_all() -> list[str]:
         ("bounded independent command ownership", batch_execution_checks),
         ("bounded complete-area ownership", area_group_checks),
         ("native test allocation and admission", native_test_allocation_checks),
-        ("ordinary driver allocation and admission", driver_test_allocation_checks),
+        ("ordinary compiler integration allocation and admission", libtest_allocation_checks),
         ("SQL editor execution and complete crate ownership", sql_editor_checks),
         ("installed public emission completeness", installed_emission_checks),
         ("generated materialization completeness", generated_materialization_checks),

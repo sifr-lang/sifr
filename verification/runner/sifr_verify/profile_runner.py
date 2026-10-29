@@ -15,7 +15,7 @@ from .build_allocation import E2E_ENV, allocate, extract_overrides
 from .area_group_policy import execution_groups
 from .area_group_execution import run_area_group
 from .native_test_allocation import ALLOCATION_ENV, allocate_native
-from .driver_test_allocation import allocate_driver_tests, reserve_monitor as driver_reserve_monitor
+from .libtest_allocation import BOUNDED_LIBTEST_SUITES, allocate_libtest, reserve_monitor as libtest_reserve_monitor
 from .cargo_setup import (
     enable_offline_cargo as enable_profile_offline_cargo,
     cargo_preparation_plan,
@@ -493,12 +493,12 @@ class ProfileRunner:
                     else:
                         if self.no_fail_fast:
                             command.insert(2, "--no-fail-fast")
-                        if configuration.ids == ("sifr_driver_lib",):
-                            allocation, environment = allocate_driver_tests(
+                        if any(suite in BOUNDED_LIBTEST_SUITES for suite in configuration.ids):
+                            allocation, environment = allocate_libtest(
                                 self.build_allocation, self.env, command)
                             print(allocation.report(), flush=True)
                             run_command(command, env=environment,
-                                        monitor=driver_reserve_monitor(allocation))
+                                        monitor=libtest_reserve_monitor(allocation))
                         else:
                             run_command(command, env=self.env)
             except (CommandFailed, VerificationError) as error:
