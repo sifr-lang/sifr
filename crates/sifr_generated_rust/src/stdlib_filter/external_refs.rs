@@ -78,7 +78,7 @@ pub fn rust_source_required_trait_names(
     )
 }
 
-pub fn rust_source_required_trait_names_with_inherent(
+pub(crate) fn rust_source_required_trait_names_with_inherent(
     consumer_source: &str,
     support_source: &str,
     inherent: &InherentMethods,

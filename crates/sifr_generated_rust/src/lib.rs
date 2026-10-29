@@ -4,11 +4,10 @@
 mod generated_rust_canonicalizer;
 pub use generated_rust_canonicalizer::*;
 mod discardability;
+mod error_refs;
 pub mod generated_visibility;
 pub mod stdlib_filter;
-pub mod task_local_support;
-pub use discardability::*;
-mod error_refs;
+mod task_local_support;
 pub use error_refs::collect_source_builtin_error_classes;
 
 #[cfg(test)]

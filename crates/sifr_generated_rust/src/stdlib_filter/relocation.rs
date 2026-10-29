@@ -3,7 +3,7 @@ use syn::{GenericArgument, Item, PathArguments, Type};
 
 /// Remove relocated nominal items while retaining a local child's conversion
 /// into the canonical parent that replaces the removed definition.
-pub fn strip_relocated_rust_items_by_name(
+pub(crate) fn strip_relocated_rust_items_by_name(
     rust_code: &str,
     names: &HashSet<&str>,
     local_conversion_sources: &HashSet<String>,

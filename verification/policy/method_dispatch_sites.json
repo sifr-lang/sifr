@@ -46077,7 +46077,7 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_generated_rust/src/stdlib_filter/relocation.rs::is_local_child_into_relocated_parent enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer::literal-match::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer::literal-match::1",
       "fingerprint": "7f262301bbc4e1fcb4b92e0e780244500c8f8fe8824a7634f4061ae778f12c3b",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -46085,11 +46085,11 @@
       "inputs": "fn initializer ( source : & str , binding : & str )",
       "outputs": "String",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer::literal-comparison::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer::literal-comparison::1",
       "fingerprint": "9706625736669136ee6c653069854d0e173bbb3519961aa07e481c826fc82e25",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -46097,8 +46097,8 @@
       "inputs": "fn initializer ( source : & str , binding : & str )",
       "outputs": "String",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::initializer enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_codegen/src/stdlib_interop_demand.rs::lifecycle::literal-comparison::1",
@@ -52764,20 +52764,20 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_generated_rust/src/task_local_support.rs::declarations enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand::literal-comparison::1",
-      "fingerprint": "a65c281fea1593d2060f6fb767dfe3fd59c86ae5aa601e553eea839767dc4144",
+      "site": "crates/sifr_generated_rust/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand::literal-comparison::1",
+      "fingerprint": "0c0342c508c070fb993599f3180e6be380efa917a58f63ba4965dd0e032db8b9",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "let consumer = if root == \"accessor\"",
       "inputs": "fn task_local_support_pruning_tracks_direct_transitive_and_absent_demand ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/task_local_support_tests.rs::task_local_support_pruning_tracks_direct_transitive_and_absent_demand enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-match::1",
-      "fingerprint": "203d1b5bc8e6a24d5edd8df5edf5f59adfd5a6dba883c858878361d9c731009c",
+      "fingerprint": "2e6462fecd02fdd6c07e575c772fc45e7bf2e14aa1c408ca26d2b8233449a3bb",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "match item { syn :: Item :: Mod ( module ) if module . ident == \"__sifr_generated_support\" => module . content , _ => None , }",
@@ -52789,7 +52789,7 @@
     },
     {
       "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-comparison::1",
-      "fingerprint": "cef5bd04d5090e9df8a87ad8243942d95a03cf4247b28091121b2be332c36c79",
+      "fingerprint": "aa4cf42b488e291a8c5d73fdd059250396309dac20e003c4f1d004da2504bea0",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "syn :: Item :: Mod ( module ) if module . ident == \"__sifr_generated_support\"",
@@ -52801,10 +52801,10 @@
     },
     {
       "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-comparison::2",
-      "fingerprint": "cc83323d8b2bc6b34dd0d0cb4d01cb5973c403a79a3707071e319e1da6ad5608",
+      "fingerprint": "4c4c21ec3416b7a2c568a624fab9be3134b4e890d74f6490108a07a8ac012884",
       "classification": "test-assertion",
       "owner": "test-owner",
-      "operation": "let cancellation = declared . iter ( ) . filter ( | local | local . name == \"__SIFR_TASK_CANCELLATION\" ) . collect :: < Vec < _ > > ( )",
+      "operation": "item . mac . path . segments . iter ( ) . map ( | segment | segment . ident . to_string ( ) ) . collect :: < Vec < _ > > ( ) == [ \"tokio\"",
       "inputs": "fn assert_cancellation_owner ( prelude : & str )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
@@ -85666,6 +85666,78 @@
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_identity/src/production_inputs.rs::package_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/production_inputs.rs::package_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-comparison::3",
+      "fingerprint": "666c26d18bbc6910a1f85a38d8ff960d4343ca7e09519ce844ec0c07ea23c86d",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "proc_macro2 :: TokenTree :: Ident ( name ) if name == \"static\" )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-comparison::4",
+      "fingerprint": "27d441294204a80c87ca40d36f29a8390bd14113832476779c761e984093194c",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "proc_macro2 :: TokenTree :: Ident ( name ) if name == \"__SIFR_TASK_CANCELLATION\" )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-comparison::5",
+      "fingerprint": "41388d5a396c47eb0489ae8cd3027e29693e6e95364b889b04b9d7f5119ac103",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "proc_macro2 :: TokenTree :: Ident ( name ) if name == \"pub\" ) )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-match::2",
+      "fingerprint": "d0b8371de8009cf8d2a8616fe28771108889ac5fef7d65798c0cb5a67483fc69",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( & pair [ 0 ] , proc_macro2 :: TokenTree :: Ident ( name ) if name == \"static\" )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-match::3",
+      "fingerprint": "5eaea6c882948781574e7b4fea34500c3b5a5fb64b25b200ea941d8cc6a84307",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( & pair [ 1 ] , proc_macro2 :: TokenTree :: Ident ( name ) if name == \"__SIFR_TASK_CANCELLATION\" )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+    },
+    {
+      "site": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner::literal-match::4",
+      "fingerprint": "602d508fe5d089f6c9488600c11137842224cad84a00f481e439532e9f804cd3",
+      "classification": "test-assertion",
+      "owner": "test-owner",
+      "operation": "matches ! ( & tokens [ index - 1 ] , proc_macro2 :: TokenTree :: Ident ( name ) if name == \"pub\" )",
+      "inputs": "fn assert_cancellation_owner ( prelude : & str )",
+      "outputs": "implicit unit / macro expansion",
+      "role": "test fixture construction, execution or assertion",
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/task_local_support_tests.rs::assert_cancellation_owner enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     }
   ]
 }

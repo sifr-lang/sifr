@@ -10,6 +10,8 @@ mod discardability;
 mod generated_dependency_metadata;
 mod generated_rust_canonicalizer;
 mod generated_visibility;
+#[cfg(test)]
+#[path = "../tests/unit/task_local_support.rs"]
 mod task_local_support;
 pub(crate) use generated_dependency_metadata::retain_generated_dependency_metadata;
 pub use generated_rust_canonicalizer::{

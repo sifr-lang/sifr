@@ -416,7 +416,7 @@ pub fn rust_source_references_item_name(rust_code: &str, name: &str) -> bool {
     })
 }
 
-pub fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
+pub(crate) fn rust_source_defines_item_name(rust_code: &str, name: &str) -> bool {
     syn::parse_file(rust_code).is_ok_and(|parsed| {
         parsed
             .items

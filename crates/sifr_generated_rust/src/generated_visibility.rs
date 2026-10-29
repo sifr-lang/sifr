@@ -217,7 +217,7 @@ pub fn generated_support_import(source: &str, support: &str) -> String {
     )
 }
 
-pub fn generated_support_import_with_inherent(
+pub(crate) fn generated_support_import_with_inherent(
     source: &str,
     support: &str,
     inherent: &crate::stdlib_filter::InherentMethods,

@@ -9,7 +9,7 @@ struct Capture {
     range: Range<usize>,
 }
 
-pub fn names(rust_macro: &syn::Macro) -> HashSet<String> {
+pub(crate) fn names(rust_macro: &syn::Macro) -> HashSet<String> {
     let mut names: HashSet<String> = format_string(rust_macro)
         .map(|format| {
             captures(&format)
@@ -94,7 +94,7 @@ pub(super) fn format_argument_index(rust_macro: &syn::Macro) -> Option<usize> {
     }
 }
 
-pub fn is_format_macro(rust_macro: &syn::Macro) -> bool {
+pub(crate) fn is_format_macro(rust_macro: &syn::Macro) -> bool {
     format_argument_index(rust_macro).is_some()
 }
 

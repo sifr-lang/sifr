@@ -77,7 +77,3 @@ pub(crate) fn rust_ir_expression_is_discardable(expression: &RustExpr) -> bool {
         | RustExpr::Range { .. } => false,
     }
 }
-
-pub(crate) use sifr_generated_rust::{
-    syntax_expression_is_discardable, syntax_expression_is_discardable_with_standard_proof,
-};

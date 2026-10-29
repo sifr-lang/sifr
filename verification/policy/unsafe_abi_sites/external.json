@@ -5169,7 +5169,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
       "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
       "owner": "X02",
       "scope": "local",
@@ -5188,7 +5188,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
@@ -5206,7 +5206,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
@@ -5224,7 +5224,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
@@ -5242,7 +5242,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
@@ -5258,7 +5258,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
       "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
       "owner": "X02",
       "scope": "local",
@@ -5277,7 +5277,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
@@ -5295,7 +5295,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
@@ -5313,7 +5313,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
@@ -5331,7 +5331,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
@@ -5347,7 +5347,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
       "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
       "owner": "X02",
       "scope": "local",
@@ -5366,7 +5366,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
@@ -5384,7 +5384,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
@@ -5402,7 +5402,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
@@ -5420,7 +5420,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
@@ -5436,7 +5436,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
       "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
       "owner": "X02",
       "scope": "local",
@@ -5455,7 +5455,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
@@ -5473,7 +5473,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
@@ -5491,7 +5491,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
@@ -5509,7 +5509,7 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },

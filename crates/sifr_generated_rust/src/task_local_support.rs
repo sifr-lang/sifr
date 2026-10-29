@@ -6,11 +6,11 @@
 use quote::{ToTokens, quote};
 use syn::parse::{Parse, ParseStream};
 
-pub struct TaskLocal {
+pub(crate) struct TaskLocal {
     attrs: Vec<syn::Attribute>,
-    pub visibility: syn::Visibility,
-    pub name: syn::Ident,
-    pub ty: syn::Type,
+    pub(crate) visibility: syn::Visibility,
+    pub(crate) name: syn::Ident,
+    pub(crate) ty: syn::Type,
 }
 
 impl ToTokens for TaskLocal {
@@ -25,7 +25,7 @@ impl ToTokens for TaskLocal {
     }
 }
 
-pub struct TaskLocals(pub Vec<TaskLocal>);
+pub(crate) struct TaskLocals(pub(crate) Vec<TaskLocal>);
 
 impl Parse for TaskLocals {
     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
@@ -51,7 +51,7 @@ impl Parse for TaskLocals {
     }
 }
 
-pub fn declarations(mac: &syn::Macro) -> Option<TaskLocals> {
+pub(crate) fn declarations(mac: &syn::Macro) -> Option<TaskLocals> {
     let mut segments = mac.path.segments.iter();
     if segments
         .next()
@@ -74,7 +74,7 @@ pub fn declarations(mac: &syn::Macro) -> Option<TaskLocals> {
 }
 
 /// Give each macro-owned declaration an independent dependency/pruning entry.
-pub fn split_declarations(item: syn::Item) -> Vec<syn::Item> {
+pub(crate) fn split_declarations(item: syn::Item) -> Vec<syn::Item> {
     if let syn::Item::Macro(mac) = &item
         && let Some(TaskLocals(declarations)) = declarations(&mac.mac)
     {
