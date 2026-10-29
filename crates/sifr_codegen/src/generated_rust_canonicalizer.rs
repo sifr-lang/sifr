@@ -1,5 +1,5 @@
 //! Codegen consumes the generated-Rust syntax authority.
-pub(crate) use sifr_generated_rust::*;
+pub use sifr_generated_rust::*;
 
 #[cfg(test)]
 mod member_demand;

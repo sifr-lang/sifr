@@ -4,6 +4,35 @@ import json
 from pathlib import Path
 import subprocess
 
+COMPILER_CRATES = {
+    "sifr",
+    "sifr_analysis",
+    "sifr_codegen",
+    "sifr_generated_rust",
+    "sifr_diagnostics",
+    "sifr_driver",
+    "sifr_format",
+    "sifr_frontend",
+    "sifr_ir",
+    "sifr_identity",
+    "sifr_ipc",
+    "sifr_lint",
+    "sifr_lowering",
+    "sifr_lsp",
+    "sifr_metadata",
+    "sifr_semantic_services",
+    "sifr_package",
+    "sifr_runtime",
+    "sifr_source",
+    "sifr_stdlib",
+    "sifr_stdlib_artifact",
+    "sifr_stdlib_imports",
+    "sifr_stdlib_manifest",
+    "sifr_sysroot",
+    "sifr_syntax",
+    "sifr_type_system",
+}
+
 SQL = ('sifr_sql_sqlite_tools', 'sifr_sql_mysql_tools', 'sifr_sql_postgresql_tools')
 LOWER = ('sifr_sysroot', 'sifr_stdlib_manifest', 'sifr_lowering', 'sifr_codegen', 'sifr_frontend')
 NATIVE = frozenset({'sifr', 'sifr_driver', 'sifr_compiler_services', 'sifr_codegen', 'sifr_stdlib_artifact'})

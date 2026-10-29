@@ -13834,7 +13834,7 @@
       "contract": "inspect or rewrite generated Rust syntax/IR: crates/sifr_generated_rust/src/generated_rust_canonicalizer/member_demand/external_demand.rs::collect_parent_aliases enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture::literal-match::1",
+      "site": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture::literal-match::1",
       "fingerprint": "ad2747219a7638762319c13df0873e78d1c734c7e1333b1115cd3a0615a52d4f",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -13842,11 +13842,11 @@
       "inputs": "fn owned_ingress_fields_move_only_before_any_borrow_or_capture ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture::literal-comparison::1",
+      "site": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture::literal-comparison::1",
       "fingerprint": "a189767e7d823ee8137f32de3385c21ac91264a10a9f68153d9792237d4e9f53",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -13854,8 +13854,8 @@
       "inputs": "fn owned_ingress_fields_move_only_before_any_borrow_or_capture ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/floating_contract_tests.rs::owned_ingress_fields_move_only_before_any_borrow_or_capture enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/member_demand/macro_arguments.rs::parse::literal-comparison::1",
@@ -14171,11 +14171,11 @@
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers::literal-match::1",
-      "fingerprint": "be546bc708886a39cad4841c95491327f267bc657b35139f48cebefb9a487a39",
+      "fingerprint": "4019d30b502b0fdc63512683d135096e3b25f73f5a9960b4d350edbb0aee5a06",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( item , syn :: Item :: Mod ( module ) if module . ident == \"__sifr_project_nominals\" )",
-      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , )",
+      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , builtin_error_classes : & [ & str ] , )",
       "outputs": "Result < String , String >",
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers enclosing context owns this literal-match; source method admission is not inferred from literal matching",
@@ -14183,11 +14183,11 @@
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers::literal-comparison::1",
-      "fingerprint": "cdf41bfdae64d7db2dc0aeb883556258d6fca9e33262cbed2717676ea6176c48",
+      "fingerprint": "0b35b5c102326297e2345ca1484ee34e0e057eec103d68bf0dabcb0c316b22c7",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "syn :: Item :: Mod ( module ) if module . ident == \"__sifr_project_nominals\" )",
-      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , )",
+      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , builtin_error_classes : & [ & str ] , )",
       "outputs": "Result < String , String >",
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
@@ -14195,11 +14195,11 @@
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers::literal-match::2",
-      "fingerprint": "be546bc708886a39cad4841c95491327f267bc657b35139f48cebefb9a487a39",
+      "fingerprint": "4019d30b502b0fdc63512683d135096e3b25f73f5a9960b4d350edbb0aee5a06",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "matches ! ( item , syn :: Item :: Mod ( module ) if module . ident == \"__sifr_project_nominals\" )",
-      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , )",
+      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , builtin_error_classes : & [ & str ] , )",
       "outputs": "Result < String , String >",
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers enclosing context owns this literal-match; source method admission is not inferred from literal matching",
@@ -14207,11 +14207,11 @@
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers::literal-comparison::2",
-      "fingerprint": "cdf41bfdae64d7db2dc0aeb883556258d6fca9e33262cbed2717676ea6176c48",
+      "fingerprint": "0b35b5c102326297e2345ca1484ee34e0e057eec103d68bf0dabcb0c316b22c7",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "syn :: Item :: Mod ( module ) if module . ident == \"__sifr_project_nominals\" )",
-      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , )",
+      "inputs": "fn prune_generated_project_prelude_for_consumers ( prelude_source : & str , consumer_sources : & [ & str ] , builtin_error_classes : & [ & str ] , )",
       "outputs": "Result < String , String >",
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::prune_generated_project_prelude_for_consumers enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
@@ -14231,11 +14231,11 @@
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::import_root_bindings_in_project_nominals::literal-comparison::1",
-      "fingerprint": "36aa3a1381bd6a2b3ed4a9f000ac87ac8fab1639f5e5fa98ea23bb5596130aa4",
+      "fingerprint": "e1d44edb30316527f8c3d53552e157eccf8b48b09d7e10acc9559ba62812af79",
       "classification": "rust-ir-consumption",
       "owner": "sifr_codegen",
       "operation": "module . ident == \"__sifr_project_nominals\"",
-      "inputs": "fn import_root_bindings_in_project_nominals ( prelude_source : & str , )",
+      "inputs": "fn import_root_bindings_in_project_nominals ( prelude_source : & str )",
       "outputs": "Result < String , String >",
       "role": "inspect or rewrite generated Rust syntax/IR",
       "caller_admission_relationship": "crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs::import_root_bindings_in_project_nominals enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",

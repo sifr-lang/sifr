@@ -5511,21 +5511,21 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
+      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
       "symbol": "run",
       "operation": "write",
       "site": "std::fs::write(&input, source).expect(\"native source\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
+      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
       "symbol": "run",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&directory).expect(\"owned native directory\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
+      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/member_demand/standard_contract_tests.rs",
       "symbol": "run",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(directory).expect(\"remove owned completed native evidence\");",

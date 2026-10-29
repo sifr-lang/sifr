@@ -49,6 +49,16 @@ class MethodTests(unittest.TestCase):
         self.assertTrue(validate_relationships([owner, changed], records, nodes))
         self.assertFalse(validate_relationships([owner, test], records, nodes))
 
+    def test_generated_rust_callers_remain_bound_to_emitter_authority(self):
+        from method_policy_constituents import relationships, validate_relationships
+        owner = Source('crates/sifr_codegen/src/owner.rs', 'fn lower() {}')
+        caller = Source('crates/sifr_generated_rust/src/consumer.rs', 'fn adapt() { lower(); }')
+        nodes = {(owner.path, 'lower'): 'canonical owner'}
+        records = {'constituents': relationships([owner, caller], nodes)}
+        self.assertEqual(records['constituents'][0]['references'][0]['path'], caller.path)
+        self.assertTrue(validate_relationships([owner], records, nodes))
+        self.assertFalse(validate_relationships([owner, caller], records, nodes))
+
     @staticmethod
     def semantic_records(sources):
         from method_policy_semantics import classification, detail
@@ -281,6 +291,12 @@ class MethodTests(unittest.TestCase):
 
 
 class UnsafeTests(unittest.TestCase):
+    def test_generated_syntax_owner_keeps_unsafe_string_inventory(self):
+        source = Source('crates/sifr_generated_rust/src/fixture.rs',
+                        'fn emit() { let code = "unsafe { pointer.read() }"; }')
+        sites = unsafe.discover(source)
+        self.assertEqual([site.kind for site in sites], ['generated-rust'])
+
     def setUp(self):
         self.path = 'crates/example/src/lib.rs'
         self.text = "fn load<'a>(x: &'a u8) { unsafe { deref(x); } }"
