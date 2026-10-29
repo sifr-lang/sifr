@@ -8,9 +8,10 @@ production library. Shared source-to-emission helpers live in `support/`.
 Private implementation invariants live in `unit/` and remain children of their
 original Rust modules through `#[cfg(test)]` and explicit `#[path]` declarations.
 They retain private access without adding public compiler APIs for tests. Editing
-these tests still recompiles the library's unit-test executable. All test-owned
-sources are outside the manifest's production `src` input root; they remain Cargo
-inputs of the test targets that use them.
+these tests still recompiles the library's unit-test executable. The relocated
+test modules and shared helpers are outside the manifest's production `src` input
+root; they remain Cargo inputs of the test targets that use them. Test-only hooks
+that remain within production files still participate in production identity.
 
 Choose the smallest appropriate check, through the same locked launcher and owned
 target used for other local verification:
