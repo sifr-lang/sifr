@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
-- Latest delivery: D10 provider-owned SQL statement framing; D11 integrated correctness discovery
+- Status: in progress; intermediate deliveries through D14; final phase qualification open
+- Latest delivery: D14 bounded CLI allocation; corrected matched performance qualification
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2144,3 +2144,111 @@ unrelated-Cargo-manifest test deliberately owns a private cold cache. Treat the
 first canonical pass as functional priming, not warm timing acceptance. Preserve
 its results, run the serial baseline, and require a retained three-worker repeat
 for the comparison. Intentional per-test cold-cache work remains included in both.
+
+### D14 qualification — bounded CLI allocation
+
+The canonical frozen `f90486060e7a3a2f1d1e865de9fc27f9e60897a0` comparison passes:
+531.559s serial versus 439.194s with three outer workers and one nested worker,
+17.376% less elapsed time. Both execute exactly 1,454 passing test identities,
+11 ignored identities and identical per-target counts/binaries/commands. Both
+sessions end empty without cap or source mutation. The first 425.766s three-worker
+run is preserved as dependency priming, not the accepted comparison.
+
+SQL applications improve 203.30s to 109.85s; CLI binary tests regress 58.39s to 88.70s
+and runtime observability 17.82s to 28.77s in this allocation comparison. Inclusive
+CPU 702.30s to 709.35s is effectively unchanged: this is scheduling improvement,
+not removed compilation. The full 120s integration design budget remains unmet.
+Do not claim improvement over the former unset libtest default from serial data.
+
+Actual implementation candidate `40006daf8b3bdf1a749eda4e72a85c70f7a6f3c1` passes
+all 24 focused controls (including real cancellation), complete runner foundation
+in 76.120s, profile/workflow contracts, source-size and diff checks. Six emitted
+plans match the base. Native Rust, manifests, lockfiles and profile inputs are
+unchanged from the timing candidate; diagnostic allocation used the pre-existing
+allocator at explicit widths. Candidate controls verify the shared allocator's
+new dispatch, selection preservation and standalone native override bounds.
+The 84.250s candidate validation guard ends empty and unchanged.
+
+The 11 ignored entries remain explicit. One pre-existing lowering deque inference
+assertion lacks an established exact execution owner; owner is lowering/stdlib
+compatibility. It is unexecuted, not a pass, and remains a final coverage follow-up.
+Other ignored/generated/helper contracts and the separately owned native corpus
+are unchanged. Failed/cancelled setup attempts remain preserved.
+
+CI full-profile create-pr job 123440352375 stops before validation setup because
+`SIFR_PERFORMANCE_REFERENCE` is missing. This is the existing configuration issue;
+there is no CI-green claim. Full phase gates, complete coverage/invalidation and
+repeated 480-second acceptance remain open.
+
+D14 is delivered in [PR #4525](https://github.com/sifr-lang/sifr/pull/4525),
+merge `3bf9891065f1fbff2ccb57242d64f3017b49be32`. Exact-candidate independent
+Claude review is SATISFIED with no blockers, retained in
+`dev-verify-d14-review-u4xpjoua/response.md`. The 133-payload evidence archive
+`dev-verify-d14-evidence.tar.gz` is SHA-256 verified:
+`2f98aaa9d2eb7f3331da46cf7e92e2756665cbd4dbccb2b51be0ae2293353773`.
+No smoke-mode timing claim is made. Clarify the full configuration's shared
+lowering allocation in the next documentation update; no new allocator exception
+is needed. The local macOS cancellation failure is retained; the actual remote
+control passes.
+
+
+D14 evidence correction: after merge, inspection found that the retained three-worker
+run used the old launcher, changing PATH and TMPDIR relative to serial. The 17.376%
+comparison is withdrawn; it is not matched performance acceptance. Functional
+results,24candidate controls and source review remain passing. Merge4525 exists,
+but D14 performance qualification is reopened. Preserve its original archive and
+review as historical evidence of the mistaken comparison. The corrected run must
+assert the full recorded execution environment matches serial except the declared
+worker counts, and assert identical TMPDIR before launching. Do not begin a D15
+implementation until this qualification is reconciled.
+
+### D14 corrected qualification — matched environment
+
+The corrected r5 run passes in 422.091s versus the 531.559s serial baseline:
+20.594% lower elapsed time. Before execution it asserts equal recorded environment
+values except the declared worker counts, plus identical temporary-storage parent.
+The comparison independently verifies those equalities, exact 1,454 passing and 11
+ignored identities, commands, binaries and per-target counts. Outer guard 425.933s;
+no cap, source change or leftover processes. Preparation 2.529s versus 2.549s.
+The original17.376% comparison remains invalid; the corrected evidence does not
+rewrite that history or justify the premature merge decision.
+
+Corrected SQL application cost 203.30s to 108.20s; CLI binary 58.39s to 89.23s;
+build-output 76.12s to 69.10s; CLI integration 88.31s to 63.84s. Inclusive CPU 702.30s
+to 708.97s still shows a scheduling improvement, not removal of compilation.
+The same frozen native candidate and implementation binding remain explicit.
+No implementation changed after the SATISFIED source review; the 24 actual-candidate
+controls and full foundation remain applicable. This record-only correction does
+not claim a new source review, smoke timing or final phase acceptance.
+
+The corrected 11-payload archive `dev-verify-d14-r5-evidence.tar.gz` is verified:
+`324118827761970a145994327b5e7b2d3f6b1eb184d7791aff2f09ffd671fc59`.
+Keep it with the original archive, serial baseline and withdrawn comparison.
+
+### D15 investigation — repeated preparation and native ownership
+
+No D15 implementation is selected yet. First measure the complete canonical
+93-project generated preparation with retained products. The earlier 348.086s
+observation used a different launcher: 310.489s was materialization and 37.005s
+recorded Cargo build/fetch commands. It is not a current matched warm baseline.
+Use the unchanged canonical environment and all original public materializations,
+locked fetches, source-sysroot and portable-relocation proofs. Compare the actual
+preparation to its 90s engineering budget before selecting work.
+
+A separate source-backed lead concerns native storage ownership. The lock-mode
+CLI fixture creates a temporary working directory; `owner_scope()` selects that
+non-Git directory, producing a new owner on every invocation. Four lock policies
+then partition it again. Retained native targets contain 24 byte-identical library
+fingerprint JSON files out of 25 across eight inspected targets. This confirms
+artifact duplication, but the inspected invocations include differing toolchain
+environments and do not establish a matched saving.
+
+Do not remove owner or lock-mode keys blindly: those families also contain mutable
+generated project roots, lock state and cleanup ownership. Map tests that require
+working-directory semantics versus tests that can use explicit project paths.
+If storage architecture changes are justified, preserve independently owned
+mutable roots, request resolution/trust, exact Cargo flags, lease/capture behavior,
+source replacement, changed-input invalidation and cleanup protection. Verify
+actual reused units and fresh runtime assertions, not fingerprint equality alone.
+Prioritize the largest current cost; do not turn this lead into an implementation
+before the baseline demonstrates value. All final phase obligations remain open.
