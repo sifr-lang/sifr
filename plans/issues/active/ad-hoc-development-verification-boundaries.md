@@ -2607,3 +2607,33 @@ The remaining qualification-record update is documentation only; source and poli
 inputs match their recorded candidates. Independent exact-candidate review remains
 required before merge. Complete phase coverage, ordinary invalidation qualification
 and the 480s gate remain open.
+
+
+#### D17 independent review correction — preserve the emitted-source guard
+
+Initial review of `a4d53785b9f4ae304ef78a8071751abf76928963` returns NOT SATISFIED:
+the intrinsic-panic/source-emission guard still walks only codegen, dropping 16
+matching production lines after relocation. No current forbidden emission was
+found, but future detection coverage was lost. Candidate
+`28828536aa46aedb1aafa87b9d6552e72b1d5763` restores the same scan and test-file
+exclusions across both production owners. Two new regression tests reject the old
+single-owner scanner and pass after repair. The canonical intrinsic-panic-lint
+case, all 18 source-quality helper tests, coverage matrix and size guard pass in a
+7.190s guarded session. Both codegen surface reproduction commands now select both
+packages; their actual profile enrollment was already complete.
+
+The 23-payload remediation archive is `dev-verify-d17-review-remediation.tar.gz`,
+SHA-256 `f04c210beb87d9b25a32ef10cac4f5041952fef55fb46321a2f0b6e603c2aa29`.
+No Rust/compiler/Cargo input changes in the remediation; retain the completed
+1,803-test, edit-cycle, generated-byte, identity and unrelated policy evidence.
+The source guard and its new tests are independently reviewed again at the final
+candidate. The first review remains rejected evidence, not a pass.
+
+Follow-up assigned to the DX metadata-inventory owner: the already stale
+`internal_docs/compiler_dx_metadata_consumers.md` / `check_dx_metadata_inventory.py`
+need reconciliation, including the new syntax owner and its three moved
+project-support-pruning consumer sites. This predates D17 and is not selected by
+its affected gate; do not silently repair that separate inventory here. The
+reviewer's task-local parser suggestion needs no change: malformed syntax remains
+covered by the relocated private invariant tests. Final phase timing and complete
+coverage qualification remain open.
