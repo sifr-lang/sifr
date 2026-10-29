@@ -2041,13 +2041,6 @@
     {
       "path": "crates/sifr/tests/build_output_behavior.rs",
       "symbol": "new",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).expect(\"temp project should be created\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/build_output_behavior.rs",
-      "symbol": "new",
       "operation": "write",
       "site": "std::fs::write(&main, source).expect(\"main.sifr should be written\");",
       "classification": "output-effect"
@@ -2057,13 +2050,6 @@
       "symbol": "output_dir",
       "operation": "create_dir_all",
       "site": "std::fs::create_dir_all(&output).expect(\"output dir should be created\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/build_output_behavior.rs",
-      "symbol": "drop",
-      "operation": "remove_dir_all",
-      "site": "let _ = std::fs::remove_dir_all(&self.root);",
       "classification": "output-effect"
     },
     {
@@ -3959,22 +3945,8 @@
     {
       "path": "crates/sifr/tests/runtime_observability_boundary.rs",
       "symbol": "new",
-      "operation": "create_dir_all",
-      "site": "std::fs::create_dir_all(&root).expect(\"temp project should be created\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/runtime_observability_boundary.rs",
-      "symbol": "new",
       "operation": "write",
       "site": "std::fs::write(&main, FIXTURE).expect(\"fixture should be copied\");",
-      "classification": "output-effect"
-    },
-    {
-      "path": "crates/sifr/tests/runtime_observability_boundary.rs",
-      "symbol": "drop",
-      "operation": "remove_dir_all",
-      "site": "let _ = std::fs::remove_dir_all(&self.root);",
       "classification": "output-effect"
     },
     {
@@ -26207,6 +26179,27 @@
       "symbol": "diamond_package_ownership_hashes_shared_inputs_once",
       "operation": "read",
       "site": "&fs::read(tree.0.join(path)).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/support/cli_fixture.rs",
+      "symbol": "owner",
+      "operation": "canonicalize",
+      "site": ".canonicalize()",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr/tests/support/cli_fixture.rs",
+      "symbol": "owner",
+      "operation": "create_dir_all",
+      "site": "std::fs::create_dir_all(&parent).expect(\"CLI fixture owner directory\");",
+      "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr/tests/support/cli_fixture.rs",
+      "symbol": "owner",
+      "operation": "canonicalize",
+      "site": "let parent = parent.canonicalize().expect(\"canonical CLI fixture owner\");",
       "classification": "tooling-input"
     }
   ]

@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D21; final phase qualification open
-- Latest delivery: D21 SQL artifact requalification; D22 ignored frontend assertion ownership in progress
+- Status: in progress; intermediate deliveries through D22; final phase qualification open
+- Latest delivery: D22 frontend assertion ownership; D23 integrated cost discovery in progress
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2949,6 +2949,7 @@ are verified locally, including every payload's size and SHA-256:
 One additional lowering assertion, `test_bare_deque_call_resolves_without_import`,
 is still ignored because it needs the driver-loaded compatibility registry. Its
 execution owner must be resolved before final complete-coverage acceptance.
+This historical gap is resolved by D22 below; the D18 execution remains incomplete.
 
 D19 merges in [PR #4531](https://github.com/sifr-lang/sifr/pull/4531) as
 `a8fb4c04aa566294be0bbfd358a50fe6f341479d`. Exact candidate
@@ -3121,3 +3122,100 @@ checks, and independent exact-candidate review. Verify the exact source string a
 ordinary discovery; required execution must not be substituted with a skip. If a
 real semantic failure remains in the correct layer, preserve it and diagnose its
 owner before claiming coverage. This is a coverage repair, not a gate speedup.
+
+
+#### D22 closure — 2026-10-29
+
+[PR #4534](https://github.com/sifr-lang/sifr/pull/4534) merges as
+`25da923a51657ec7cdeec06c1b2f4285bcb601ca`; exact reviewed candidate
+`d60c0cb8e377fa1859e2dd325da23b05c453817a`. The previously ignored lowering
+`test_bare_deque_call_resolves_without_import` is now ordinary driver test
+`tests::single_file_frontend::test_imported_deque_constructor_infers_element_type`.
+Its source, success assertion and message are identical; only the canonical
+frontend owner, explicit test compiler context and accurate name change.
+
+The focused assertion passes, then the full frontend group passes 33 tests and
+remaining lowering ownership/async group passes 52. These are 85 distinct tests;
+the focused repeat is not an extra unique test. None in these selected groups is
+failed or ignored; other groups are explicitly filtered. Ordinary discovery includes
+the new test, ignored-only discovery excludes it and lowering discovery excludes
+the old copy. Focused command 56.551s includes rebuilding after D21 input changes;
+assertion execution is 5.41s. Frontend group is 6.078s command / 5.53s execution;
+lowering group 9.136s command / 0.02s execution. Total guarded 74.245s. No timing
+improvement or full-gate acceptance is claimed.
+
+Source parity, unchanged emitted plan, formatting, size and frontend ownership
+checks pass. All 24 payloads in `dev-verify-d22-qualified.tar.gz` are verified,
+SHA-256 `e1774f8400b8d846929898ec9b75e074fc1a0cb309c684aa5345201553db2657`.
+Independent review is SATISFIED with no blockers; response SHA-256
+`0492f4f6d1621a2d1382215e0008fa9f5655c7e262874d8ac16017262ef984e7`.
+Future additions to the 803-line frontend test file should split by responsibility
+before reaching the existing 900-line limit. This closes the named coverage gap,
+not the final integrated coverage or 480s qualification obligations.
+
+### D23 — integrated correctness and current cost discovery (prospective)
+
+After D19/D21 repair the known integrated assertion failures, D20 removes repeated
+CLI dependency builds and D22 restores the ignored assertion, run one complete
+current merge correctness selection on a frozen candidate. Use canonical allocation,
+retained targets, pinned tools and failure continuation. Record resource capacity,
+target size, planned allocation and 20GiB disk / 2GiB memory reserves before work.
+Preserve the 1,750s diagnostic category cap and independent category continuation.
+If an aggregate crate deadline leaves later groups or the native corpus unexecuted,
+freeze the original result, explicitly recover only those missing selections under
+the same candidate with their own caps, and do not relabel the original as passing.
+
+Report every terminal status, preparation separately, complete elapsed, overlapping
+area groups correctly, and largest current subcategory costs. Retain all raw failure
+and incomplete evidence before any later run overwrites canonical report paths.
+Use ordinary telemetry, not tracing, for these elapsed measurements. First-use
+reconstruction after changed compiler inputs is not a steady-state performance
+baseline. Compare only input-compatible retained follow-ups when selecting an
+optimization. Budgets remain 90s preparation, 60s semantic/unit, 90s native corpus,
+120s integrations, 60s installed product and 60s policy/metadata, with the complete
+ordinary gate at 480s. These are stopping/acceptance targets, not measured results.
+
+The SQL independent clean-build and sanitizer obligations remain required. A
+read-only lead finds both syn 2.0.117 and 3.0.5 compiled under a global syntax-library
+optimization override, approximately 35s each in D10 clean SQL. Investigate actual
+roles and complete-cycle impact before changing it; no profile or optimization
+change is authorized by this observation alone. Prefer the largest demonstrated
+repeated work after this integrated diagnostic. Full phase correctness, invalidation,
+repeated timing and final merge qualification remain open.
+
+
+D23 first discovery on `7b19e10c90cbd5d699c6912ba7f21872a6ba8668` stops at
+metadata-inventory admission before preparation or main tests. Guarded elapsed
+50.736s; five guard steps pass, one fails and all dependent work remains blocked.
+The 20-payload failure archive is verified: `dev-verify-d23-discovery-guard-evidence.tar.gz`,
+SHA-256 `c4bfbbb9ed79a1a246ff3bf1c2e9a592b45a328271adf7ed9f0cdea469f495ae`.
+The optional recursive native-cache size census was separately stopped after more
+than 80s; this is neither test execution nor a test timeout. Capacity admission
+retains the measured 168GiB compiler target, approximately 33GiB free build storage,
+216GiB free native storage and 10GiB available memory.
+
+The admission mismatch is exactly nine Markdown line-anchor updates from D20/D22.
+An ordered audit proves all 1,171 consumer identities, operations, classifications
+and matching-anchor multiplicities unchanged. No new consumer was introduced;
+the initial progress hypothesis is corrected by this audit. Refresh only those
+anchors through the canonical generator, then run the actual guard and its 15
+mutation/self-tests. These are record-only changes, not a policy relaxation or a
+reason to rerun already-qualified compiler tests. Before retrying integration,
+check the related source inventories too. Keep this first failed run immutable.
+
+
+The related-inventory audit additionally finds D20 omissions before another sweep:
+eight existing SQL fixture literal-comparison fingerprints changed with their
+enclosing fixture context; three filesystem effects moved into the new CLI owner
+helper; four manual create/remove calls disappeared when TempDir took ownership.
+Retain all eight test-assertion/test-owner classifications and refresh only their
+fingerprints. Classify the helper's two canonicalizations as tooling-input and its
+create_dir_all as output-effect; remove only the four nonexistent old calls.
+All other policy records remain byte-equivalent. The unsafe ABI inventory already
+passes all 410 sites. Preserve these failed inventory checks. This reconciliation
+changes policy records, so it requires affected guard/self-tests and independent
+review, unlike the Markdown anchor-only refresh. Runtime code and test sources
+remain the already-qualified D20/D22 inputs; no duplicate runtime qualification is
+needed if an exact changed-path audit proves that binding on the final candidate.
+For subsequent source-fixture edits, run these dependent inventories with focused
+validation before review; do not rely only on frontend ownership classification.
