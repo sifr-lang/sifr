@@ -1,31 +1,30 @@
 #![allow(clippy::expect_used)]
 
+#[path = "support/cli_fixture.rs"]
+mod cli_fixture;
+
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 const FIXTURE: &str = include_str!("e2e/pass/runtime_diagnostics_tracing.sifr");
 
 struct TestProject {
+    _workspace: tempfile::TempDir,
     root: PathBuf,
     main: PathBuf,
 }
 
 impl TestProject {
     fn new() -> Self {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock should move forward")
-            .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "sifr_runtime_observability_boundary_{}_{}",
-            std::process::id(),
-            unique
-        ));
-        std::fs::create_dir_all(&root).expect("temp project should be created");
+        let workspace = cli_fixture::project("runtime-observability-");
+        let root = workspace.path().to_path_buf();
         let main = root.join("main.sifr");
         std::fs::write(&main, FIXTURE).expect("fixture should be copied");
-        Self { root, main }
+        Self {
+            _workspace: workspace,
+            root,
+            main,
+        }
     }
 
     fn run(&self, args: &[&str]) -> Output {
@@ -34,12 +33,6 @@ impl TestProject {
             .current_dir(&self.root)
             .output()
             .expect("sifr command should run")
-    }
-}
-
-impl Drop for TestProject {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.root);
     }
 }
 

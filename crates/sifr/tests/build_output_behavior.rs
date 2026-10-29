@@ -1,41 +1,34 @@
 #![allow(clippy::expect_used)]
 
+#[path = "support/cli_fixture.rs"]
+mod cli_fixture;
+
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 struct TestProject {
+    _workspace: tempfile::TempDir,
     root: PathBuf,
     main: PathBuf,
 }
 
 impl TestProject {
     fn new(name: &str, source: &str) -> Self {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock should move forward")
-            .as_nanos();
-        let root = std::env::temp_dir().join(format!(
-            "sifr_build_output_{name}_{}_{}",
-            std::process::id(),
-            unique
-        ));
-        std::fs::create_dir_all(&root).expect("temp project should be created");
+        let workspace = cli_fixture::project(&format!("build-output-{name}-"));
+        let root = workspace.path().to_path_buf();
         let main = root.join("main.sifr");
         std::fs::write(&main, source).expect("main.sifr should be written");
-        Self { root, main }
+        Self {
+            _workspace: workspace,
+            root,
+            main,
+        }
     }
 
     fn output_dir(&self, name: &str) -> PathBuf {
         let output = self.root.join(name);
         std::fs::create_dir_all(&output).expect("output dir should be created");
         output
-    }
-}
-
-impl Drop for TestProject {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.root);
     }
 }
 
@@ -158,11 +151,9 @@ fn build_output_project_mode_reports_import_closure_counts() {
     let output_dir_arg = output_dir.to_string_lossy().to_string();
     let main_arg = project.main.to_string_lossy().to_string();
 
-    let invocation_cwd = std::env::temp_dir();
-    let capture = run_sifr(
-        &["build", &main_arg, "-o", &output_dir_arg],
-        &invocation_cwd,
-    );
+    let invocation = cli_fixture::project("build-output-invocation-");
+    let invocation_cwd = invocation.path();
+    let capture = run_sifr(&["build", &main_arg, "-o", &output_dir_arg], invocation_cwd);
 
     assert_eq!(capture.status_code, 0, "stderr:\n{}", capture.stderr);
     assert!(capture.stdout.is_empty());
