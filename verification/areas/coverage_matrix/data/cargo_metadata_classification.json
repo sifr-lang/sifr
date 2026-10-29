@@ -347,8 +347,7 @@
         {"name": "sifr_sql_mysql", "kind": "rlib", "classification": "first_party_compiler", "profile_assignment": "merge"},
         {"name": "live_differential", "kind": "test", "classification": "test_fixture", "profile_assignment": "test-fixture"},
         {"name": "mysql_compiler", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
-        {"name": "mysql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"},
-        {"name": "build-script-build", "kind": "custom-build", "classification": "internal_codegen_tool", "profile_assignment": "merge"}
+        {"name": "mysql_properties", "kind": "test", "classification": "test_fixture", "profile_assignment": "merge"}
       ],
       "features": []
     },
