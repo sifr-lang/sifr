@@ -3003,3 +3003,25 @@ If it does not earn a meaningful reduction, retain the evidence and reject it.
 SQL component provenance requalification remains a separate owned repair. The
 475s independent SQL clean-build obligation and final integrated coverage,
 invalidation and timing qualification remain mandatory; no gate split is approved.
+
+
+The first D20 candidate is rejected by its own unchanged assertions: placing
+fixtures below the product checkout changes ancestor manifest discovery for
+standalone cases. Noncanonical `..` components also correctly trigger cache-path
+admission and SQL identity comparisons. Preserve that failed 130.264s run; it is
+not a speedup. The next candidate creates one real, retained Git fixture repository
+outside the product source tree, below the session's temporary root, and creates
+unique canonical fixture directories within it. Git owns the shared native scope;
+no fabricated marker, production owner override, manifest-discovery exception or
+weakened assertion is introduced. Existing explicitly private cache controls remain
+private. The same complete 48-assertion selection and adoption criteria apply.
+
+The valid baseline executes all 48 assertions in 233.101s, 251.341s outer including
+preparation. SQL companion executables needed 12.330s requalification after the
+prior production compiler change; report this separately rather than inflate a
+retained speedup. Initial diagnostic harness attempts missed the canonical
+prepared-compiler/sysroot session and SQL companion preparation; preserve all
+failures. After the existing SQL preparation script refreshes its companions, all
+48 pass without remote source changes. Follow-up: make focused CLI companion
+prerequisites explicit in the canonical preparation contract instead of relying
+on a previously produced executable merely existing.
