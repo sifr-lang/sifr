@@ -3345,9 +3345,9 @@ Measure an unchanged and an assertion-only complete lowering-test/production-CLI
 cycle with retained targets and identical allocation before changing the boundary.
 Separate initial configuration preparation from recurring edit cost. If this
 confirms material propagation, move explicit test-owned sources outside production
-inputs. Keep private invariants in their logical unit modules. Put suitable public
-lowering contracts into one cohesive integration target using the existing public
-API; do not expose private APIs or duplicate frontend authority to enable tests.
+inputs. Keep private invariants in their logical unit modules. Consider a cohesive public
+contract target only if the measured unit-test edit cost warrants it; do not expose
+private APIs or duplicate frontend authority to enable tests.
 Preserve all discovered identities, fixture/snapshot literals, declaration order
 and relative include meanings. Update dependent source-evidence, policy and target
 inventories together, using D16/D17 and D23's omissions as explicit lessons.
@@ -3361,3 +3361,52 @@ are demonstrated; do not optimize already cheap assertion execution. Preserve
 profile semantics, sanitizer and independent-clean obligations. Require independent
 exact-candidate review; full final phase correctness, ordinary invalidation and
 repeated 480s timing qualification remain open.
+
+
+#### D24 measured decision — isolate inputs, retain the existing test target
+
+On `a4eccaa6bcd3a6a22d5bb3b5b8e346316d9b6dba`, the initial unchanged cycle
+passes all 1,148 tests. It takes 42.757s for tests (one production-library unit
+needed configuration preparation; the test binary was fresh), 0.637s for the CLI
+(all 457 units fresh), and 47.716s guarded. It is not an edit-cycle baseline.
+
+A single assertion failure-message prefix changes no predicate or source fixture.
+The subsequent test command takes 10.464s and rebuilds two lowering units; the CLI
+build takes 23.858s and rebuilds 11 production units, changing its bytes. Combined
+guard: 36.713s. The same owned assertion edit then forces the existing packaged
+release compiler to rebuild in 116.630s, changing its bytes too (119.273s guarded).
+Thus the measured three commands cost 150.953s after a test-only edit. All tests
+pass, canonical four compiler slots and retained targets are used, and no reserve
+or category cap is reached. Source is restored after the control; restored-source
+build artifacts are not claimed fresh until Cargo next checks them.
+
+This confirms material production propagation. The unit-test edit command itself
+is already reasonable at 10.464s. Defer adding a new public integration target;
+relocate explicit test-owned sources and inline modules while retaining the exact
+logical unit-module paths and every assertion. This simpler boundary directly
+addresses the two unnecessary production rebuilds. Measure the same complete
+post-edit commands, including release preparation, after the change. Do not claim
+that this alone meets the entire gate budget.
+
+All 53 pre-change evidence payloads are verified, archive SHA-256
+`d85afbf974393ca9931eb01dc1055382713060d5f1dcb084c6fc5a098405548f`.
+The initial 0.690s diagnostic launch fails its environment-marker admission before
+compilation; its evidence is retained. The corrected controller binds the actual
+pinned Python executable/environment. No failed launch is counted as a test pass.
+
+
+The candidate preserves token-equivalent production bodies in all 44 changed
+owners after removing only test-module declarations/bodies. All 68 relocated
+external files preserve tokens, and all 38 extracted inline modules preserve every
+literal byte and the formatter's canonical tokens. One relative include is rebased
+to the same existing Sifr fixture. Nested expression tests use a directory module
+so Rust keeps their original logical paths. This lexical audit supplements actual
+compiled discovery/execution; it is not their substitute.
+
+Dependent method-policy validation also exposes existing nested test helpers
+classified as typed lowering because their old filenames lacked a test suffix.
+Only sites in the proven cfg(test)-owned, production-excluded moved files may be
+reclassified to test assertions. Preserve fingerprints, operations, signatures,
+relationships, inventory membership and every production node. Do not weaken the
+classifier or create a production exemption. Record the exact affected set and
+require the actual guard and its negative controls after reconciliation.

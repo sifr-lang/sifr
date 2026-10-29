@@ -3,7 +3,7 @@
   "capability": "sync-declaration",
   "evidence": {
     "positive": [
-      "crates/sifr_lowering/src/lower/python_interop_tests.rs",
+      "crates/sifr_lowering/tests/unit/lower/python_interop_tests.rs",
       "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs"
     ],
     "negative": [

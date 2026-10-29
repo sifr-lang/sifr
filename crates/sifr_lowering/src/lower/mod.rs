@@ -27,10 +27,12 @@ mod call_iterable_validation;
 mod callable_fields;
 mod class_field_inference;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/class_inheritance_defaults_tests.rs"]
 mod class_inheritance_defaults_tests;
 mod classes;
 mod compiler_intrinsics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/compiler_intrinsics_tests.rs"]
 mod compiler_intrinsics_tests;
 mod container_literal_diagnostics;
 mod container_literal_specialization;
@@ -43,6 +45,7 @@ mod default_args;
 mod defaultdict_refinement;
 mod descriptor_declarations;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/diagnostic_transport_tests.rs"]
 mod diagnostic_transport_tests;
 mod diagnostic_types;
 mod diagnostics;
@@ -56,6 +59,7 @@ mod expression_operators;
 mod expression_sum_sorted;
 mod expressions;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/expressions_tests/mod.rs"]
 mod expressions_tests;
 mod external_defs;
 mod external_layers;
@@ -99,13 +103,17 @@ mod method_call_verifier;
 mod method_diagnostics;
 mod method_receiver_analysis;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/method_receiver_analysis_tests.rs"]
 mod method_receiver_analysis_tests;
 mod method_receiver_diagnostics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/method_receiver_diagnostics_tests.rs"]
 mod method_receiver_diagnostics_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/method_receiver_footprint_tests.rs"]
 mod method_receiver_footprint_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/method_receiver_nested_helper_tests.rs"]
 mod method_receiver_nested_helper_tests;
 mod method_receiver_places;
 mod min_max_validation;
@@ -116,72 +124,97 @@ mod module_function_inference;
 mod module_function_registry;
 mod must_use_obligations;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/mutable_call_sequence_guard_tests.rs"]
 mod mutable_call_sequence_guard_tests;
 mod mutating_methods;
 mod name_diagnostics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/name_import_diagnostics_tests.rs"]
 mod name_import_diagnostics_tests;
 mod narrowing;
 mod nested_function_inference;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/nested_function_tests.rs"]
 mod nested_function_tests;
 mod nonempty_method_narrowing;
 mod nonlocal_support;
 mod numeric_sentinels;
 mod offload_worker_captures;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/own_mut_param_tests.rs"]
 mod own_mut_param_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/own_mut_semantics_tests.rs"]
 mod own_mut_semantics_tests;
 mod ownership_diagnostics;
 mod parallel_calls;
 mod private_stdlib_imports;
 mod protocol_diagnostics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_arrow_contract_tests.rs"]
 mod python_arrow_contract_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_async_context_contract_tests.rs"]
 mod python_async_context_contract_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_async_tests.rs"]
 mod python_async_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_bridge_tests.rs"]
 mod python_bridge_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_buffer_contract_tests.rs"]
 mod python_buffer_contract_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_context_expression_tests.rs"]
 mod python_context_expression_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_context_flow_tests.rs"]
 mod python_context_flow_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_coroutine_contract_tests.rs"]
 mod python_coroutine_contract_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_dlpack_contract_tests.rs"]
 mod python_dlpack_contract_tests;
 mod python_interop;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_interop_callback_tests.rs"]
 mod python_interop_callback_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_interop_tests.rs"]
 mod python_interop_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_interop_validation_tests.rs"]
 mod python_interop_validation_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/python_trust_tests.rs"]
 mod python_trust_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/required_error_message_tests.rs"]
 mod required_error_message_tests;
 mod result_diagnostics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/result_diagnostics_tests.rs"]
 mod result_diagnostics_tests;
 mod return_lowering;
 mod rust_callback_callsite;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/rust_callback_callsite_tests.rs"]
 mod rust_callback_callsite_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/rust_callback_expression_capture_tests.rs"]
 mod rust_callback_expression_capture_tests;
 mod rust_interop;
 mod rust_interop_structural;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/rust_interop_structural_tests.rs"]
 mod rust_interop_structural_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/rust_interop_tests.rs"]
 mod rust_interop_tests;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/rust_opaque_constructor_tests.rs"]
 mod rust_opaque_constructor_tests;
 mod scope_helpers;
 mod sequence_guard_detection;
@@ -192,6 +225,7 @@ mod sequence_shapes;
 mod simple_expr;
 mod statement_diagnostics;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/statement_diagnostics_tests.rs"]
 mod statement_diagnostics_tests;
 mod statements;
 mod subscript_type;
@@ -204,10 +238,12 @@ mod task_scope_calls;
 mod task_scope_offload_calls;
 mod template_string_support;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/template_string_tests.rs"]
 mod template_string_tests;
 mod try_error_propagation;
 mod tuple_unpack;
 #[cfg(test)]
+#[path = "../../tests/unit/lower/type_alias_tests.rs"]
 mod type_alias_tests;
 mod type_aliases;
 mod type_bounds;

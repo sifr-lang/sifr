@@ -130,7 +130,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "RUST-SLOT",
         "A method-slot bridge bound is incomplete or misplaced.",
         Severity::Error,
-        "crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
+        "crates/sifr_lowering/tests/unit/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
         "invalid method-slot bridge bound: {reason}",
         "sifr_lowering::lower::rust_interop_structural",
         [arg!("reason")],

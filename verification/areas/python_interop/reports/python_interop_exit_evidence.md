@@ -33,7 +33,7 @@ Active compiler diagnostic families:
 | Family | Codes | Evidence |
 | --- | --- | --- |
 | `SIFR-PYENV` | `0001..0011` | `crates/sifr_package/src/python/tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
-| `SIFR-PYTRUST` | `0001`, `0003..0005` | `crates/sifr_package/src/python/trust_policy_tests.rs`, `crates/sifr_lowering/src/lower/python_trust_tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
+| `SIFR-PYTRUST` | `0001`, `0003..0005` | `crates/sifr_package/src/python/trust_policy_tests.rs`, `crates/sifr_lowering/tests/unit/lower/python_trust_tests.rs`; generated docs under `docs/errors/`; registry rows in `internal_docs/diagnostic_codes.md`. |
 | `SIFR-PYIMP` | `0001..0003` | declaration target validation, package bridge inventory, and reserved runtime collision tests. |
 | `SIFR-PYCALL` | `0001` | declaration call-shape lowering and driver target-probe tests. |
 | `SIFR-PYCONV` | `0001` | recursive declaration conversion lowering/codegen/runtime tests. |

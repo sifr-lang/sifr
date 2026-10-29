@@ -25,7 +25,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use workload_annotations::WorkloadKind;
 
 #[cfg(test)]
-#[path = "external_defs_context_tests.rs"]
+#[path = "../../tests/unit/lower/external_defs_context_tests.rs"]
 mod external_defs_context_tests;
 
 #[derive(Clone)]

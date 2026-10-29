@@ -206,7 +206,7 @@ active_entry!("{entry_code}", "TYPE", "summary", Severity::Error,
 
     def test_fixture_symbol_resolution_follows_declared_modules(self) -> None:
         valid = (
-            "crates/sifr_lowering/src/lower/expressions_tests.rs::"
+            "crates/sifr_lowering/tests/unit/lower/expressions_tests/mod.rs::"
             "test_fixed_width_literal_assignment_out_of_range_has_int_code",
             "crates/sifr_driver/src/build/rust_interop_tests.rs::"
             "package_rust_interop_rejects_untrusted_build_script",

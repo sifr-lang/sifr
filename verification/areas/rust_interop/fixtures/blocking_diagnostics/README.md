@@ -17,5 +17,5 @@ CPU-heavy classification.
 The structured `fixture.json` record is authoritative. These names repeat its
 exact executable Rust-test bindings for readers:
 
-- Positive `classified_sync_rust_effects` runs `rust_interop_lowers_blocking_io_effect_for_sync_rust_function` in `crates/sifr_lowering/src/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
-- Negative `classified_async_declarations_rejected` runs `rust_interop_rejects_blocking_classification_on_async_function` in `crates/sifr_lowering/src/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
+- Positive `classified_sync_rust_effects` runs `rust_interop_lowers_blocking_io_effect_for_sync_rust_function` in `crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
+- Negative `classified_async_declarations_rejected` runs `rust_interop_rejects_blocking_classification_on_async_function` in `crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.

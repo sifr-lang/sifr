@@ -5,7 +5,7 @@
   "positive": [
     {
       "id": "compiler-contract",
-      "owners": ["crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs", "crates/sifr_codegen/tests/unit/python_arrow_codegen_tests.rs", "crates/sifr_codegen/tests/unit/python_interop_plan_tests.rs"],
+      "owners": ["crates/sifr_lowering/tests/unit/lower/python_arrow_contract_tests.rs", "crates/sifr_codegen/tests/unit/python_arrow_codegen_tests.rs", "crates/sifr_codegen/tests/unit/python_interop_plan_tests.rs"],
       "covers": ["five nominal kinds", "import-root producer", "Self receiver", "bridge producer", "owned consumer", "owned requested schema"]
     },
     {
@@ -22,7 +22,7 @@
   "negative": [
     {
       "id": "declaration-and-ownership",
-      "owners": ["crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs"],
+      "owners": ["crates/sifr_lowering/tests/unit/lower/python_arrow_contract_tests.rs"],
       "covers": ["invalid schema shape", "async consumer", "mutable consumer", "omittable consumer", "borrowed escape", "same-call double move", "use after move"]
     },
     {

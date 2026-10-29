@@ -7,10 +7,10 @@
     "asyncio AsyncCallable round-trip on the application-owned loop"
   ],
   "negative": [
-    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::foreign_callback_rejects_non_send_handler_capture_at_attachment",
-    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::foreign_callback_rejects_python_identity_handler_capture_at_attachment",
-    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::parallel_callback_rejects_mutable_handler_capture_at_attachment",
-    "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::receiver_callback_rejects_capturing_its_owner",
+    "crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs::foreign_callback_rejects_non_send_handler_capture_at_attachment",
+    "crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs::foreign_callback_rejects_python_identity_handler_capture_at_attachment",
+    "crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs::parallel_callback_rejects_mutable_handler_capture_at_attachment",
+    "crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs::receiver_callback_rejects_capturing_its_owner",
     "checked callback argument/result conversion failures",
     "serial foreign and asyncio recursive-entry rejection before lock or await"
   ],

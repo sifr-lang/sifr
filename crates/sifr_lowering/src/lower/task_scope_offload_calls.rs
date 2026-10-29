@@ -337,18 +337,5 @@ fn call_arity_range(call: &ExprCall) -> TextRange {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fallback_worker_errors_keep_canonical_parallel_identity() {
-        let ctx = LowerCtx::new();
-        for name in ["WorkerError", "WorkerRuntimeError"] {
-            assert!(matches!(
-                worker_error_type(name, &ctx),
-                Type::Class { identity: Some(identity), .. }
-                    if identity == format!("sifr.parallel.{name}")
-            ));
-        }
-    }
-}
+#[path = "../../tests/unit/lower/task_scope_offload_calls/tests.rs"]
+mod tests;
