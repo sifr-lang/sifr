@@ -3,27 +3,27 @@ use super::rewrite_named_project_borrows;
 #[test]
 fn project_value_borrows_rewrite_imported_and_local_calls() {
     let mut helper = r#"
-        pub trait Unwrappable { fn unwrap(&self) -> i64; }
-        pub struct Carrier(i64);
-        impl Unwrappable for Carrier { fn unwrap(&self) -> i64 { self.0 } }
-        pub fn through(value: Box<dyn Unwrappable>) -> i64 { value.unwrap() }
-        fn optional_read(value: &Option<String>) -> usize {
-            value.as_ref().map_or(0, String::len)
-        }
-        pub fn optional(value: Option<String>) -> usize { optional_read(&value) }
-        pub fn outer(value: Option<String>) -> usize { optional(value) }
-        pub fn local() -> i64 { through(Box::new(Carrier(2))) }
-    "#
+            pub trait Unwrappable { fn unwrap(&self) -> i64; }
+            pub struct Carrier(i64);
+            impl Unwrappable for Carrier { fn unwrap(&self) -> i64 { self.0 } }
+            pub fn through(value: Box<dyn Unwrappable>) -> i64 { value.unwrap() }
+            fn optional_read(value: &Option<String>) -> usize {
+                value.as_ref().map_or(0, String::len)
+            }
+            pub fn optional(value: Option<String>) -> usize { optional_read(&value) }
+            pub fn outer(value: Option<String>) -> usize { optional(value) }
+            pub fn local() -> i64 { through(Box::new(Carrier(2))) }
+        "#
     .to_string();
     let mut main = r#"
-        use crate::helper::{through as imported_through, optional, outer};
-        fn main() {
-            assert_eq!(imported_through(Box::new(helper::Carrier(3))), 3);
-            assert_eq!(optional(Some("abc".to_string())), 3);
-            assert_eq!(outer(Some("abcd".to_string())), 4);
-            assert_eq!(helper::local(), 2);
-        }
-    "#
+            use crate::helper::{through as imported_through, optional, outer};
+            fn main() {
+                assert_eq!(imported_through(Box::new(helper::Carrier(3))), 3);
+                assert_eq!(optional(Some("abc".to_string())), 3);
+                assert_eq!(outer(Some("abcd".to_string())), 4);
+                assert_eq!(helper::local(), 2);
+            }
+        "#
     .to_string();
 
     rewrite_named_project_borrows(&mut [("", &mut main), ("helper", &mut helper)])

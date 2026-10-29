@@ -3,25 +3,25 @@ use super::{import_project_prelude_bindings, prune_generated_project_owners};
 #[test]
 fn project_nominal_methods_retain_their_transitive_support_helpers() {
     let prelude = r#"
-        mod __sifr_project_nominals {
-            pub struct Child;
-            impl Child {
-                pub async fn wait(&self) -> i64 {
-                    process_async_wait().await
+            mod __sifr_project_nominals {
+                pub struct Child;
+                impl Child {
+                    pub async fn wait(&self) -> i64 {
+                        process_async_wait().await
+                    }
                 }
             }
-        }
-        pub use __sifr_project_nominals::Child;
-    "#;
+            pub use __sifr_project_nominals::Child;
+        "#;
     let support = r#"
-        async fn process_async_wait() -> i64 {
-            status_from_parts()
-        }
-        fn status_from_parts() -> i64 {
-            0
-        }
-        fn unused_support() {}
-    "#;
+            async fn process_async_wait() -> i64 {
+                status_from_parts()
+            }
+            fn status_from_parts() -> i64 {
+                0
+            }
+            fn unused_support() {}
+        "#;
     let body = "async fn run(child: Child) -> i64 { child.wait().await }";
 
     let (pruned_prelude, pruned_support) =
@@ -37,15 +37,15 @@ fn project_nominal_methods_retain_their_transitive_support_helpers() {
 #[test]
 fn consumer_method_calls_retain_support_trait_contracts() {
     let support = r#"
-        struct Wrapper;
-        trait RenderSupport {
-            fn render(&self) -> i64;
-        }
-        impl RenderSupport for Wrapper {
-            fn render(&self) -> i64 { 1 }
-        }
-        fn unused_support() {}
-    "#;
+            struct Wrapper;
+            trait RenderSupport {
+                fn render(&self) -> i64;
+            }
+            impl RenderSupport for Wrapper {
+                fn render(&self) -> i64 { 1 }
+            }
+            fn unused_support() {}
+        "#;
     let body = "fn run(value: Wrapper) -> i64 { value.render() }";
 
     let (_, pruned_support) = prune_generated_project_owners("", support, &[body])

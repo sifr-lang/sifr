@@ -4,12 +4,12 @@ use super::rewrite_named_project_borrows;
 fn ancestry_scalar_borrows_reach_callers_through_reexports() {
     for reverse in [false, true] {
         let mut sources = vec![
-            ("base", "pub struct Root; impl Root { pub fn new(value: SifrInt) -> SifrInt { value } }".to_string()),
-            ("middle", "use crate::base::Root as BaseRoot; pub struct Root; impl Root { pub fn new(value: SifrInt, middle: SifrInt) -> (SifrInt, SifrInt) { (BaseRoot::new(value), middle.clone()) } }".to_string()),
-            ("child", "use crate::middle::Root as MiddleRoot; pub struct Child; impl Child { pub fn new(value: SifrInt, middle: SifrInt, extra: SifrInt) -> ((SifrInt, SifrInt), SifrInt) { (MiddleRoot::new(value, middle), extra.clone()) } }".to_string()),
-            ("facade", "pub use crate::child::Child as PublicChild;".to_string()),
-            ("", "use crate::facade::PublicChild as Child; fn main() { Child::new(SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)); }".to_string()),
-        ];
+                ("base", "pub struct Root; impl Root { pub fn new(value: SifrInt) -> SifrInt { value } }".to_string()),
+                ("middle", "use crate::base::Root as BaseRoot; pub struct Root; impl Root { pub fn new(value: SifrInt, middle: SifrInt) -> (SifrInt, SifrInt) { (BaseRoot::new(value), middle.clone()) } }".to_string()),
+                ("child", "use crate::middle::Root as MiddleRoot; pub struct Child; impl Child { pub fn new(value: SifrInt, middle: SifrInt, extra: SifrInt) -> ((SifrInt, SifrInt), SifrInt) { (MiddleRoot::new(value, middle), extra.clone()) } }".to_string()),
+                ("facade", "pub use crate::child::Child as PublicChild;".to_string()),
+                ("", "use crate::facade::PublicChild as Child; fn main() { Child::new(SifrInt::from_i64(1), SifrInt::from_i64(2), SifrInt::from_i64(3)); }".to_string()),
+            ];
         if reverse {
             sources.reverse();
         }

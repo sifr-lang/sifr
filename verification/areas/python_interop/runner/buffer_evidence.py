@@ -25,7 +25,7 @@ BUFFER_MATRIX_SPECS = {
             "python_buffer_contract_tests and python_buffer_codegen_tests",
             {
                 "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs",
-                "crates/sifr_codegen/src/python_buffer_codegen_tests.rs",
+                "crates/sifr_codegen/tests/unit/python_buffer_codegen_tests.rs",
             },
             {
                 "import-root target",

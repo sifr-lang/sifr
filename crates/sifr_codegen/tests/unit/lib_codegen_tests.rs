@@ -5,8 +5,8 @@ use crate::{
     generate_rust_with_stdlib_for_module,
 };
 use sifr_ir::{
-    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
-    HirModule, HirParam, HirPattern, HirStmt, HirWithItem, HirWithItemKind, MethodKind,
+    HirClass, HirClassKind, HirExpr, HirFunction, HirImport, HirMatchArm, HirModule, HirParam,
+    HirPattern, HirStmt, HirWithItem, HirWithItemKind, MethodKind,
 };
 use sifr_lowering::lower_module;
 use sifr_python_parser::parse_module;
@@ -17,7 +17,6 @@ use std::collections::HashSet;
 mod codegen_support;
 pub(crate) use codegen_support::{
     empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections,
-    trait_impl_fixture_stdlib_code,
 };
 #[cfg(test)]
 #[path = "lib_codegen_tests/class_trait_contract_codegen_tests.rs"]

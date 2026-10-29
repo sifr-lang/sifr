@@ -108,11 +108,11 @@ fn imported_identity_uses_the_generated_package_type() {
         .get("main.Envelope")
         .expect("consumer identity must be generated");
     assert!(
-        expression.contains(
-            "<crate::values::Token as ::sifr_runtime::interop::structural::StructuralType>::shape_identity()"
-        ),
-        "{expression}"
-    );
+            expression.contains(
+                "<crate::values::Token as ::sifr_runtime::interop::structural::StructuralType>::shape_identity()"
+            ),
+            "{expression}"
+        );
     assert!(!expression.contains("::bridge::"), "{expression}");
     let static_identities = super::super::static_class_identities_for_project(
         &[("values", &values), ("main", &main)],

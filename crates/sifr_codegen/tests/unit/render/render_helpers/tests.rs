@@ -79,31 +79,31 @@ fn renders_struct_enum_trait_and_impl() {
 
     let rendered = render_items(&items);
     assert_snapshot!(rendered, @r###"
-    #[derive(Debug, Clone)]
-    pub struct Point {
-        x: i64,
-        y: i64,
-    }
-
-    #[derive(Debug)]
-    enum Token {
-        Int { value: i64 },
-        Eof,
-        Bytes(Vec<i64>),
-    }
-
-    pub trait Renderable {
-        fn render(&self) -> String {
-            "ok".to_string()
+        #[derive(Debug, Clone)]
+        pub struct Point {
+            x: i64,
+            y: i64,
         }
-    }
 
-    impl<T: Clone> Renderable for Point {
-        fn render(&self) -> String {
-            "Point".to_string()
+        #[derive(Debug)]
+        enum Token {
+            Int { value: i64 },
+            Eof,
+            Bytes(Vec<i64>),
         }
-    }
-    "###);
+
+        pub trait Renderable {
+            fn render(&self) -> String {
+                "ok".to_string()
+            }
+        }
+
+        impl<T: Clone> Renderable for Point {
+            fn render(&self) -> String {
+                "Point".to_string()
+            }
+        }
+        "###);
 }
 
 #[test]
@@ -199,30 +199,30 @@ fn renders_function_with_control_flow_statements() {
 
     let rendered = render_items(&[item]);
     assert_snapshot!(rendered, @r###"
-    pub fn control(items: Vec<i64>) -> () {
-        let mut acc: i64 = 0;
-        if acc == 0 {
-            println!("empty".to_string());
+        pub fn control(items: Vec<i64>) -> () {
+            let mut acc: i64 = 0;
+            if acc == 0 {
+                println!("empty".to_string());
+            }
+            for value in items.iter() {
+                acc += *value;
+            }
+            while acc < 10 {
+                break;
+            }
+            loop {
+                continue;
+            }
+            match acc {
+                0 => {
+                    return;
+                },
+                _ => {
+                    println!("non-zero".to_string());
+                },
+            }
         }
-        for value in items.iter() {
-            acc += *value;
-        }
-        while acc < 10 {
-            break;
-        }
-        loop {
-            continue;
-        }
-        match acc {
-            0 => {
-                return;
-            },
-            _ => {
-                println!("non-zero".to_string());
-            },
-        }
-    }
-    "###);
+        "###);
 }
 
 #[test]
@@ -278,10 +278,10 @@ fn renders_function_type_param_bounds() {
     }]);
 
     assert_snapshot!(rendered, @r###"
-    pub fn identity<T: Clone + ::std::fmt::Display>(value: T) -> T {
-        value
-    }
-    "###);
+        pub fn identity<T: Clone + ::std::fmt::Display>(value: T) -> T {
+            value
+        }
+        "###);
 }
 
 #[test]
@@ -475,11 +475,11 @@ fn render_stmts_helper_renders_block() {
     ];
     let rendered = render_stmts(&stmts);
     assert_snapshot!(rendered, @r###"
-    let x: i64 = 1;
-    let mut pending: String;
-    let (a, b) = (2, true);
-    may_fail()?;
-    "###);
+        let x: i64 = 1;
+        let mut pending: String;
+        let (a, b) = (2, true);
+        may_fail()?;
+        "###);
 }
 
 #[test]
@@ -496,9 +496,9 @@ fn render_stmts_renders_assert_variants() {
     ];
     let rendered = render_stmts(&stmts);
     assert_snapshot!(rendered, @r###"
-    assert!(true);
-    assert!(false, "{}", "boom".to_string());
-    "###);
+        assert!(true);
+        assert!(false, "{}", "boom".to_string());
+        "###);
 }
 
 #[test]
@@ -527,10 +527,10 @@ fn render_stmts_escapes_keyword_identifiers_and_patterns() {
 
     let rendered = render_stmts(&stmts);
     assert_snapshot!(rendered, @r###"
-    let mut r#mod: i64 = 7;
-    let (mut res, r#mod, r#gen) = (1, 2, 3);
-    res % r#mod;
-    "###);
+        let mut r#mod: i64 = 7;
+        let (mut res, r#mod, r#gen) = (1, 2, 3);
+        res % r#mod;
+        "###);
 }
 
 #[test]

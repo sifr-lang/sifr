@@ -1,12 +1,8 @@
 use crate::{
-    RustEmitter, RustExpr, RustStmt, generate_project_with_deps_and_crates, generate_rust,
-    generate_rust_multi, generate_rust_multi_with_metadata, generate_rust_test,
+    generate_project_with_deps_and_crates, generate_rust, generate_rust_multi_with_metadata,
     generate_rust_with_metadata, generate_rust_with_stdlib_for_module,
 };
-use sifr_ir::{
-    HirClass, HirClassKind, HirExceptHandler, HirExpr, HirFunction, HirImport, HirMatchArm,
-    HirModule, HirParam, HirPattern, HirStmt, HirWithItem, HirWithItemKind, MethodKind,
-};
+use sifr_ir::{HirExceptHandler, HirExpr, HirFunction, HirImport, HirModule, HirStmt, MethodKind};
 use sifr_lowering::lower_module;
 use sifr_python_parser::parse_module;
 use sifr_stdlib_artifact::{StdlibCode, StdlibRustSource};

@@ -26,11 +26,11 @@ fn retains_dependencies_referenced_by_final_generated_paths() {
     ]);
 
     retain_generated_dependency_metadata(
-        ["fn read(path: &str) { let _ = ::sifr_stdlib::fs::read_text(path); let _ = ::sifr_runtime::SifrInt::from(1); }"],
-        &mut modules,
-        &mut features,
-    )
-    .expect("retained generated Rust should parse");
+            ["fn read(path: &str) { let _ = ::sifr_stdlib::fs::read_text(path); let _ = ::sifr_runtime::SifrInt::from(1); }"],
+            &mut modules,
+            &mut features,
+        )
+        .expect("retained generated Rust should parse");
 
     assert_eq!(
         modules,
@@ -49,10 +49,10 @@ fn reconstructs_direct_crate_features_from_final_generated_paths() {
 
     retain_generated_dependency_metadata(
         [r#"
-            use ::bigdecimal::BigDecimal;
-            use ::num_bigint::BigInt;
-            use ::rust_decimal::Decimal;
-        "#],
+                use ::bigdecimal::BigDecimal;
+                use ::num_bigint::BigInt;
+                use ::rust_decimal::Decimal;
+            "#],
         &mut modules,
         &mut features,
     )
@@ -78,11 +78,11 @@ fn retains_hyphenated_stdlib_features_for_rust_module_paths() {
     let mut features = HashSet::new();
 
     retain_generated_dependency_metadata(
-        ["fn emit() { let _ = ::sifr_stdlib::runtime_observability::emit_diagnostic(\"info\", \"demo\", \"event\", \"message\"); }"],
-        &mut modules,
-        &mut features,
-    )
-    .expect("observability bridge should parse");
+            ["fn emit() { let _ = ::sifr_stdlib::runtime_observability::emit_diagnostic(\"info\", \"demo\", \"event\", \"message\"); }"],
+            &mut modules,
+            &mut features,
+        )
+        .expect("observability bridge should parse");
 
     assert_eq!(
         modules,
