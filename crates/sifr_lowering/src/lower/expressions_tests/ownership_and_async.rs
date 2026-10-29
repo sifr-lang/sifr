@@ -668,19 +668,6 @@ pub(super) fn test_builtin_set_constructor_accepts_list_iterable() {
 }
 
 #[test]
-#[ignore = "depends on driver-loaded stdlib compat registry"]
-pub(super) fn test_bare_deque_call_resolves_without_import() {
-    let result = lower_source(
-        "from sifr.collections import deque\n\ndef main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
-    );
-    assert!(
-        result.is_ok(),
-        "deque(...) should resolve through the compat stdlib surface: {:?}",
-        result.err()
-    );
-}
-
-#[test]
 pub(super) fn test_generic_constructor_infers_typevar_from_optional_union_param() {
     let result = lower_source(
         "class Bucket[T]:\n    items: list[T]\n\n    def __init__(self, items: list[T] | None = None):\n        if items is None:\n            self.items = []\n        else:\n            self.items = items\n\n    def first(self) -> T | None:\n        if len(self.items) == 0:\n            return None\n        return self.items[0]\n\ndef main() -> int:\n    bucket = Bucket([1])\n    value = bucket.first()\n    if value is None:\n        return 0\n    return value + 1\n",
