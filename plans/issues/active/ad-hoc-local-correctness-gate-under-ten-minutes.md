@@ -18022,6 +18022,9 @@ Scoped tests:2827 grouped executions,116 standalone LSP,1148 lowering,
 pass. Counts are executions across configurations, not unique tests.
 The unchanged lowering ignore test_bare_deque_call_resolves_without_import
 depends on the driver-loaded stdlib registry; it is recorded, not counted passing.
+Subsequent resolution: [DEV-VERIFY D22](ad-hoc-development-verification-boundaries.md#d22-closure--2026-10-29)
+moves the identical assertion to ordinary driver frontend execution and qualifies
+it in PR #4534. This does not change the historical execution counts above.
 Both development/release732-fixture source/metadata corpora pass in83.934s
 outer time. All30 selected Python variants pass in403.952s; formatting, size,
 inventories and profile checks pass. The complete emitted merge correctness-only
