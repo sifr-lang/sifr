@@ -110,17 +110,5 @@ pub(crate) fn module_uses_async_python_declaration(module: &HirModule) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::rust_source_uses_python_runtime;
-
-    #[test]
-    fn runtime_dependency_detection_covers_both_python_namespaces() {
-        assert!(rust_source_uses_python_runtime(
-            "::sifr_stdlib::python::PythonError"
-        ));
-        assert!(rust_source_uses_python_runtime(
-            "::sifr_runtime::python::PythonError"
-        ));
-        assert!(!rust_source_uses_python_runtime("struct PythonError;"));
-    }
-}
+#[path = "../tests/unit/python_interop_common/tests.rs"]
+mod tests;

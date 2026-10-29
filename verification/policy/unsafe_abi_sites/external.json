@@ -4902,7 +4902,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
+      "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
       "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
       "owner": "X02",
       "scope": "local",
@@ -4921,13 +4921,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
               "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
               "quote": "\"unsafe {\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -4939,13 +4939,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
               "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
               "quote": "\"unsafe {\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -4957,13 +4957,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
               "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
               "quote": "\"unsafe {\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -4975,13 +4975,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::1",
               "fingerprint": "93258d261bffe974265bf77c9eba5d2e0c0a78335e68dcaac3c5cba1f7f8d74c",
               "quote": "\"unsafe {\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -4991,7 +4991,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
+      "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
       "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
       "owner": "X02",
       "scope": "local",
@@ -5010,13 +5010,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
               "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
               "quote": "\"scoped unsafe block\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -5028,13 +5028,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
               "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
               "quote": "\"scoped unsafe block\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -5046,13 +5046,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
               "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
               "quote": "\"scoped unsafe block\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -5064,13 +5064,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs::typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup::generated-rust::2",
               "fingerprint": "6c4a2980b0f96d2902cd87032e33868c143d5a0ff4ea0a7fa9f73ee51f87fe2f",
               "quote": "\"scoped unsafe block\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/python_interop_direct_tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/python_interop_direct_tests.rs",
               "scope": "typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup",
               "quote": "fn typed_current_callback_emits_checked_adapter_failure_reconciliation_and_cleanup() {\n    let python_error = python_error_type();\n    let handler_error = Type::Class {\n        identity: None,\n        type_args: Vec::new(),\n        name: \"HandlerError\".to_string(),\n        fields: vec![(\"message\".to_string(), Type::Str)].into(),\n        methods: Vec::new().into(),\n        parent_class: Some(\"Error\".to_string()),\n    };\n    let error = Type::Union(vec![python_error, handler_error.clone()]);\n    let handler_type = Type::Callable(\n        vec![Type::List(Box::new(Type::Int))],\n        vec![ParamConvention::own()],\n        Box::new(Type::Result(\n            Box::new(Type::Int),\n            Box::new(handler_error.clone()),\n        )),\n    );\n    let mut declaration = declaration();\n    declaration.parameters = vec![shape(\"handler\", PythonParameterKind::Positional, false)];\n    let mut callback = callback_declaration(\n        PythonCallbackLifetime::Call,\n        PythonCallbackDispatch::Current,\n        None,\n        Some(handler_error),\n        None,\n    );\n    callback.argument_types = vec![Type::List(Box::new(Type::Int))];\n    declaration.callbacks = vec![callback];\n    let function = HirFunction {\n        name: \"map\".to_string(),\n        params: vec![param(\"handler\", handler_type, ParamConvention::own())],\n        return_type: Type::Result(Box::new(Type::Int), Box::new(error)),\n        body: Vec::new(),\n        is_async: false,\n        method_kind: MethodKind::Regular,\n        receiver: None,\n        decorators: Vec::new(),\n        rust_interop: Vec::new(),\n        python_interop: vec![declaration],\n        compiler_intrinsic: None,\n        type_params: Vec::new(),\n    };\n\n    let rendered = render_stmts(\n        &python_interop_function_body(&function, &Default::default()).expect(\"callback wrapper\"),\n    );\n    assert!(rendered.contains(\"CallbackFailureSlot::new\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"current_callback_scoped_with_owner\"),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"list_items\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\n            \"let __sifr_callback_args_array: Result<[::sifr_runtime::python::ForeignObject; 1], _> = __sifr_callback_args.try_into();\"\n        ),\n        \"{rendered}\"\n    );\n    assert!(rendered.contains(\"Sifr callback handler returned an error\"));\n    assert!(rendered.contains(\"__sifr_callback_0.close()\"), \"{rendered}\");\n    assert!(\n        rendered.contains(\"__sifr_callback_failure_0.take_if_owner_first\"),\n        \"{rendered}\"\n    );\n    let scoped_block = rendered\n        .split(\"unsafe {\")\n        .nth(1)\n        .expect(\"scoped unsafe block\");\n    assert!(\n        scoped_block\n            .split('}')\n            .next()\n            .unwrap_or_default()\n            .contains(\"current_callback_scoped_with_owner\")\n    );\n    syn::parse_file(&format!(\"fn generated() {{ {rendered} }}\"))\n        .expect(\"generated callback statements should be valid Rust syntax\");\n}",
               "context_fingerprint": "fd7ecb78ecbfcb2dd7be83345d2dd4cfd093a0dc7ec71a0f75cffe323bb70ba4"
@@ -5169,7 +5169,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
       "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
       "owner": "X02",
       "scope": "local",
@@ -5188,13 +5188,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5206,13 +5206,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5224,13 +5224,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5242,13 +5242,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5258,7 +5258,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
       "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
       "owner": "X02",
       "scope": "local",
@@ -5277,13 +5277,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5295,13 +5295,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5313,13 +5313,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5331,13 +5331,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5347,7 +5347,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
       "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
       "owner": "X02",
       "scope": "local",
@@ -5366,13 +5366,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5384,13 +5384,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5402,13 +5402,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5420,13 +5420,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5436,7 +5436,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
       "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
       "owner": "X02",
       "scope": "local",
@@ -5455,13 +5455,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5473,13 +5473,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5491,13 +5491,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5509,13 +5509,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/src/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/src/stdlib_filter/tests.rs",
+              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"

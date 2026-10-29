@@ -75,6 +75,7 @@ running the full gate after every local edit.
 | Change or checkpoint | Next command from the repository root |
 |---|---|
 | One compiler behavior | `uv run --project verification --locked cargo test --locked -p <crate> <test-filter>` |
+| Public codegen emission contract | `uv run --project verification --locked cargo test --locked -p sifr_codegen --test emission_contracts <test-filter>`; see [test ownership](../crates/sifr_codegen/tests/README.md) |
 | CLI tests excluding the E2E pass suite | `uv run --project verification --locked cargo test --locked -p sifr -- --skip test_e2e_pass` |
 | Verification runner mechanics | Affected self-tests; the runner foundation suite is `uv run --project verification --locked python -m sifr_verify --self-test` |
 | One verification area/suite | `uv run --project verification --locked python -m sifr_verify areas run --area <area> --suite <suite>` |

@@ -571,5 +571,5 @@ fn collect_actual_caller_params(
 }
 
 #[cfg(test)]
-#[path = "function_generic_bounds_tests.rs"]
+#[path = "../tests/unit/function_generic_bounds_tests.rs"]
 mod tests;

@@ -83,7 +83,6 @@ CONSTITUENTS = {
     ('methods/dict.rs', 'lower_get'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/dict.rs', 'lower_pop'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/dict.rs', 'lower_setdefault'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/dict.rs', 'setdefault_affine_types_are_an_internal_invariant_violation'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/dispatch.rs', 'is_in_place_collection_method'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/dispatch.rs', 'lower_method'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/dispatch.rs', 'lower_method_with_context'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
@@ -120,14 +119,6 @@ CONSTITUENTS = {
     ('methods/list.rs', 'lower_pop'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/list.rs', 'lower_remove'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/list.rs', 'lower_index'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lower_method'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lower_method_with_context'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lowers_string_methods_via_registry'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lower_method_accepts_ir_inputs'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lower_method_supports_list_sort_with_reverse_flag'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'safe_collection_methods_flatten_optional_payload_absence'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lowers_decimal_and_bigdecimal_methods_via_registry'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
-    ('methods/tests.rs', 'lowers_bytes_methods_with_u8_backend_boundaries'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/set.rs', 'is_already_borrowed_rendered_expr'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/set.rs', 'render_borrowed_arg_expr'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
     ('methods/set.rs', 'lower_set_op_collect'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
@@ -195,6 +186,20 @@ CONSTITUENTS = {
     ('intrinsic_method_emitters/borrowing_call_args.rs', 'materialize_explicit_borrowed_clone'): 'admitted unchecked collection registry -> explicit builtin clone/copy/cloned ownership materialization',
 }
 CONSTITUENTS = {(CODEGEN + p, s): r for (p, s), r in CONSTITUENTS.items()}
+CONSTITUENTS.update({
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lower_method'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lower_method_with_context'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lowers_string_methods_via_registry'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lower_method_accepts_ir_inputs'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lower_method_supports_list_sort_with_reverse_flag'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'safe_collection_methods_flatten_optional_payload_absence'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lowers_decimal_and_bigdecimal_methods_via_registry'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+    ('crates/sifr_codegen/tests/unit/methods/tests.rs', 'lowers_bytes_methods_with_u8_backend_boundaries'): 'methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations',
+})
+CONSTITUENTS[("crates/sifr_codegen/tests/unit/methods/dict/tests.rs",
+              "setdefault_affine_types_are_an_internal_invariant_violation")] = (
+    "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations"
+)
 
 ADAPTATIONS = {
     ('intrinsic_method_emitters/narrowing_helpers.rs', 'adapt_owned_mapping_default'): 'owned mapping default coercion/materialization; recursive builtin branch after source_method_path or admitted collection registry caller; preserves selected method dispatch',

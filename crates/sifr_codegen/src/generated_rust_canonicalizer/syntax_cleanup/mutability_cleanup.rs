@@ -3,7 +3,7 @@ use syn::visit::{self, Visit};
 use syn::visit_mut::VisitMut;
 
 #[cfg(test)]
-#[path = "mutability_cleanup_tests.rs"]
+#[path = "../../../tests/unit/generated_rust_canonicalizer/syntax_cleanup/mutability_cleanup_tests.rs"]
 mod tests;
 
 pub(super) fn collect_mutating_method_names(file: &syn::File) -> HashSet<String> {

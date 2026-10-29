@@ -2366,3 +2366,118 @@ semantics, weaken identities, or silently split the acceptance gate. Measure the
 complete affected development cycle and require a material improvement before
 adoption, plus independent exact-candidate review. Continue the approved focused
 intermediate policy; complete final phase gates and 480s qualification remain open.
+
+
+### D16 implementation candidate — codegen test ownership and public contracts
+
+A controlled assertion-message edit at `fa02de4d84b914ea8e478f016cf36ae4e7db9bee`
+passes all 1,785 tests but costs 144.777s for the unit-test command (14.78s actual
+assertions) and 20.054s for the subsequent production CLI build. Cargo reports
+one rebuilt codegen test unit and six rebuilt production units. The CLI hash
+changes despite no production logic edit. The complete guard is 167.790s. The
+preceding 388.475s baseline includes configuration/revision priming and is not the
+recurring comparison. Verified evidence: `dev-verify-d16-before-evidence.tar.gz`,
+SHA-256 `e796cdb77efa120e12c71898090cd722c5c0f87a99ed47c3368b8098e4f15441`.
+
+Move explicitly test-owned sources outside `src`, retaining logical private module
+paths through cfg(test) declarations. Actual production dep-info independently
+confirms exclusion of the moved test files. Extract inline test modules without
+changing their assertions. Move public emission contracts into one integration
+target consuming the existing public library; retain private invariants as unit
+tests. Shared source-to-emission helpers have one test-owned definition. No new
+product API, optimization-profile change, result replay, or coverage exemption.
+
+Before adoption require exact discovered-test reconciliation, all codegen tests
+(including the existing native ABI target), positive production invalidation,
+unchanged/assertion/fixture/edit controls, production artifact reuse, relevant
+identity and coverage-policy checks, and independent review. Reconcile source
+evidence paths where relocation affects executable contracts. Measure retained
+complete affected cycles after configuration preparation; 90s/480s budgets and
+all final phase acceptance obligations remain open. This candidate is not yet
+qualified or merged.
+
+#### D16 focused qualification — public edits improved, implementation rebuilds remain open
+
+Candidate source `9a7959ccdc3ed89f45b20a3edb32fe4e76c0c909`, with documentation
+candidate `58fedb49d9ebf9f8a40e176652f6feec115bc59f`, preserves the exact union
+of all 1,785 original test discovery identities: 1,488 in the unit target and 297
+in one public emission-contract target, without duplicates or ignored tests.
+All pass, together with the existing 18 native ABI tests. Both canonical
+create-PR and merge memberships still select the complete package. No test-only
+public compiler API, optimization-profile change, or result replay is added.
+
+Initial candidate qualification takes 562.072s, including 389.887s for the complete
+codegen test command and 163.136s for the subsequent CLI build. Configuration and
+revision preparation are included; this is not a recurring edit-cycle saving.
+Follow-up literal-preservation/policy corrections pass in a 195.842s guard.
+All 98 changed production owners retain identical Rust tokens after removing only
+comments and explicitly cfg(test)-owned modules/declarations. All 71 extracted
+inline modules preserve their fixture and snapshot literals, except four relative
+include paths corrected to the same source files. Actual production dep-info
+excludes the relocated test sources. Test-only hooks retained inside production
+files remain conservative production identity inputs; do not generalize the
+measured test-module boundary to those hooks.
+
+Retained controls use the same canonical launcher, three compiler slots, one
+libtest thread, and separate 1,750s diagnostic deadlines. Each row executes all
+1,785 original tests plus 18 native ABI tests, then builds the production CLI.
+Rows represent alternative edit scenarios, not additive parts of one gate.
+
+| Controlled edit | Codegen test command | CLI build | Complete guard |
+|---|---:|---:|---:|
+| Unchanged | 20.523s | 0.570s | 25.205s |
+| Public assertion message | 23.070s | 0.563s | 27.209s |
+| Embedded Sifr fixture comment | 21.645s | 0.613s | 26.203s |
+| Assertion remaining in the unit target | 145.374s | 0.582s | 149.777s |
+| Shared test-support assertion message | 40.878s | 0.614s | 45.215s |
+| Positive production-input comment | 37.897s | 18.381s | 60.227s |
+| Actual canonicalizer implementation edit | 305.355s | 143.894s | 453.473s |
+
+The same public assertion edit previously took 167.790s. The earlier control
+selected `--lib`; the candidate also executes the 18 native ABI tests. This is a
+substantial observed codegen test-edit improvement, not matched full-gate timing.
+The public assertion and fixture controls rebuild only the integration executable;
+the private-unit control rebuilds only its unit executable; shared support rebuilds
+both. Every test-only control keeps all 456 CLI build units fresh and the CLI
+byte-identical. Positive production controls correctly rebuild six CLI units and
+change its hash. A comment tests invalidation, not implementation compilation cost:
+the separate implementation control replaces the canonicalizer's Option-to-Result
+expression with an equivalent explicit match and costs 453.473s. No diagnostic
+implementation change is adopted.
+
+Controls are a recorded cumulative edit sequence, retaining prior controlled
+inputs unchanged while measuring each next edit. The first controller stops
+before shared-support mutation because its diagnostic matcher finds two strings;
+it restores all sources. Its four completed guards remain passing evidence,
+while the incomplete controller remains failed. The corrected continuation
+resumes the exact last passing input state and executes only the remaining cases.
+All source changes are finally restored and the production CLI is rebuilt to its
+original SHA-256 `cd2e1db67f66131f1408871b8c2c4e2eebe7b1db3399e403e824dedcbea13756`.
+The first type check's private-access errors remain preserved; their three mixed
+modules stay unit tests rather than exposing private emitter APIs.
+
+The final canonical policy guard passes in 230.822s, including 137.872s restoring
+the production CLI. Formatting, file-size limits, method policy (6,458 sites and
+235 unchanged node meanings), 18 method-policy self-tests, unsafe ABI policy
+(410 sites/three partitions), filesystem effects (3,744 sites), Python runner
+self-tests, emitted-Rust inventory, coverage matrix and profile checks pass.
+The constituent reference scan includes relocated test callers; its regression
+rejects removed or changed callers. All method classifications and owners are
+preserved. A separate unprepared local Python self-test was cancelled when it
+started compiler preparation; it is not counted as a pass. Prepared canonical
+validation above supplies the completed evidence.
+
+The 272-payload complete archive is SHA-256 verified:
+`dev-verify-d16-qualification.tar.gz`,
+`92ef330c99bd6192391db06e45b6099f1b52eb4a08d411713dd4de8f7954f2e4`.
+Draft PR #4528 awaits independent exact-candidate review and merge. Later
+qualification-record/README clarification edits are documentation only; they do
+not change the validated implementation inputs.
+
+The 149.777s unit-target assertion and 453.473s implementation cycle remain above
+the preparation design budget. The next macro item must address substantial
+compiler recompilation and its test/CLI configuration boundaries; inspect the
+measured units and coherent ownership before choosing crate extraction. Do not
+keep optimizing the already short public-contract cycle. The 90s preparation
+and 480s complete gate targets, complete phase gates, invalidation qualification,
+and any unresolved coverage obligations remain open.

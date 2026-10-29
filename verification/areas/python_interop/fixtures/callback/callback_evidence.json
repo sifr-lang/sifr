@@ -28,7 +28,7 @@
     "crates/sifr_runtime/src/python/callbacks/asyncio_tests.rs::retained_finalization_resumes_native_cancellation_only_after_rollback proves an active retained callback is cancelled and joined, its handler capture is released, and only then the native fallback resumes",
     "crates/sifr_runtime/src/python/async_declaration_tests.rs::retained_owner_close_drains_before_native_cancellation_resumes proves consuming async owner close masks native cancellation until its active retained call drains and handler captures are released",
     "generated task-local cancellation scope preserves nested declaration identity",
-    "crates/sifr_codegen/src/python_interop_async_tests.rs asserts call-scoped foreign, call-scoped asyncio, provisional receiver, and retained-result cleanup all precede native cancellation resumption"
+    "crates/sifr_codegen/tests/unit/python_interop_async_tests.rs asserts call-scoped foreign, call-scoped asyncio, provisional receiver, and retained-result cleanup all precede native cancellation resumption"
   ],
   "evidence_boundary": {
     "compiled": "Sifr fixtures prove generated callback execution, typed HandlerError result matching, post-cleanup shell release, retained successful close/drain, and process shutdown after all affine owners are consumed.",

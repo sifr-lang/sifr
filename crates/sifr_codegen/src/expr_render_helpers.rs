@@ -12,4 +12,5 @@ use sifr_int_parse_helpers::{
     is_sifr_int_operand_coercion_op, promote_result_i64_ok_to_sifr_int, rust_expr_identifier_path,
 };
 #[cfg(test)]
+#[path = "../tests/unit/expr_render_helpers/tests.rs"]
 mod tests;

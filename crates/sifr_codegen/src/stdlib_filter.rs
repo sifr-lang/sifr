@@ -14,4 +14,5 @@ mod dedup_keys;
 mod relocation;
 pub(crate) use relocation::*;
 #[cfg(test)]
+#[path = "../tests/unit/stdlib_filter/tests.rs"]
 mod tests;

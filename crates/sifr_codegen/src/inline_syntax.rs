@@ -128,5 +128,5 @@ fn consume_validated_support(input: ParseStream<'_>, support: &Range<usize>) -> 
 }
 
 #[cfg(test)]
-#[path = "inline_syntax_tests.rs"]
+#[path = "../tests/unit/inline_syntax_tests.rs"]
 mod inline_syntax_tests;

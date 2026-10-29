@@ -1,0 +1,297 @@
+use super::*;
+use crate::{
+    Type, build_error_type_items, build_file_handle_infra_items, build_file_handle_struct_items,
+    build_io_error_items, render_items, sifr_type_to_rust_type,
+};
+
+fn count_raw_in_type(ty: &RustType) -> usize {
+    match ty {
+        RustType::Vec(inner)
+        | RustType::HashSet(inner)
+        | RustType::VecDeque(inner)
+        | RustType::Option(inner) => count_raw_in_type(inner),
+        RustType::HashMap(k, v) | RustType::Result(k, v) => {
+            count_raw_in_type(k) + count_raw_in_type(v)
+        }
+        RustType::Tuple(items) => items.iter().map(count_raw_in_type).sum(),
+        RustType::Ref { inner, .. } => count_raw_in_type(inner),
+        RustType::Generic { params, .. } | RustType::Fn { params, .. } => {
+            params.iter().map(count_raw_in_type).sum()
+        }
+        _ => 0,
+    }
+}
+
+fn count_raw_in_expr(expr: &RustExpr) -> usize {
+    match expr {
+        RustExpr::Literal(_) | RustExpr::Ident(_) | RustExpr::Path(_) => 0,
+        RustExpr::Verbatim(_) => 1,
+        RustExpr::MethodCall { receiver, args, .. }
+        | RustExpr::SourceMethodCall { receiver, args, .. }
+        | RustExpr::FnCall {
+            func: receiver,
+            args,
+        } => count_raw_in_expr(receiver) + args.iter().map(count_raw_in_expr).sum::<usize>(),
+        RustExpr::MacroCall { args, .. }
+        | RustExpr::Vec(args)
+        | RustExpr::Tuple(args)
+        | RustExpr::Array(args) => args.iter().map(count_raw_in_expr).sum(),
+        RustExpr::TimeoutAwait {
+            duration,
+            future,
+            error,
+        } => count_raw_in_expr(duration) + count_raw_in_expr(future) + count_raw_in_expr(error),
+        RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
+        RustExpr::BinOp { left, right, .. } => count_raw_in_expr(left) + count_raw_in_expr(right),
+        RustExpr::UnaryOp { operand, .. }
+        | RustExpr::Deref(operand)
+        | RustExpr::Clone(operand)
+        | RustExpr::Try(operand)
+        | RustExpr::Paren(operand)
+        | RustExpr::Await(operand) => count_raw_in_expr(operand),
+        RustExpr::Field { expr, .. } => count_raw_in_expr(expr),
+        RustExpr::Index { expr, index } => count_raw_in_expr(expr) + count_raw_in_expr(index),
+        RustExpr::Slice { expr, start, stop } => {
+            count_raw_in_expr(expr)
+                + start.as_ref().map(|s| count_raw_in_expr(s)).unwrap_or(0)
+                + stop.as_ref().map(|s| count_raw_in_expr(s)).unwrap_or(0)
+        }
+        RustExpr::Ref { expr, .. } => count_raw_in_expr(expr),
+        RustExpr::Cast { expr, ty } => count_raw_in_expr(expr) + count_raw_in_type(ty),
+        RustExpr::Block { stmts, expr } => {
+            stmts.iter().map(count_raw_in_stmt).sum::<usize>()
+                + expr.as_ref().map(|e| count_raw_in_expr(e)).unwrap_or(0)
+        }
+        RustExpr::If {
+            cond,
+            then_expr,
+            else_expr,
+        } => {
+            count_raw_in_expr(cond)
+                + count_raw_in_expr(then_expr)
+                + else_expr
+                    .as_ref()
+                    .map(|e| count_raw_in_expr(e))
+                    .unwrap_or(0)
+        }
+        RustExpr::Match { expr, arms } => {
+            count_raw_in_expr(expr)
+                + arms
+                    .iter()
+                    .map(|a| a.body.iter().map(count_raw_in_stmt).sum::<usize>())
+                    .sum::<usize>()
+        }
+        RustExpr::Closure { body, .. } => count_raw_in_expr(body),
+        RustExpr::ClosureBlock { body, .. } | RustExpr::AsyncBlock { body, .. } => {
+            body.iter().map(count_raw_in_stmt).sum()
+        }
+        RustExpr::StructInit { fields, .. } => {
+            fields.iter().map(|(_, v)| count_raw_in_expr(v)).sum()
+        }
+        RustExpr::Range { start, end } => count_raw_in_expr(start) + count_raw_in_expr(end),
+    }
+}
+
+fn count_raw_in_stmt(stmt: &RustStmt) -> usize {
+    match stmt {
+        RustStmt::Verbatim(_) => 1,
+        RustStmt::Let { ty, value, .. } => {
+            ty.as_ref().map(count_raw_in_type).unwrap_or(0) + count_raw_in_expr(value)
+        }
+        RustStmt::LetDecl { ty, .. } => count_raw_in_type(ty),
+        RustStmt::LetPattern { value, .. } => count_raw_in_expr(value),
+        RustStmt::LetElse {
+            value, else_body, ..
+        } => count_raw_in_expr(value) + else_body.iter().map(count_raw_in_stmt).sum::<usize>(),
+        RustStmt::Assign { target, value } | RustStmt::AugAssign { target, value, .. } => {
+            count_raw_in_expr(target) + count_raw_in_expr(value)
+        }
+        RustStmt::Expr(expr) | RustStmt::TailExpr(expr) | RustStmt::Return(Some(expr)) => {
+            count_raw_in_expr(expr)
+        }
+        RustStmt::Assert { cond, msg } => {
+            count_raw_in_expr(cond) + msg.as_ref().map(count_raw_in_expr).unwrap_or(0)
+        }
+        RustStmt::Return(None) | RustStmt::Break | RustStmt::Continue => 0,
+        RustStmt::If {
+            cond,
+            then_body,
+            else_body,
+        } => {
+            count_raw_in_expr(cond)
+                + then_body.iter().map(count_raw_in_stmt).sum::<usize>()
+                + else_body
+                    .as_ref()
+                    .map(|b| b.iter().map(count_raw_in_stmt).sum::<usize>())
+                    .unwrap_or(0)
+        }
+        RustStmt::IfLet {
+            expr,
+            then_body,
+            else_body,
+            ..
+        } => {
+            count_raw_in_expr(expr)
+                + then_body.iter().map(count_raw_in_stmt).sum::<usize>()
+                + else_body
+                    .as_ref()
+                    .map(|b| b.iter().map(count_raw_in_stmt).sum::<usize>())
+                    .unwrap_or(0)
+        }
+        RustStmt::Match { expr, arms } => {
+            count_raw_in_expr(expr)
+                + arms
+                    .iter()
+                    .map(|a| a.body.iter().map(count_raw_in_stmt).sum::<usize>())
+                    .sum::<usize>()
+        }
+        RustStmt::For { iter, body, .. } | RustStmt::While { cond: iter, body } => {
+            count_raw_in_expr(iter) + body.iter().map(count_raw_in_stmt).sum::<usize>()
+        }
+        RustStmt::With { items, body } => {
+            items
+                .iter()
+                .map(|item| count_raw_in_expr(&item.value))
+                .sum::<usize>()
+                + body.iter().map(count_raw_in_stmt).sum::<usize>()
+        }
+        RustStmt::Loop { body } | RustStmt::Block(body) => body.iter().map(count_raw_in_stmt).sum(),
+        RustStmt::LocalFn {
+            params, ret, body, ..
+        } => {
+            params
+                .iter()
+                .map(|p| match p {
+                    RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                        count_raw_in_type(ty)
+                    }
+                    RustParam::SelfParam { .. }
+                    | RustParam::SelfParamWithLifetime { .. }
+                    | RustParam::SelfValue
+                    | RustParam::MutableSelfValue => 0,
+                })
+                .sum::<usize>()
+                + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+                + body.iter().map(count_raw_in_stmt).sum::<usize>()
+        }
+    }
+}
+
+fn count_raw_in_item(item: &RustItem) -> usize {
+    match item {
+        RustItem::Struct { fields, .. } => fields.iter().map(|(_, t)| count_raw_in_type(t)).sum(),
+        RustItem::TupleStruct { inner, .. } => count_raw_in_type(inner),
+        RustItem::Enum { variants, .. } => variants
+            .iter()
+            .map(|v| {
+                v.tuple_fields.iter().map(count_raw_in_type).sum::<usize>()
+                    + v.fields
+                        .iter()
+                        .map(|(_, t)| count_raw_in_type(t))
+                        .sum::<usize>()
+                    + v.value.as_ref().map(count_raw_in_expr).unwrap_or(0)
+            })
+            .sum(),
+        RustItem::Trait { methods, .. } | RustItem::Impl { items: methods, .. } => {
+            methods.iter().map(count_raw_in_item).sum()
+        }
+        RustItem::Fn {
+            params, ret, body, ..
+        } => {
+            params
+                .iter()
+                .map(|p| match p {
+                    RustParam::SelfParam { .. }
+                    | RustParam::SelfParamWithLifetime { .. }
+                    | RustParam::SelfValue
+                    | RustParam::MutableSelfValue => 0,
+                    RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                        count_raw_in_type(ty)
+                    }
+                })
+                .sum::<usize>()
+                + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+                + body.iter().map(count_raw_in_stmt).sum::<usize>()
+        }
+        RustItem::TraitMethodSig { params, ret, .. } => {
+            params
+                .iter()
+                .map(|p| match p {
+                    RustParam::SelfParam { .. }
+                    | RustParam::SelfParamWithLifetime { .. }
+                    | RustParam::SelfValue
+                    | RustParam::MutableSelfValue => 0,
+                    RustParam::Named { ty, .. } | RustParam::NamedMut { ty, .. } => {
+                        count_raw_in_type(ty)
+                    }
+                })
+                .sum::<usize>()
+                + ret.as_ref().map(count_raw_in_type).unwrap_or(0)
+        }
+        RustItem::TypeAlias { ty, .. } => count_raw_in_type(ty),
+        RustItem::Const { ty, value, .. } | RustItem::Static { ty, value, .. } => {
+            count_raw_in_type(ty) + count_raw_in_expr(value)
+        }
+        RustItem::Use(_) | RustItem::UseAlias { .. } | RustItem::Attr(_) => 0,
+    }
+}
+
+#[test]
+fn maps_types_to_structured_rust_types() {
+    assert_eq!(
+        sifr_type_to_rust_type(&Type::Int),
+        RustType::Named("SifrInt".to_string())
+    );
+    assert_eq!(
+        sifr_type_to_rust_type(&Type::List(Box::new(Type::Str))),
+        RustType::Vec(Box::new(RustType::String_))
+    );
+    assert_eq!(
+        sifr_type_to_rust_type(&Type::Union(vec![Type::Int, Type::None])),
+        RustType::Option(Box::new(RustType::Named("SifrInt".to_string())))
+    );
+}
+
+#[test]
+fn error_items_render_expected_shapes() {
+    let items = build_error_type_items(
+        "RegexError",
+        &[("detail".to_string(), RustType::String_)],
+        &[(
+            "detail".to_string(),
+            RustExpr::FnCall {
+                func: Box::new(RustExpr::Path(vec![
+                    "String".to_string(),
+                    "new".to_string(),
+                ])),
+                args: vec![],
+            },
+        )],
+    );
+    let rendered = render_items(&items);
+    assert!(rendered.contains("struct RegexError"));
+    assert!(rendered.contains("fn new(message: String) -> Self"));
+    assert!(rendered.contains("impl ::std::error::Error for RegexError"));
+}
+
+#[test]
+fn file_handle_items_render_core_symbols() {
+    let mut items = build_file_handle_infra_items();
+    items.extend(build_file_handle_struct_items());
+    let rendered = render_items(&items);
+    assert!(rendered.contains("enum SifrFileHandle"));
+    assert!(rendered.contains("static __SIFR_FILE_HANDLES"));
+    assert!(rendered.contains("static __SIFR_NEXT_FILE_HANDLE_ID"));
+    assert!(rendered.contains("fn __sifr_next_file_handle_id() -> i64"));
+    assert!(rendered.contains("impl __SifrIoFileHandle"));
+    assert!(rendered.contains("fn read(&self) -> Result<String, IOError>"));
+}
+
+#[test]
+fn preamble_structural_count_is_zero() {
+    let mut all = build_io_error_items();
+    all.extend(build_file_handle_infra_items());
+    all.extend(build_file_handle_struct_items());
+    let total_structural_violations: usize = all.iter().map(count_raw_in_item).sum();
+    assert_eq!(total_structural_violations, 0);
+}

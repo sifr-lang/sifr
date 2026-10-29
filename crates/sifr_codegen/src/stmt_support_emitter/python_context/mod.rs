@@ -12,9 +12,9 @@ use sifr_ir::{HirWithItem, HirWithItemKind};
 use sync::classify_cause_kind;
 
 #[cfg(test)]
-#[path = "../python_context_tests.rs"]
+#[path = "../../../tests/unit/stmt_support_emitter/python_context_tests.rs"]
 mod tests;
 
 #[cfg(test)]
-#[path = "../python_async_context_tests.rs"]
+#[path = "../../../tests/unit/stmt_support_emitter/python_async_context_tests.rs"]
 mod async_context_tests;

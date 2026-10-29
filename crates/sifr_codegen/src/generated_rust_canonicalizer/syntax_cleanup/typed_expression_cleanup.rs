@@ -876,5 +876,5 @@ impl VisitMut for Rewriter<'_> {
 include!("typed_expression_tests.rs");
 
 #[cfg(test)]
-#[path = "method_slot_borrow_tests.rs"]
+#[path = "../../../tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs"]
 mod method_slot_borrow_tests;

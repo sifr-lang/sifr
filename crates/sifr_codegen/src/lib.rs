@@ -47,6 +47,7 @@ pub(crate) use runtime_need_state::RuntimeNeeds;
 mod runtime_support_demand;
 pub(crate) use runtime_support_demand::RuntimeSupportDemand;
 #[cfg(test)]
+#[path = "../tests/unit/runtime_support_tests.rs"]
 mod runtime_support_tests;
 mod support_plan;
 pub(crate) use support_plan::{
@@ -107,6 +108,7 @@ mod lower_stmt;
 pub use lower_stmt::*;
 mod match_guard_helpers;
 #[cfg(test)]
+#[path = "../tests/unit/method_authority_tests.rs"]
 mod method_authority_tests;
 mod method_call_emitter;
 mod methods;
@@ -131,15 +133,19 @@ pub use preamble::*;
 pub(crate) use structural_record_codegen::structural_record_rust_type;
 mod python_arrow_codegen;
 #[cfg(test)]
+#[path = "../tests/unit/python_arrow_codegen_tests.rs"]
 mod python_arrow_codegen_tests;
 mod python_buffer_codegen;
 #[cfg(test)]
+#[path = "../tests/unit/python_buffer_codegen_tests.rs"]
 mod python_buffer_codegen_tests;
 mod python_dlpack_codegen;
 #[cfg(test)]
+#[path = "../tests/unit/python_dlpack_codegen_tests.rs"]
 mod python_dlpack_codegen_tests;
 mod python_interop_async;
 #[cfg(test)]
+#[path = "../tests/unit/python_interop_async_tests.rs"]
 mod python_interop_async_tests;
 mod python_interop_callbacks;
 mod python_interop_common;
@@ -147,11 +153,14 @@ mod python_interop_direct;
 mod python_interop_direct_conversions;
 mod python_interop_direct_helpers;
 #[cfg(test)]
+#[path = "../tests/unit/python_interop_direct_tests.rs"]
 mod python_interop_direct_tests;
 #[cfg(test)]
+#[path = "../tests/unit/python_interop_entrypoints.rs"]
 mod python_interop_entrypoints;
 mod python_interop_plan;
 #[cfg(test)]
+#[path = "../tests/unit/python_interop_plan_tests.rs"]
 mod python_interop_plan_tests;
 mod python_interop_runtime_exprs;
 mod python_raw_api_codegen;
@@ -173,6 +182,7 @@ mod rust_interop_direct;
 mod rust_interop_direct_args;
 mod rust_interop_direct_collections;
 #[cfg(test)]
+#[path = "../tests/unit/rust_interop_direct_tests.rs"]
 mod rust_interop_direct_tests;
 mod rust_interop_panic;
 mod rust_interop_plan;
@@ -223,11 +233,14 @@ mod type_emitters;
 mod union_type_helpers;
 
 #[cfg(test)]
+#[path = "../tests/unit/lib_codegen_tests.rs"]
 mod lib_codegen_tests;
 #[cfg(test)]
+#[path = "../tests/unit/type_conversion_tests.rs"]
 mod type_conversion_tests;
 
 #[cfg(test)]
+#[path = "../tests/unit/generated_support_regression_tests.rs"]
 mod generated_support_regression_tests;
 
 mod compiled_identity;
@@ -235,7 +248,5 @@ mod compiled_identity;
 pub use compiled_identity::compiled_input_tokens;
 
 #[cfg(test)]
+#[path = "../tests/unit/generated_rust_canonicalizer_ownership_tests.rs"]
 mod generated_rust_canonicalizer_ownership_tests;
-
-#[cfg(test)]
-mod generated_rust_canonicalizer_control_flow_tests;

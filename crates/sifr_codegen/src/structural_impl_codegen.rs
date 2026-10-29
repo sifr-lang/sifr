@@ -4,6 +4,7 @@ use sifr_type_system::Type;
 use std::collections::{BTreeSet, HashSet};
 
 #[cfg(test)]
+#[path = "../tests/unit/structural_impl_codegen/generic_representation_tests.rs"]
 mod generic_representation_tests;
 
 use crate::structural_record_fields::structural_record_fields;

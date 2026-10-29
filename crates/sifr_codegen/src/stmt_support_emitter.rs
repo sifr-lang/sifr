@@ -45,6 +45,7 @@ mod if_condition_lowering;
 mod iterator_lowering;
 mod loops_try_finally;
 #[cfg(test)]
+#[path = "../tests/unit/stmt_support_emitter/loops_try_finally_tests.rs"]
 mod loops_try_finally_tests;
 mod native_async_context;
 mod native_async_for;

@@ -14,7 +14,7 @@
       "id": "compiler-contract-matrix",
       "layer": "lowering-codegen",
       "evidence": "python_buffer_contract_tests and python_buffer_codegen_tests",
-      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr_codegen/src/python_buffer_codegen_tests.rs"],
+      "owners": ["crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs", "crates/sifr_codegen/tests/unit/python_buffer_codegen_tests.rs"],
       "covers": ["import-root target", "bridge target", "read-only Self receiver", "producer read/write access", "any/C/F layout", "affine aggregate propagation", "non-Send propagation"]
     },
     {

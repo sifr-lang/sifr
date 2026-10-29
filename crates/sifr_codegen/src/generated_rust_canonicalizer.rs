@@ -12,6 +12,7 @@ pub(crate) use format_capture::names as generated_format_capture_names;
 mod external_identifiers;
 mod identifier_canonicalizer;
 #[cfg(test)]
+#[path = "../tests/unit/generated_rust_canonicalizer/identifier_ownership_tests.rs"]
 mod identifier_ownership_tests;
 mod identifier_policy;
 mod item_demand;
@@ -572,25 +573,25 @@ fn collect_use_bindings(tree: &syn::UseTree, bindings: &mut BTreeSet<String>) ->
 }
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_tests.rs"]
 mod tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_transforms_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_transforms_tests.rs"]
 mod transforms_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_effects_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_effects_tests.rs"]
 mod effects_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_semantics_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_semantics_tests.rs"]
 mod semantics_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_support_demand_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_support_demand_tests.rs"]
 mod support_demand_tests;
 
 #[cfg(test)]
-#[path = "generated_rust_canonicalizer_capture_tests.rs"]
+#[path = "../tests/unit/generated_rust_canonicalizer_capture_tests.rs"]
 mod capture_tests;

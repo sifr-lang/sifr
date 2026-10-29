@@ -34,6 +34,21 @@ def unsafe_records(sites):
 
 
 class MethodTests(unittest.TestCase):
+    def test_relocated_test_callers_remain_in_constituent_relationships(self):
+        from method_policy_constituents import relationships, validate_relationships
+        owner = Source('crates/sifr_codegen/src/owner.rs', 'fn lower() {}')
+        test = Source('crates/sifr_codegen/tests/contracts/caller.rs',
+                      'fn check() { lower(); }')
+        nodes = {(owner.path, 'lower'): 'canonical owner'}
+        records = {'constituents': relationships([owner, test], nodes)}
+        references = records['constituents'][0]['references']
+        self.assertEqual([(r['path'], r['scope']) for r in references],
+                         [(test.path, 'check')])
+        self.assertTrue(validate_relationships([owner], records, nodes))
+        changed = Source(test.path, 'fn check() { lower(); assert!(false); }')
+        self.assertTrue(validate_relationships([owner, changed], records, nodes))
+        self.assertFalse(validate_relationships([owner, test], records, nodes))
+
     @staticmethod
     def semantic_records(sources):
         from method_policy_semantics import classification, detail

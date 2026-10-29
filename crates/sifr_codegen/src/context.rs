@@ -66,12 +66,5 @@ impl std::fmt::Display for CodegenError {
 impl std::error::Error for CodegenError {}
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn codegen_error_formats_with_location() {
-        let err = CodegenError::with_location("unsupported node", Some(10), Some(3));
-        assert_eq!(err.to_string(), "unsupported node (at 10:3)");
-    }
-}
+#[path = "../tests/unit/context/tests.rs"]
+mod tests;

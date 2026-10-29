@@ -9,6 +9,7 @@ use registry::Registry;
 use rewrite::Rewriter;
 
 #[cfg(test)]
+#[path = "../../tests/unit/generated_rust_canonicalizer/field_name_cleanup/tests.rs"]
 mod tests;
 
 pub(super) fn canonicalize_fields(

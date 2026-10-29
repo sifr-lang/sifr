@@ -158,5 +158,5 @@ pub(crate) fn register_imported_stdlib_signature(
 }
 
 #[cfg(test)]
-#[path = "stdlib_import_signatures_tests.rs"]
+#[path = "../tests/unit/stdlib_import_signatures_tests.rs"]
 mod tests;

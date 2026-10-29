@@ -668,16 +668,5 @@ impl Visit<'_> for ArrayCompatibleUse<'_> {
 }
 
 #[cfg(test)]
-mod ownership_tests {
-    use super::*;
-
-    #[test]
-    fn integer_float_power_uses_powi() {
-        let mut expression: syn::Expr = syn::parse_quote!(2_f64.powf(10_f64));
-        assert!(rewrite_integer_float_power(&mut expression));
-        assert_eq!(
-            expression.to_token_stream().to_string(),
-            "2_f64 . powi (10)"
-        );
-    }
-}
+#[path = "../../../../../tests/unit/generated_rust_canonicalizer/syntax_cleanup/idiom_cleanup/clippy_cleanup/structural_expression_cleanup/ownership_tests.rs"]
+mod ownership_tests;

@@ -810,5 +810,5 @@ pub(crate) fn expr_key(expr: &HirExpr) -> usize {
 }
 
 #[cfg(test)]
-#[path = "body_analysis/async_advance_tests.rs"]
+#[path = "../tests/unit/body_analysis/async_advance_tests.rs"]
 mod async_advance_tests;

@@ -8,6 +8,8 @@
   Private unit modules can live under `tests/unit` and stay inside the same Rust test target through
   `#[cfg(test)]` path declarations. Production reuse never authorizes reuse of test results:
   verification evidence still binds its complete test and fixture inputs.
+  Codegen public emission contracts use one integration target against the production library;
+  private invariants retain their unit-module access. See [codegen test ownership](../crates/sifr_codegen/tests/README.md).
 
 - Source method-call HIR carries an explicit typed dispatch authority alongside receiver convention, checked mutable places and source ranges. Typed lowering assigns builtin/intrinsic, protocol, local or inherited nominal, imported, or Rust-adapted authority from the resolved receiver and declaration before publishing HIR; unsupported pairs receive diagnostics, and an unclassified call cannot leave lowering. The indexed metadata v5 wire record round-trips that authority and rejects older or malformed authority records.
   The validated builtin `len(...)` producer assigns builtin authority for its supported optional payloads while retaining the optional receiver representation. This admission does not extend to direct optional methods. Codegen routes typed defaultdict bucket mutations to the canonical insertion authority before plain-dict representation shortcuts.
