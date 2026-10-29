@@ -1818,3 +1818,28 @@ normal dependency graph; keep all existing assertions. Do not add TOML to ordina
 identity consumers or bypass the admission guard. Refresh affected producer receipts
 through actual production, then resume full discovery on a frozen candidate. The
 previous failed selection and unexecuted categories remain explicit.
+
+
+Admission repair source `f623d46a1f79a2d6d4853e48b807f06cc1106e3e` passes the
+actual dependency-direction guard/self-tests, all 11 identity tests under default
+features (10.110s command / 8.36s execution), the same 11 under explicit build
+features (8.594s / 8.28s), and all 15 dependency-audit tests (2.173s command).
+Cargo's resolved normal dependency graph confirms that default identity contains
+SHA-2 and excludes TOML; the explicitly selected build graph includes TOML.
+Complete guarded check elapsed is 29.206s with no source mutation or reserve stop.
+Formatting and file-size checks pass. Target-specific policy mutations are further
+isolated from optionality/alias errors, so each ownership condition is exercised.
+
+The only changed SQL producer input is `crates/sifr_identity/Cargo.toml`; all
+three SQL receipts therefore require actual production refresh. The words fixture
+input map is unchanged and does not require rebuilding. The admission archive's
+19 payloads were verified after transfer. No registry version or lockfile changes
+are required by the inherited test dependency.
+
+
+Actual component production refresh succeeds: MySQL 24.973s, PostgreSQL 228.957s
+for all six majors, SQLite 19.848s. All ten regenerated component binaries are
+byte-for-byte identical to the prior qualified artifacts; only the three source-bound
+receipts change. All four manifests validate, and the words fixture remains untouched.
+The refreshed outputs are transferred with SHA-256 verification before restarting
+integration. No old receipt is relabeled without executing its canonical producer.

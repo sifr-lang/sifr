@@ -56,8 +56,11 @@ def self_test() -> list[str]:
     mutations.append(indirect)
     for section in ("dependencies", "build-dependencies"):
         changed = deepcopy(valid)
-        changed["target"] = {"cfg(windows)": {section: {"parser": {"package": "toml"}}}}
+        changed["target"] = {"cfg(windows)": {section: {"toml": {"workspace": True, "optional": True}}}}
         mutations.append(changed)
+    build_script = deepcopy(valid)
+    build_script["build-dependencies"] = {"toml": {"workspace": True, "optional": True}}
+    mutations.append(build_script)
     renamed = deepcopy(valid)
     renamed["dependencies"]["parser"] = renamed["dependencies"].pop("toml")
     mutations.append(renamed)
