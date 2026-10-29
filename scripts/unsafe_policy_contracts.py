@@ -209,6 +209,12 @@ def _binding_patterns(site) -> tuple[re.Pattern[str], ...]:
 
 
 def normalized_obligations(contract, site, record, *, comparison_sites=None) -> tuple:
+    """Return the complete normalized obligations for exact preservation checks."""
+    return tuple(iter_normalized_obligations(
+        contract, site, record, comparison_sites=comparison_sites))
+
+
+def iter_normalized_obligations(contract, site, record, *, comparison_sites=None):
     """Compare prose after removing discovered bindings, never authored meaning.
 
     Gather complete spans against the original text before removing any of
@@ -221,7 +227,6 @@ def normalized_obligations(contract, site, record, *, comparison_sites=None) -> 
     binding_sites = tuple(comparison_sites) if comparison_sites is not None else (site,)
     patterns = set(pattern for binding in binding_sites for pattern in _binding_patterns(binding))
     fingerprints = {binding.fingerprint.lower() for binding in binding_sites}
-    values = []
     for field in FIELDS:
         text = contract[field]
         spans = [match.span() for pattern in patterns for match in pattern.finditer(text)]
@@ -243,8 +248,7 @@ def normalized_obligations(contract, site, record, *, comparison_sites=None) -> 
             text = text[:start] + '\0' + text[end:]
         # Separators only between removed spans cannot distinguish bindings.
         text = re.sub(r'(?<=\0)[\s/:;]*(?=\0)', '', text).replace('\0', '')
-        values.append(' '.join(text.split()).strip(' ;:/'))
-    return tuple(values)
+        yield ' '.join(text.split()).strip(' ;:/')
 
 
 def validate_contracts(sites, inventory, sources=(), *, compare_repeated=True) -> list[str]:
@@ -309,9 +313,12 @@ def repeated_contract_groups(sites, inventory) -> list[list[dict]]:
         pair = (by_key[left['site']], by_key[right['site']])
         raw_equal = tuple(left['contract'][k] for k in FIELDS) == tuple(
             right['contract'][k] for k in FIELDS)
-        if raw_equal or normalized_obligations(
-                left['contract'], pair[0], left, comparison_sites=pair) == normalized_obligations(
-                right['contract'], pair[1], right, comparison_sites=pair):
+        # A different obligation already distinguishes this pair. Keep pair-local
+        # bindings and field order, without normalizing the remaining fields.
+        if raw_equal or all(left_field == right_field for left_field, right_field in zip(
+                iter_normalized_obligations(left['contract'], pair[0], left, comparison_sites=pair),
+                iter_normalized_obligations(right['contract'], pair[1], right, comparison_sites=pair),
+                strict=True)):
             parents[root(b)] = root(a)
     groups = {}
     for index, record in enumerate(records):

@@ -175,8 +175,9 @@ def item_header_end(ts: list[Token], ps: dict[int, int], start: int) -> int:
 class Source:
     def __init__(self, path: str, text: str):
         self.path, self.text = path, text
-        self.comments = [t for t in tokens(text) if t.kind == "comment"]
-        self.ts = code_tokens(text)
+        lexed = tokens(text)
+        self.comments = [t for t in lexed if t.kind == "comment"]
+        self.ts = [t for t in lexed if t.kind != "comment"]
         self.pairs = pairs(self.ts)
         self.functions = []
         seen = Counter()

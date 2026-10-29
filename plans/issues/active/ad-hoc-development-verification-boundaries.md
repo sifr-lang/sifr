@@ -1910,3 +1910,56 @@ under the approved intermediate policy. This does not waive the remainder of the
 current discovery, any blocked category recovery, final complete gates, coverage
 and invalidation qualification, or repeated 480-second acceptance. Archive the
 frozen run before replacing any reports or transferring the repaired source.
+
+#### D11 reconciliation closure — 2026-10-29
+
+[PR #4522](https://github.com/sifr-lang/sifr/pull/4522) merged candidate
+`b5a7fd153fe3f38eace384ed4272c800c8a9aa0c` as
+`f5fc0fa5ceca2b2a80159d113088042f16605a0b`, with independent `SATISFIED` review.
+Readiness, 58 negative controls, canonical diagnostic generation/synchronization,
+links, and file-size checks pass. Its archive has 20 verified payloads, SHA-256
+`831e3f82587dcf1087ab0133ecbf1146219e34b6e719eba7a262201bd518a80f`.
+The full-profile CI job again stopped before setup for the absent performance
+reference. The frozen remote discovery still uses the original b74 candidate.
+
+The external discovery launcher explicitly sets `RUST_TEST_THREADS=1`; the D5
+allocator correctly honors that smaller request. These serial diagnostic timings
+are not the default driver allocation's latency. Subsequent ordinary comparisons
+must record effective outer and nested workers, and use the exact provisioned
+Node/npm pair. Do not multiply four test workers by four nested Cargo workers.
+
+### D12 — eliminate repeated policy scanner work (prospective)
+
+The r3 method and unsafe main scans take 34.321s and 59.198s; developer-tooling
+architecture controls additionally take 89.368s. Local profiling identifies two
+avoidable operations: each `Source` tokenizes identical Rust text twice, and each
+contract pair normalizes all four fields even after an earlier field differs.
+An in-memory local prototype reduces the two main scans from 50.832s to 28.002s.
+That single local observation is not remote or full-gate timing acceptance, and
+its cold-child tests copied the unchanged original sources.
+
+Tokenize each immutable source once, deriving comments and code tokens from the
+same ordered token list. Normalize contract fields lazily and stop comparison at
+the first unequal field. Preserve exact pair-specific binding removal, all four
+obligations, nontransitive connected-component grouping, discovered sites, policy
+records, ordering, and diagnostics. Do not cache correctness across invocations,
+weaken negative controls, or replace lexical authority with text matching.
+
+Acceptance: the actual edited sources must pass all architecture-policy controls,
+including cold subprocess copies, each-field distinction and existing nontransitive
+grouping controls. Compare complete main-check outputs with the unchanged source,
+then measure the affected commands on the retained remote environment after D11
+is archived. Adoption requires lower complete affected-check cost with unchanged
+decisions. Use focused checks and independent review under the approved intermediate
+policy; complete phase gates and repeated 480-second qualification remain open.
+
+The SQL duplicate-execution inventory and bounded CLI concurrency experiment remain
+separate measured leads. This local repair does not mutate the running remote inputs.
+
+The actual on-tree implementation passes 57 architecture-policy tests in 23.906s,
+including copied-script cold subprocess checks and the new four-field distinction
+control. Both complete inventory checks pass unchanged counts: 6,458 method sites /
+235 reviewed nodes and 410 unsafe sites / three complete source partitions. Local
+main-check elapsed is 13.226s + 14.661s = 27.887s. File-size and diff checks pass.
+These results use Python 3.14.7; remote comparison and independent review remain
+pending. No policy inventory or compiler/runtime source changed.
