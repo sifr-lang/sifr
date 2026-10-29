@@ -5,14 +5,16 @@ from __future__ import annotations
 
 import argparse
 import re
+import tempfile
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOTS = (
-    ROOT / "crates" / "sifr_codegen" / "src",
-    ROOT / "crates" / "sifr_lowering" / "src",
-    ROOT / "crates" / "sifr_type_system" / "src",
+    Path("crates/sifr_codegen/src"),
+    Path("crates/sifr_generated_rust/src"),
+    Path("crates/sifr_lowering/src"),
+    Path("crates/sifr_type_system/src"),
 )
 
 DIRECT_PATTERNS = {
@@ -34,11 +36,11 @@ CONVERTER_PATTERNS = {
 }
 
 
-def rust_sources() -> dict[str, str]:
+def rust_sources(root: Path = ROOT) -> dict[str, str]:
     return {
-        str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
+        str(path.relative_to(root)): path.read_text(encoding="utf-8")
         for source_root in SOURCE_ROOTS
-        for path in source_root.rglob("*.rs")
+        for path in (root / source_root).rglob("*.rs")
     }
 
 
@@ -72,6 +74,16 @@ pub fn sifr_type_to_rust_type(ty: &Type) -> RustType {
     }
     if violations(seed):
         raise SystemExit("structured Rust type guard self-test rejected the valid seed")
+    with tempfile.TemporaryDirectory(prefix="sifr-structured-rust-") as directory:
+        root = Path(directory)
+        converter = root / converter_path
+        converter.parent.mkdir(parents=True)
+        converter.write_text(seed[converter_path])
+        moved = root / "crates/sifr_generated_rust/src/consumer.rs"
+        moved.parent.mkdir(parents=True)
+        moved.write_text("fn bad(ty: &Type) { ty.rust_type(); }")
+        if not any("sifr_generated_rust" in problem for problem in violations(rust_sources(root))):
+            raise SystemExit("structured Rust type guard missed extracted syntax owner")
 
     mutations = {
         "direct call": "fn bad(ty: &Type) { ty.rust_type(); }",

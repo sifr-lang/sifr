@@ -10,6 +10,7 @@ import tempfile
 import tomllib
 from pathlib import Path
 from typing import Any
+from stdlib_runtime_roots import runtime_roots, run_self_test as runtime_roots_self_test
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ALLOWLIST_PATH = REPO_ROOT / "internal_docs" / "stdlib_retained_compiler_intrinsics.toml"
@@ -20,7 +21,7 @@ REGISTRY_DISPATCH_PATH = (
 HIR_NODES_PATH = REPO_ROOT / "crates" / "sifr_ir" / "src" / "hir_nodes.rs"
 LOWERING_ROOT = REPO_ROOT / "crates" / "sifr_lowering" / "src"
 PREAMBLE_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src" / "preamble"
-CODEGEN_ROOT = REPO_ROOT / "crates" / "sifr_codegen" / "src"
+CODEGEN_OWNERS = (Path("crates/sifr_codegen/src"), Path("crates/sifr_generated_rust/src"))
 STDLIB_SOURCE_ROOT = REPO_ROOT / "stdlib"
 STDLIB_FEATURES_PATH = REPO_ROOT / "crates" / "sifr_stdlib_manifest" / "src" / "features.rs"
 DEPENDENCY_PLAN_RS_PATH = (
@@ -50,7 +51,6 @@ CODEGEN_FEATURE_RE = re.compile(r"StdlibFeature::([A-Za-z0-9_]+)")
 LOWERER_MATCH_INTRINSIC_RE = re.compile(r'"([A-Za-z0-9_]+)"\s*(?=\||=>)')
 PREFIX_INTRINSIC_RE = re.compile(r'starts_with\("([A-Za-z0-9_]+)"\)')
 GENERATED_DEPENDENCY_PACKAGE_RE = re.compile(r'"([A-Za-z0-9_-]+)\s+=')
-DIRECT_RUNTIME_ROOT_RE = re.compile(r"\bsifr_runtime::([A-Za-z_][A-Za-z0-9_]*)")
 EXPECTED_PREFIX_DISPATCHERS: set[str] = set()
 PREFIX_DISPATCH_LOWERERS: tuple[Path, ...] = ()
 STALE_ARCH_PHRASES = (
@@ -232,7 +232,7 @@ def _observed_surface() -> dict[str, set[str]]:
             for path in PREAMBLE_ROOT.rglob("*.rs")
         },
         "lowering_files": _compiler_intrinsic_files(LOWERING_ROOT),
-        "codegen_files": _compiler_intrinsic_files(CODEGEN_ROOT),
+        "codegen_files": _codegen_intrinsic_files(),
         "retained_direct_dependency_packages": {
             package
             for package in GENERATED_DEPENDENCY_PACKAGE_RE.findall(
@@ -252,15 +252,20 @@ def _source_declared_intrinsics() -> set[str]:
     return declared
 
 
-def _compiler_intrinsic_files(root: Path) -> set[str]:
+def _compiler_intrinsic_files(root: Path, repo_root: Path = REPO_ROOT) -> set[str]:
     files = set()
     for path in root.rglob("*.rs"):
         relative = path.relative_to(root).as_posix()
         if _is_test_source(relative):
             continue
         if "CompilerIntrinsicId" in path.read_text(encoding="utf-8"):
-            files.add(path.relative_to(REPO_ROOT).as_posix())
+            files.add(path.relative_to(repo_root).as_posix())
     return files
+
+
+def _codegen_intrinsic_files(repo_root: Path = REPO_ROOT) -> set[str]:
+    return set().union(*(_compiler_intrinsic_files(repo_root / owner, repo_root)
+                         for owner in CODEGEN_OWNERS))
 
 
 def _feature_variant_ids() -> dict[str, str]:
@@ -282,11 +287,11 @@ def _retained_dependency_feature_mappings() -> set[str]:
 
 def _orphan_retained_dependency_features() -> set[str]:
     live_variants: set[str] = set()
-    for path in CODEGEN_ROOT.rglob("*.rs"):
-        relative = path.relative_to(CODEGEN_ROOT).as_posix()
-        if _is_test_source(relative):
-            continue
-        live_variants.update(CODEGEN_FEATURE_RE.findall(path.read_text(encoding="utf-8")))
+    for owner in CODEGEN_OWNERS:
+        root = REPO_ROOT / owner
+        for path in root.rglob("*.rs"):
+            if not _is_test_source(path.relative_to(root).as_posix()):
+                live_variants.update(CODEGEN_FEATURE_RE.findall(path.read_text(encoding="utf-8")))
     return {
         variant
         for variant, _package in _retained_dependency_pairs()
@@ -437,16 +442,13 @@ def _permanent_file_failures(
     return failures
 
 
-def _direct_runtime_roots() -> set[str]:
+def _direct_runtime_roots(repo_root: Path = REPO_ROOT) -> set[str]:
     roots: set[str] = set()
-    for path in CODEGEN_ROOT.rglob("*.rs"):
-        relative = path.relative_to(CODEGEN_ROOT).as_posix()
-        if _is_test_source(relative):
-            continue
-        text = path.read_text(encoding="utf-8")
-        roots.update(
-            f"sifr_runtime::{root}" for root in DIRECT_RUNTIME_ROOT_RE.findall(text)
-        )
+    for owner in CODEGEN_OWNERS:
+        root = repo_root / owner
+        for path in root.rglob("*.rs"):
+            if not _is_test_source(path.relative_to(root).as_posix()):
+                roots.update(runtime_roots(path.read_text(encoding="utf-8")))
     return roots
 
 
@@ -503,6 +505,19 @@ def _compare_sets(
 
 
 def _self_test() -> int:
+    runtime_roots_self_test()
+    with tempfile.TemporaryDirectory(prefix="sifr-runtime-owners-") as temporary:
+        root = Path(temporary)
+        expected = set()
+        for owner in ("sifr_codegen", "sifr_generated_rust"):
+            source = root / "crates" / owner / "src/consumer.rs"
+            source.parent.mkdir(parents=True)
+            source.write_text('fn owner() { let _ = CompilerIntrinsicId::Alpha; '
+                              '&["sifr_runtime", "new_root"]; }')
+            expected.add(source.relative_to(root).as_posix())
+            source.with_name("consumer_tests.rs").write_text('sifr_runtime::test_only();')
+        assert _codegen_intrinsic_files(root) == expected
+        assert _direct_runtime_roots(root) == {"sifr_runtime::new_root"}
     dependency_plan_fixture = r"""
         StdlibFeature::Alpha => &["alpha-dep = \"=1.0.0\""],
         StdlibFeature::Beta => &[

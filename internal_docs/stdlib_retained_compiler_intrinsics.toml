@@ -179,7 +179,6 @@ lowering_files = [
   "crates/sifr_lowering/src/lower/mod_context.rs",
 ]
 codegen_files = [
-  "crates/sifr_codegen/src/error_refs.rs",
   "crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs",
   "crates/sifr_codegen/src/intrinsic_method_emitters/literal_and_intrinsic_exprs.rs",
   "crates/sifr_codegen/src/intrinsics/registry.rs",
@@ -224,11 +223,14 @@ preamble_files = [
   "types_and_errors.rs",
 ]
 direct_runtime_roots = [
+  "sifr_runtime::DEFAULT_MAX_INTEGER_DIGITS",
   "sifr_runtime::IntegerArithmeticError",
   "sifr_runtime::IntegerDivisionError",
   "sifr_runtime::IntegerFloatConversionError",
   "sifr_runtime::SifrInt",
+  "sifr_runtime::SifrNonEmptyVec",
   "sifr_runtime::SifrRange",
+  "sifr_runtime::SifrSliceIndices",
   "sifr_runtime::interop",
   "sifr_runtime::to_usize_proven",
 ]

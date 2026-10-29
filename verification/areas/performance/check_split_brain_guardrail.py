@@ -13,6 +13,7 @@ import re
 import sys
 import tempfile
 from pathlib import Path
+from cargo_source_roles import source_roles
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 APPROVED_PREFIXES = (
@@ -154,11 +155,12 @@ def within(offset: int, ranges: list[tuple[int, int]]) -> bool:
     return any(start <= offset < end for start, end in ranges)
 
 
-def module_target(owner: Path, name: str, explicit: str | None) -> Path | None:
+def module_target(owner: Path, name: str, explicit: str | None,
+                  *, crate_root: bool = False) -> Path | None:
     if explicit:
         candidate = owner.parent / explicit
         return candidate.resolve() if candidate.is_file() else None
-    base = owner.parent if owner.stem in {"lib", "main", "mod"} else owner.parent / owner.stem
+    base = owner.parent if crate_root or owner.stem in {"lib", "main", "mod"} else owner.parent / owner.stem
     for candidate in (base / f"{name}.rs", base / name / "mod.rs"):
         if candidate.is_file(): return candidate.resolve()
     return None
@@ -187,16 +189,24 @@ def include_declarations(text: str, code: str):
         yield match, gated, match["path"] or match["raw_path"]
 
 
-def test_only_files(paths: list[Path]) -> set[Path]:
+def test_only_files(paths: list[Path], repo_root: Path = REPO_ROOT) -> set[Path]:
     path_set = {p.resolve() for p in paths}
     incoming: dict[Path, list[tuple[Path, bool]]] = defaultdict(list)
+    tests, production = source_roles(paths, repo_root)
+    # Cargo target roles are ownership edges, not filename exemptions. A real
+    # production edge prevents the same file from becoming test-only.
+    for path in tests:
+        incoming[path].append((repo_root.resolve(), True))
+    for path in production:
+        incoming[path].append((repo_root.resolve(), False))
     for owner in paths:
         text = owner.read_text(encoding="utf-8", errors="replace")
         code = scrub(text)
         ranges = inline_test_ranges(text, code)
         for match, gated, explicit in module_declarations(text, code):
             if match.group("kind") != ";": continue
-            target = module_target(owner, match.group("name"), explicit)
+            target = module_target(owner, match.group("name"), explicit,
+                                   crate_root=owner.resolve() in tests | production)
             if target in path_set:
                 incoming[target].append((owner.resolve(), gated or within(match.start(), ranges)))
         for match, gated, relative in include_declarations(text, code):
@@ -283,12 +293,67 @@ def rust_files() -> list[Path]:
     return sorted(p for p in (REPO_ROOT / "crates").rglob("*.rs") if "target" not in p.parts)
 
 
-def violations(paths: list[Path]) -> list[str]:
-    test_only = test_only_files(paths)
+def violations(paths: list[Path], repo_root: Path = REPO_ROOT) -> list[str]:
+    test_only = test_only_files(paths, repo_root)
     return [finding for p in paths for finding in violations_text(
         p, p.read_text(encoding="utf-8", errors="replace"), test_only=p.resolve() in test_only
     )]
 
+
+
+def run_cargo_roles_self_test() -> None:
+    with tempfile.TemporaryDirectory(prefix="sifr-cargo-source-roles-") as tmp:
+        root = Path(tmp)
+        manifest = root / "Cargo.toml"
+        package = '[package]\nname = "source-roles"\nversion = "0.1.0"\n'
+        manifest.write_text(package)
+        library, contract, shared = (root / path for path in
+                                    ("src/lib.rs", "tests/contract.rs", "support/shared.rs"))
+        for path in (library, contract, shared):
+            path.parent.mkdir(parents=True, exist_ok=True)
+        library.write_text("")
+        contract.write_text('#[path = "../support/shared.rs"]\nmod shared;\n')
+        shared.write_text('fn check() { sifr_lowering::lower_module(input); }\n')
+
+        def findings():
+            return violations(sorted(root.rglob("*.rs")), repo_root=root)
+
+        assert not findings(), "automatic Cargo test and owned support rejected"
+        library.write_text('#[path = "../support/shared.rs"]\nmod shared;\n')
+        assert findings(), "support shared with production escaped"
+        library.write_text('include!("../tests/contract.rs");\n')
+        assert findings(), "production include of a test target escaped"
+        library.write_text("")
+        manifest.write_text(package + '[lib]\npath = "tests/contract.rs"\n')
+        assert findings(), "production target under tests escaped"
+        manifest.write_text(package + 'autotests = false\n')
+        assert findings(), "disabled automatic Cargo target was exempted"
+        manifest.write_text(package + 'autotests = false\n[[test]]\nname = "contract"\n')
+        assert not findings(), "explicit named test rejected with automatic tests disabled"
+        external = root / "checks/external.rs"
+        external.parent.mkdir()
+        contract.rename(external)
+        manifest.write_text(package + 'autotests = false\n[[test]]\nname = "external"\n'
+                            'path = "checks/external.rs"\n')
+        assert not findings(), "explicit external Cargo test rejected"
+        external.write_text('mod helper;\n')
+        helper = external.parent / "helper.rs"
+        helper.write_text('#[path = "../support/shared.rs"]\nmod shared;\n')
+        assert not findings(), "Cargo crate-root sibling module rejected"
+        manifest.write_text(package + '[lib]\npath = "checks/external.rs"\n'
+                            '[[test]]\nname = "external"\npath = "checks/external.rs"\n')
+        assert findings(), "custom production crate-root module escaped"
+        helper.unlink()
+        manifest.write_text(package)
+        nested = root / "tests/nested/main.rs"
+        nested.parent.mkdir(parents=True)
+        external.rename(nested)
+        nested.write_text('#[path = "../../support/shared.rs"]\nmod shared;\n')
+        assert not findings(), "automatic directory test rejected"
+        # An orphaned file named like a test is still production-scanned.
+        unowned = root / "src/looks_like_tests.rs"
+        unowned.write_text(shared.read_text())
+        assert findings(), "test-looking production file escaped"
 
 
 def run_include_self_test() -> None:
@@ -406,6 +471,7 @@ def run_self_test() -> None:
         extra = cli.read_text() + '\nfn duplicate() { sifr_syntax::parse_module(src, None); }\n'
         assert violations_text(cli, extra), "same-file duplicate escaped"
     run_include_self_test()
+    run_cargo_roles_self_test()
     for rel in (
         Path("crates/sifr_compiler_services/src/metadata/locations.rs"),
         Path("crates/sifr_semantic_services/src/stdlib/bootstrap.rs"),
