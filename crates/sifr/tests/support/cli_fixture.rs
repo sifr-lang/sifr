@@ -14,10 +14,10 @@ fn owner() -> &'static Path {
         let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
             .canonicalize()
             .expect("CLI source owner");
-        let key = format!(
-            "{:x}",
-            Sha256::digest(checkout.as_os_str().as_encoded_bytes())
-        );
+        let key: String = Sha256::digest(checkout.as_os_str().as_encoded_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect();
         let parent = std::env::temp_dir()
             .join("sifr-cli-fixture-owners")
             .join(key);
