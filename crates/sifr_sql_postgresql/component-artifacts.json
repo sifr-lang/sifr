@@ -86,8 +86,8 @@
     "schema_version": 1,
     "source_inputs": {
       ".cargo/config.toml": "d4c924aa9aef68df597f232d9d301a62ea6e12c497c17154cccf875a66c4bbf5",
-      "Cargo.lock": "90f701740833348541660cf845473cd7c810d60767b7941065441c58c8bf5f14",
-      "Cargo.toml": "c483b23cb5edb83797a32a6e5d36fb19f93d1a1ab9c9a27d2e2c34f538fdde69",
+      "Cargo.lock": "ccba2030808fc886af8058c62df6a999b67824b3fd0d1f776def08b3be59407e",
+      "Cargo.toml": "21c8bceb1ab6e9f5e57c86ec426cd0a643bc5bdcfb6f38bd467981149bf52328",
       "crates/sifr_compiler_component/Cargo.toml": "8f420af82234238bdfb3db763a87cc1d367fb9e7dacfe1b73796022f2e50b632",
       "crates/sifr_compiler_component/build.rs": "50f7ec26457e6151185e65613747970b4fd0b2633e3bf1501a6c65af54987da8",
       "crates/sifr_compiler_component/src/cache.rs": "24760870764d218a011d2e05a3e275366775f553dc092b6bde4b10be78d13c77",
@@ -253,7 +253,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "ad49f9713b222a674ebee21a40150965d64e888925b62e737dbf4d92776f8b48",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "cc3cda1e2efa032957f11dac4af25f9ddfa9503ce0dcf95504830b183b13e37a",
+    "source_sha256": "f378aab66c5b36a08937b66b2602b89f6f4086d15e5417e1cda12f12b3c1c335",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

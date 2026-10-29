@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D19; final phase qualification open
-- Latest delivery: D17 generated Rust ownership; D18 integrated normal-allocation discovery
+- Status: in progress; intermediate deliveries through D20; final phase qualification open
+- Latest delivery: D20 isolated CLI fixture dependency reuse; D21 SQL artifact requalification in progress
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3025,3 +3025,49 @@ failures. After the existing SQL preparation script refreshes its companions, al
 48 pass without remote source changes. Follow-up: make focused CLI companion
 prerequisites explicit in the canonical preparation contract instead of relying
 on a previously produced executable merely existing.
+
+
+#### D20 closure — 2026-10-29
+
+[PR #4532](https://github.com/sifr-lang/sifr/pull/4532) merges as
+`9f721f1e7d2fe9f898d476e494fb18bd639fa23c`; exact reviewed candidate
+`d2df51d91132646e032143088766ec1aca074617`. All 48 tests pass, with identical
+test names, environment and actual four-worker allocation. Complete affected cycle:
+251.341s baseline, 232.827s first use, 150.271s retained candidate (40.21% lower).
+Comparing the complete candidate against baseline execution alone (233.101s)
+still yields 35.53% lower time, exceeding the 25% adoption criterion. Execution
+is 145.445s, above the provisional 120s group budget. A separate 165.781s result
+used three workers and is functional evidence only. Family filesystem observations
+corroborate reuse but provide a lower bound, not a complete execution census.
+
+All 132 payloads in `dev-verify-d20-qualified-v2.tar.gz` are verified; archive
+SHA-256 `f1f9f8dd4e09eac05a9a1b0caa6759b4a4372a0dfdaaff87f53a3faa01dec03e`.
+Independent exact-candidate review is SATISFIED with no blockers, response SHA-256
+`110c0fe9bfec6a3e29baf2a629b562980a7bb63bc837a6c8ff13387ad40b93c1`.
+Formatting, source ownership, size policy and unchanged selection pass. The merged
+Git tree equals the reviewed tree. Failed preparations and rejected candidates
+remain preserved. Full coverage, invalidation and 90s/480s qualification remain open.
+
+Follow-ups owned by fixture/preparation infrastructure: serialize concurrent
+initialization of the same retained Git fixture owner; declare Git >=2.28 as a
+prerequisite; declare SQL companion preparation for focused CLI tests; remove stale
+inherited allocation metadata (both matched runs actually used four workers).
+Do not weaken owner isolation or private-cache controls to address these items.
+
+### D21 — SQL component artifact requalification (prospective)
+
+D18 identified four failing qualification variants. Current source reconciliation
+must confirm which component inputs changed. Rebuild affected MySQL, PostgreSQL
+and SQLite artifacts with their canonical pinned producers; do not update hashes
+without executing production. Preserve prior artifacts and actual producer outputs,
+validate authenticated SDK and parser inputs, then transfer each output with a
+SHA-256 check. Record byte equivalence or differences explicitly. The words fixture
+is rebuilt only if its own declared inputs changed.
+
+Run all affected component/provider contracts and mutation controls and the native
+component consumers, with bounded resource guards and retained targets. Keep
+source inputs frozen during production; allow only declared family outputs.
+Require exact-candidate independent review before intermediate merge. This repairs
+artifact correctness and makes no gate speedup claim. The independent SQL clean
+build protocol, ignored deque assertion and final integrated qualification remain
+separate obligations; no ordinary/expanded gate split is approved.
