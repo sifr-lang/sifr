@@ -47,6 +47,7 @@ class LibtestAllocationTests(unittest.TestCase):
                 env = {"RUST_TEST_THREADS": str(width), "SIFR_E2E_CARGO_BUILD_JOBS": str(requested)}
                 allocation, actual = allocate_libtest(self.build, env, COMMAND)
                 self.assertEqual(int(actual["SIFR_E2E_CARGO_BUILD_JOBS"]), min(requested, 4 // width))
+                self.assertEqual(int(actual["SIFR_E2E_CARGO_BUILD_JOBS"]), allocation.native_cargo_jobs)
                 self.assertLessEqual(width * int(actual["SIFR_E2E_CARGO_BUILD_JOBS"]), allocation.slots)
                 self.assertEqual(env["SIFR_E2E_CARGO_BUILD_JOBS"], str(requested))
         with self.assertRaises(VerificationError):

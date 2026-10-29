@@ -18,6 +18,7 @@ class LibtestAllocation:
     workers: int
     cargo_jobs: int
     rayon_threads: int
+    native_cargo_jobs: int
     slots: int
     reserved_memory_mib: int
 
@@ -55,17 +56,17 @@ def allocate_libtest(build, env, command):
     if explicit is not None and explicit > slots:
         raise CommandFailed(2, "libtest_capacity")
     workers = min(requested, slots)
-    allocation = LibtestAllocation(workers, min(build.compiler_jobs, slots // workers),
-                                  min(build.sifr_jobs, slots // workers), slots,
-                                  policy["reserved_memory_mib"])
     # The ordinary CLI suite also contains standalone native assertions whose
     # harness selects Cargo jobs explicitly instead of inheriting CARGO_BUILD_JOBS.
     native_jobs = min(positive(env.get("SIFR_E2E_CARGO_BUILD_JOBS", 1),
                                "SIFR_E2E_CARGO_BUILD_JOBS"), slots // workers)
+    allocation = LibtestAllocation(workers, min(build.compiler_jobs, slots // workers),
+                                  min(build.sifr_jobs, slots // workers), native_jobs,
+                                  slots, policy["reserved_memory_mib"])
     return allocation, dict(env, RUST_TEST_THREADS=str(workers),
                             CARGO_BUILD_JOBS=str(allocation.cargo_jobs),
                             RAYON_NUM_THREADS=str(allocation.rayon_threads),
-                            SIFR_E2E_CARGO_BUILD_JOBS=str(native_jobs))
+                            SIFR_E2E_CARGO_BUILD_JOBS=str(allocation.native_cargo_jobs))
 
 
 def reserve_monitor(allocation):
