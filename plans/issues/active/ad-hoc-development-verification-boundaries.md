@@ -1738,3 +1738,16 @@ Build targets and the extracted SDK remain retained separately. The evidence bin
 the implementation at `b28227e0`; subsequent phase-record-only updates do not alter
 those implementation or validation inputs. Independent review is the remaining
 bounded-item adoption prerequisite.
+
+
+Initial independent review confirms the actual production equivalence harness,
+component hashes/provenance, dependency removal and current qualification evidence.
+It reports NOT SATISFIED for three stale current-design descriptions: the MySQL
+architecture paragraph, the private-tool list and the capability-matrix grammar
+behavior entry. All three now describe the provider-owned parser boundary; the
+historical grammar and producer records remain unchanged. The affected SQL
+contracts and all 13 contract mutation controls pass. All four component manifests
+still validate, confirming that no producer input or output changed. This metadata
+fixture correction requires a scoped remediation review; no compiler rebuild or
+broad test repetition is warranted. Initial review evidence remains outside the
+Git tree in `dev-verify-d10-review-6fo5osl_/response.md`.

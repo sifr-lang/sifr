@@ -50,7 +50,7 @@ The driver disables default features. The provider does not enable its
 `tracing` feature because upstream events can contain statements or values.
 Sifr owns redacted operational metadata.
 
-LALRPOP, the driver, Tokio, and Rustls are private Rust implementation tools.
+The driver, Tokio, and Rustls are private Rust implementation tools.
 They are not Sifr modules. Applications do not import them.
 
 The component builder verifies the exact WASI-Virt commit and tracked-source

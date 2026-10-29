@@ -1761,7 +1761,8 @@ component artifact, component-host execution, and server qualification pass.
 
 The MySQL provider does not embed MySQL server source. It maintains an
 independently implemented grammar from published syntax and observed server
-behavior. LALRPOP generates pure Rust parser code for the WebAssembly component.
+behavior. Provider-owned Rust code frames statements and lowers their SQL syntax
+for the WebAssembly component.
 Server differential tests remain the acceptance authority.
 
 The SQLite component uses syntaqlite because it wraps SQLite's grammar and
