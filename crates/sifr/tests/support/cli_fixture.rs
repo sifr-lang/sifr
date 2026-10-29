@@ -44,7 +44,7 @@ fn owner() -> &'static Path {
     })
 }
 
-pub fn project(prefix: &str) -> tempfile::TempDir {
+pub(super) fn project(prefix: &str) -> tempfile::TempDir {
     tempfile::Builder::new()
         .prefix(prefix)
         .tempdir_in(owner())
