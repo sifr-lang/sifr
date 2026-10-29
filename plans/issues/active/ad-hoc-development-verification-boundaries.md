@@ -1311,3 +1311,168 @@ Any implementation requires complete-category improvement, affected harness and
 allocation/failure regressions, unchanged selected coverage and independent review.
 The existing focused intermediate policy applies. This item does not alter the
 mandatory SQL independent-clean-build obligation or close final480-second acceptance.
+
+
+#### D7 retained measurement and prioritization — 2026-10-29
+
+At unchanged candidate `d8956dad0f792de7c656d37d95bd1faa6017f16e`, exact
+preparation passed in16.540s. Complete732-fixture prime execution passed in143.185s;
+it refreshed resolution receipts despite186/186 native groups being fresh. This
+is not the matched steady-state baseline. Subsequent complete runs passed in
+102.308s with four inner Cargo jobs and104.766s with the default one job. Both
+retained186/186 fresh groups and observed zero rebuilt compiler units. The default
+run spent44.349s in frontend compilation,44.681s in native build validation and
+11.753s in runtime. These are normal telemetry, not instrumented timings.
+
+The concurrency difference is small and unreplicated; adopt no concurrency change.
+The90s category budget remains unmet. A read-only census finds71 distinct normalized
+manifest-and-lock configurations among186 groups (the largest contains58 groups).
+This establishes a possible consolidation opportunity, not equivalence of typed
+plans or permission to merge feature configurations. Cohort ownership would also
+need to preserve resolution, artifact retirement and failure-isolation contracts.
+Defer that implementation behind larger measured costs; retain D7 as open timing
+debt rather than reporting its budget passed. All commands and failure evidence
+remain in the D7 evidence records. Two census-helper failures affected postprocessing
+only and are preserved; the corrected census completed successfully.
+
+### D8 — generated-test preparation and execution ownership (prospective)
+
+The last complete generated-driver category passed81 assertion cases in439.735s,
+with one preparation helper executed separately. Its isolated tests still invoke
+Cargo once per assertion. The81 observed command durations sum to876.385s across
+two workers; this sum is not category elapsed time. The longest cases include
+independent native-build evidence106.901s and backend integration92.204s, but this
+candidate changed production identities, so retained repetition is required before
+attributing those costs to steady-state work.
+
+First run the complete unchanged generated selection with fresh execution of its
+preparation helper and preserve every assertion. Then compare a bounded diagnostic
+that admits the exact Cargo-selected test executable once and launches the same
+isolated cases directly. Cargo must remain the authority for executable selection,
+working directory and launch environment; do not reconstruct them from guessed
+paths or silently change configured runners. Preparation, publication and execution
+costs must all remain counted. The diagnostic may use frozen owned artifacts to
+measure feasibility; production adoption additionally requires explicit immutable
+artifact ownership, bounded lifetime and failure/corruption/interruption checks.
+
+Preserve current native allocation, process isolation, exact inventory and execution
+counts, helper ownership, delegated-corpus policy and failure continuation. Builds
+performed inside tests remain real, including both independent native evidence
+builds. No profile or guarantee is removed. Reject a new execution mechanism if its
+complete-category benefit does not justify the added responsibility. Use the normal
+focused intermediate checks and independent review before adoption; the full phase
+correctness and timing requirements remain open.
+
+
+D8 tooling decision: evaluate nextest's existing Cargo preparation, binary metadata,
+process isolation and outcome reporting before implementing a custom launcher, as
+already called for by section10. The diagnostic pins the official0.9.150 Linux
+asset (SHA-256`b0959bc64232974224cf9fb22c915845398c0e8668fa7831eb5b43fb1eef781f`)
+in session-owned tools; it does not install globally or change project tool policy.
+Keep two workers and the same inner build/Rayon allocation for the first comparison.
+Reconcile exact ignored-test inventory, helper exclusion, all81 terminal outcomes
+and no retries. Include preparation/admission time. Existing ordinary/doctest and
+non-Rust boundaries remain unchanged in this diagnostic. A drafted custom-launch
+probe remains unexecuted; it is not validation evidence or adopted infrastructure.
+
+
+D7 evidence is archived as `dev-verify-d7-evidence.tar.gz`, SHA-256
+`26ca400ac97b7c56f0335129a8b0814939dbad2a3b1f537ed8a78e2c9d480cb0`;
+all41 payloads verified after transfer. No native concurrency change was adopted.
+
+D8 retained baseline passes81 assertions with the preparation helper actually
+executed:437.442s outer guard,388.500s first-to-last assertion span,776.000s summed
+(overlapping) assertion commands. Peak sampled aggregate RSS3,869,106,176bytes;
+minimum available9,935,069,184bytes; no reserve stop, leftover session or source
+change. The independent native-build case remains105.383s. Advanced-data runtime
+is67.663s despite preparation; this remains a separate freshness/ownership lead,
+not an established diagnosis. Backend integration is29.968s, so its earlier92.204s
+must not be used as the present steady-state cost.
+
+Nextest discovery passes in2.725s, selects exactly the same81 assertions and excludes
+only the declared preparation helper. Its actual driver executable has the same
+SHA-256 as the Cargo baseline and D6 qualification. The complete unchanged two-worker
+comparison is running. No new production dependency or runner implementation has
+been adopted, and no full-phase timing claim follows from discovery.
+
+
+D8 diagnostic correction: the first direct-binary nextest run was deliberately
+cancelled after288.551s and its owned session emptied. It reconstructed native
+families, so it is not a matched retained timing or a complete pass. A1.200s
+Cargo launch capture confirms the difference: normal Cargo exports CARGO_HOME,
+RUSTUP_HOME, RUSTUP_TOOLCHAIN and CARGO; direct nextest invocation inherited them
+absent. CARGO_HOME presence is an intentional native identity input; do not weaken
+that identity to conceal the experimental setup error. A CLI-only Cargo alias
+control was rejected before tests (0.693s), and that evidence is retained too.
+
+The pinned tool is now linked only into the owned verification virtual environment,
+which is already on the recorded PATH. Use normal `cargo nextest` dispatch without
+changing PATH, global installation, compiler flags or native identity rules. The
+symlink target/hash is recorded for safe ownership and later retirement. Repeat
+exact discovery and input comparison before interpreting the corrected complete
+run. Custom launch capture code remains diagnostic-only; no custom runner is adopted.
+
+
+Corrected D8 nextest execution passes all81 assertions in351.701s including
+preparation; nextest admission/execution334.146s, summed case durations664.870s.
+All81 successful JUnit outputs retain the libtest attestation of exactly one
+executed assertion;806 other entries are explicitly skipped by the selection.
+The actual test process native environment, including loader path, matches the
+Cargo baseline. Peak sampled aggregate RSS3,951,939,584bytes, minimum available
+10,144,133,120bytes; the owned session is empty and tracked source unchanged.
+This is not yet an attributable85.741s runner gain: preparation and some case
+costs also declined. A second complete original-runner execution is running
+on the retained state before deciding adoption.
+
+
+#### D8 diagnostic conclusion — 2026-10-29
+
+The second original-runner execution passes all81 assertions in374.635s including
+preparation, with348.223s assertion span and695.042s summed commands. Compared
+with the corrected nextest run, the observed total difference is22.934s (6.12%),
+with14.077s difference between assertion span and nextest admission/execution.
+These differently bounded execution measurements are not a precise causal estimate.
+The first Cargo baseline's82 commands (including preparation) sum to821.763s
+against779.520s of reported libtest execution, approximately42.243s combined
+launcher/orchestration overhead. Overlapping durations are never added to wall time.
+Defer nextest adoption: this improvement is too small and variable to prioritize
+over the measured native and independent-build costs. No runner, allocation,
+selection, tool pin or production source change is adopted.
+
+A targeted advanced-data process trace passes in30.148s including instrumentation.
+It observes the final generated root rustc invocation at17.012s (including its
+6.076s linker child); actual runtime is0.013s. This is diagnostic timing, not
+acceptance. Temporary test-only reporting then observes9.900s libtest execution
+(after44.95s test-binary preparation): fixture0.112s, Cargo entrypoint0.495s,
+compiler build9.279s. All seven generated project files retain identical bytes
+and mtimes. The reported native stage6.397s includes publication and must not be
+called pure Cargo compilation time. The compiler report records a finalized cache
+hit. An interleaving control also passes (15.969s combined, instrumented), without
+reproducing the earlier expensive rebuild. The source of that rebuild remains
+unresolved; do not claim global cache failure or implement a speculative repair.
+The diagnostic-only source was restored exactly, the owned nextest symlink removed,
+and failure/incomplete/trace evidence retained. The changed test executable requires
+normal Cargo readmission before future acceptance.
+
+### D9 — independent SQL build cost (prospective)
+
+The previous complete native SQL clean/reused/independent-clean protocol passed
+in511.420s and alone exceeded the proposed full ordinary-gate target. Measure
+its actual current compilation graph before changing dependencies or policy.
+Retain all three linked MySQL/PostgreSQL/SQLite executables, locked/offline Cargo,
+the exact existing dev profile and constant two-root path remaps, reused-A byte
+comparison, removal of A before independent clean B, and exact executable-byte
+comparison. Cross-target checks remain outside this local investigation.
+
+Use Cargo's unit timings and separately recorded clean-A/reused-A/clean-B commands,
+CPU/resources and selected artifact inventories to identify the critical dependency
+chain. Preserve diagnostics and failed artifacts, check capacity first, and keep
+the1,750s diagnostic cap. Do not treat a cold build as host-performance evidence
+or adopt input-bound qualification reuse without the policy decision required by
+section11. The next implementation must remove unnecessary production/build
+dependencies or other measured compilation work while preserving the actual
+qualification guarantee; first inspect the existing feature boundaries so already
+delivered isolation is not proposed again. Full phase480s acceptance stays open.
+
+D8 evidence archive: `dev-verify-d8-evidence.tar.gz`, SHA-256
+`7609504413f23e7b132b09f67e215215a016e7f415b1b691eab12fdd9b51d6e2`; all121 payloads independently verified after transfer.
