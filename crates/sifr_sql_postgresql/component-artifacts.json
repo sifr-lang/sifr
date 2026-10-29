@@ -138,7 +138,7 @@
       "crates/sifr_diagnostics/src/render/presentation.rs": "134326ebe579753b657488eb18d960f2a1ec34f77e6505a72642b5787659ef14",
       "crates/sifr_diagnostics/src/schema/mod.rs": "d47217278c30e5d97ed9af350a76d5e6d9f4e4813c16eaaaf35405398bab6b18",
       "crates/sifr_diagnostics/src/source_map/mod.rs": "4e67c65a411bc57a93c88b738e4e63904b546f946f04e358bf4ffe26a881fcfe",
-      "crates/sifr_identity/Cargo.toml": "c473cbc030dd98bb610828a81cae38f9953990ad854549783d5a183eaf871df8",
+      "crates/sifr_identity/Cargo.toml": "a99e655de7bdff8b428fdaa6e67e0882d6d43b28af686141bf3184e9cb1d5afd",
       "crates/sifr_identity/src/build.rs": "1b0b9b8dbf86021cb9c932061cd2c77ca3a6e87dffa950bbf8540572cd2b7751",
       "crates/sifr_identity/src/input_tree.rs": "e9983754779f00a44842899c8c12ab09eb644683e98b13f04c0e79e1472205e6",
       "crates/sifr_identity/src/lib.rs": "a8e39513a6dd7b3f2c27f98036c9d0e7709e0140bbddeea833ca2ab826f46ab1",
@@ -253,7 +253,7 @@
       "verification/areas/sql_platform/tools/wasi_sdk_inputs.py": "ad49f9713b222a674ebee21a40150965d64e888925b62e737dbf4d92776f8b48",
       "verification/areas/sql_platform/tools/wasi_virt_inputs.py": "925c7487986c5953b86da6074d01cd2b7258e595e573e562fdf41f78c73506c7"
     },
-    "source_sha256": "7a2cb9f8b69cf19b1900bf77fe3868f04077192fadbac46adea196a501a8819e",
+    "source_sha256": "cc3cda1e2efa032957f11dac4af25f9ddfa9503ce0dcf95504830b183b13e37a",
     "tools": {
       "sdk": {
         "archive": "wasi-sdk-34.0-x86_64-linux.tar.gz",

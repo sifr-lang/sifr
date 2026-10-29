@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
-- Latest delivery: D9 production-input aggregation; D10 SQL parser boundary investigation
+- Latest delivery: D10 provider-owned SQL statement framing; D11 integrated correctness discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1751,3 +1751,95 @@ still validate, confirming that no producer input or output changed. This metada
 fixture correction requires a scoped remediation review; no compiler rebuild or
 broad test repetition is warranted. Initial review evidence remains outside the
 Git tree in `dev-verify-d10-review-6fo5osl_/response.md`.
+
+
+#### D10 closure — 2026-10-29
+
+Delivered through [PR #4520](https://github.com/sifr-lang/sifr/pull/4520), final
+candidate `6b104374eb6084c1014a354bf6e348dc43386019`, merged as
+`8054fd42c48c499399d2579bcfcdd827ae981c49`. The initial review confirms the
+implementation and evidence but remains NOT SATISFIED for its three stale-record
+findings. Scoped remediation review is SATISFIED with no remaining blockers,
+retained outside the tree in `dev-verify-d10-remediation-tk218uwn/response.md` and
+`binding.json`. It confirms that the final candidate differs from the tested
+runtime only in the declared documentation/verification metadata records.
+
+Nonblocking SQL metadata follow-ups: remove the formatting space in
+`check_mysql.py`, choose a consistent `reconciled_at` representation in the Rust
+registry record, distinguish current/history entries in the MySQL grammar evidence
+row, and remove the pre-existing duplicate provider key in MySQL qualification.
+These are recorded suggestions, not new phase blockers or silently changed inputs.
+The original full create-pr CI job 123210774820 stopped before setup because
+`SIFR_PERFORMANCE_REFERENCE` was absent; its log is retained as
+`dev-verify-d10-ci-create-pr.log`. No full-profile or CI-green claim follows from
+this bounded merge. Full phase gates and repeated 480s acceptance remain open.
+
+### D11 — current integrated correctness discovery (prospective)
+
+After D5/D6/D9/D10 and the D7/D8 diagnostic decisions, run one fresh complete
+`merge --correctness-only --no-fail-fast` selection with canonical preparation,
+retained owned targets, the same four-slot allocation and 30-minute diagnostic cap
+per category. Inspect the emitted plan and capacity before launching. Preserve
+all original failures and prior evidence. Capture source/command/environment
+identity and preparation separately; account for every failed, blocked, cancelled
+or unexecuted category. Schedule remaining independent categories explicitly if
+an aggregate cap prevents their execution. Do not mark partial execution as a pass.
+
+Use ordinary execution for elapsed time; only apply targeted instrumentation if
+the completed sweep identifies an unresolved large cost. Keep the source candidate
+frozen during execution. This checkpoint is discovery, not a repeated timing
+qualification or permission to exclude expensive guarantees. Select the next
+bounded repair from the current largest measured cost and its real assertion
+boundary. Prefer removing repeated compilation/preparation or an unnecessarily
+expensive test boundary over replacing the runner for a marginal gain.
+
+
+D11's first complete selection at `567d6b8597005d47ccad0a5c0da555bce8a9f592`
+stops at admission in 24.701s outer / 23.380s facade elapsed. The dependency-direction
+guard still permits only SHA-2 for `sifr_identity`, although D6 introduced optional
+TOML parsing behind its explicit build feature. The other five early guards pass.
+The runner correctly blocks all preparation and consumers for invalid inventory;
+no broad test timing or coverage was measured. The complete incomplete-run archive
+is retained as `dev-verify-integrated-d10-discovery-evidence.tar.gz`, SHA-256
+`585b16b4890642aad9e61c22ccfc3170ba041350f219b3375ef68d5efec991c1`.
+
+A separate smallest affected check reveals the related default-feature omission:
+`cargo test --locked --offline -p sifr_identity --lib --no-run` fails in 1.200s
+because cfg(test) includes the build helpers but no TOML dev dependency exists.
+The earlier explicit-feature checks did not cover this configuration. Preserve
+that diagnostic instead of treating the successful build-feature run as sufficient.
+
+The bounded admission repair will retain optional, explicitly selected production
+build helpers, add the same workspace TOML dependency for unit tests, and make the
+policy recognize that precise boundary. Negative controls must reject unconditional,
+default/transitively default, renamed and target-specific production activation.
+Check the actual default and build-feature unit-test configurations and resolved
+normal dependency graph; keep all existing assertions. Do not add TOML to ordinary
+identity consumers or bypass the admission guard. Refresh affected producer receipts
+through actual production, then resume full discovery on a frozen candidate. The
+previous failed selection and unexecuted categories remain explicit.
+
+
+Admission repair source `f623d46a1f79a2d6d4853e48b807f06cc1106e3e` passes the
+actual dependency-direction guard/self-tests, all 11 identity tests under default
+features (10.110s command / 8.36s execution), the same 11 under explicit build
+features (8.594s / 8.28s), and all 15 dependency-audit tests (2.173s command).
+Cargo's resolved normal dependency graph confirms that default identity contains
+SHA-2 and excludes TOML; the explicitly selected build graph includes TOML.
+Complete guarded check elapsed is 29.206s with no source mutation or reserve stop.
+Formatting and file-size checks pass. Target-specific policy mutations are further
+isolated from optionality/alias errors, so each ownership condition is exercised.
+
+The only changed SQL producer input is `crates/sifr_identity/Cargo.toml`; all
+three SQL receipts therefore require actual production refresh. The words fixture
+input map is unchanged and does not require rebuilding. The admission archive's
+19 payloads were verified after transfer. No registry version or lockfile changes
+are required by the inherited test dependency.
+
+
+Actual component production refresh succeeds: MySQL 24.973s, PostgreSQL 228.957s
+for all six majors, SQLite 19.848s. All ten regenerated component binaries are
+byte-for-byte identical to the prior qualified artifacts; only the three source-bound
+receipts change. All four manifests validate, and the words fixture remains untouched.
+The refreshed outputs are transferred with SHA-256 verification before restarting
+integration. No old receipt is relabeled without executing its canonical producer.

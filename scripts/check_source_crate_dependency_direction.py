@@ -14,6 +14,7 @@ import tomllib
 
 from source_test_includes import exclusively_test_includes
 import semantic_dependency_graph as semantic_graph
+import source_identity_boundary as identity_boundary
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -162,11 +163,10 @@ RULES = (
     *(CrateRule(crate=crate, forbidden_all_dependencies=frozenset({"sifr_metadata"}),
                 forbidden_source_references=frozenset({"sifr_metadata"}), scan_manifest_targets=True)
       for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend")),
-    # The stateless identity/encoding leaf may be shared by compiler layers,
-    # but must never acquire a reverse compiler dependency.
+    # Keep identity stateless; its optional manifest parser belongs to build helpers.
     CrateRule(
         crate="sifr_identity",
-        allowed_normal_dependencies=frozenset({"sha2"}),
+        allowed_normal_dependencies=frozenset({"sha2", "toml"}),
         forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_identity"}),
     ),
     CrateRule(
@@ -539,6 +539,7 @@ def validate(root: Path) -> list[str]:
     failures.extend(generated_dependency_spec_violations(root))
     failures.extend(provider_construction_violations(root))
     failures.extend(semantic_graph.manifest_failures(root, sys.modules[__name__]))
+    failures.extend(identity_boundary.validate(root, sys.modules[__name__]))
     return failures
 
 
@@ -607,7 +608,7 @@ def assert_self_test_case(
 def run_self_test() -> int:
     from source_direction_checks import check_split_sources_and_composition_roots, check_data_owner_boundaries
 
-    failures: list[str] = semantic_graph.self_test()
+    failures: list[str] = semantic_graph.self_test() + identity_boundary.self_test()
     check_split_sources_and_composition_roots(sys.modules[__name__], failures)
     check_data_owner_boundaries(sys.modules[__name__], failures)
     SELF_TEST_TMP_ROOT.mkdir(exist_ok=True)
