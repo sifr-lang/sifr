@@ -250,6 +250,14 @@
     },
     {
       "lock": "Cargo.lock",
+      "owner": "sifr_dependency_contracts",
+      "package": "itertools",
+      "manifests": [
+        "verification/tools/dependency_contracts/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
       "owner": "sifr_driver",
       "package": "num-bigint",
       "manifests": [
@@ -270,6 +278,22 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_frontend/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_generated_rust",
+      "package": "prettyplease",
+      "manifests": [
+        "crates/sifr_generated_rust/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_generated_rust",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_generated_rust/Cargo.toml"
       ]
     },
     {
@@ -358,14 +382,6 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_stdlib/Cargo.toml"
-      ]
-    },
-    {
-      "lock": "Cargo.lock",
-      "owner": "sifr_dependency_contracts",
-      "package": "itertools",
-      "manifests": [
-        "verification/tools/dependency_contracts/Cargo.toml"
       ]
     },
     {

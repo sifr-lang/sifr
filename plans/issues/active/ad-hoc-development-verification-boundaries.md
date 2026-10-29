@@ -3271,3 +3271,14 @@ The reconciliation does not eliminate any measured runtime cost or close the
 coverage reconciliation, then choose the next macro improvement from the current
 preparation and execution measurements. Complete final phase gates, invalidation
 and repeated timing qualification remain required.
+
+
+The first focused repair candidate `069c90c734d227991da70506bf377d48352865c4`
+runs the complete dependency-contract crate in 14.021s: 76 assertions pass and one
+fails. Inventory admission is repaired, exposing two further D17 omissions in the
+exact lock-edge inventory: `sifr_generated_rust` owns current `syn` and
+`prettyplease` edges in the root lock. Independent reconstruction across every
+maintained lock and inventoried dependency family confirms exactly these two
+additions and no removals. Add both records; preserve all assertions and version,
+checksum, pinned-graph and lock contents. Retain this failed candidate's evidence
+and rerun the complete affected crate before review.
