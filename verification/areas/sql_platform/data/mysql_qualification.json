@@ -18,7 +18,7 @@
   "runtime_features": ["aws-lc-rs", "minimal-rust", "rustls-tls", "tls12"],
   "forbidden_runtime_features": ["default", "tracing"],
   "surfaces": [
-    {"id": "grammar", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/src/mysql.lalrpop", "crates/sifr_sql_mysql/tests/mysql_compiler.rs", "crates/sifr_sql_mysql/tests/mysql_properties.rs"]},
+    {"id": "grammar", "owner": "sifr_sql_mysql", "evidence": ["verification/areas/sql_platform/data/history/mysql_statement_grammar.lalrpop", "crates/sifr_sql_mysql/src/statement_framing.rs", "crates/sifr_sql_mysql/tests/mysql_compiler.rs", "crates/sifr_sql_mysql/tests/mysql_properties.rs"]},
     {"id": "schema", "owner": "sifr_sql_mysql", "evidence": ["crates/sifr_sql_mysql/src/schema.rs", "crates/sifr_sql_mysql_tools/src/catalog.rs"]},
     {"id": "runtime", "owner": "sifr_sql_mysql_runtime", "evidence": ["crates/sifr_sql_mysql_runtime/src/pool.rs", "crates/sifr_sql_mysql_runtime/src/stream.rs", "crates/sifr_sql_mysql_runtime/src/control.rs"]},
     {"id": "tools", "owner": "sifr_sql_mysql_tools", "evidence": ["crates/sifr_sql_mysql_tools/src/command.rs", "crates/sifr_sql_mysql_tools/src/provision.rs"]},

@@ -1585,7 +1585,7 @@ symlink aliases intentionally remain distinct inputs; no deduplication by inode
 or canonical path is proposed. Record-only spacing/status corrections do not
 change the reviewed implementation.
 
-CI `local-first-create-pr` job123196711202 failed before setup because the full
+CI `local-first-create-pr` job 123196711202 failed before setup because the full
 profile had no `SIFR_PERFORMANCE_REFERENCE`. The saved log identifies performance
 reference admission as the owner; all downstream steps were blocked. That is not
 a correctness execution or passing full-profile result. The intermediate local
@@ -1593,8 +1593,8 @@ policy and independent review cover this bounded merge; final phase gates stay o
 
 ### D10 — MySQL statement parser build boundary (prospective)
 
-D9's clean SQL timings still contain approximately57s compiling LALRPOP before
-the provider can compile. Inspecting the145-line provider grammar shows that it
+D9's clean SQL timings still contain approximately 57s compiling LALRPOP before
+the provider can compile. Inspecting the 145-line provider grammar shows that it
 frames semicolon-separated statements, admits nine starting keywords, and retains
 the remaining tokens. Detailed SQL syntax belongs to the existing handwritten
 lowering code. Establish that boundary precisely before adopting a generated-file
@@ -1623,6 +1623,25 @@ Acceptance includes focused negative/positive regression tests, relevant policy
 and SQL area contracts, native compiler/tool integration, actual component behavior,
 and the full independent clean/reused/clean SQL build protocol. Compare the complete
 cost, not only generator compilation. Keep the existing preparation accounting,
-capacity reserves and30-minute diagnostic cap. Use one independent review for the
+capacity reserves and 30-minute diagnostic cap. Use one independent review for the
 bounded implementation. No ordinary/expanded qualification split or full-phase
 480-second acceptance is implied by this item.
+
+
+D10 diagnostic at `466bb00c6172f0ef9b7dae858c443cd2aad60f9f`: the explicit
+framer matches the retained original generated parser on all 378,505 streams of
+72 token classes through length three, 87,381 representative state sequences
+through length eight (including lexer errors), 20,000 seeded longer cases and
+28 actual lexer/SQL-mode cases. It compares complete results, spans, tokens and
+error payloads. The successful guarded command takes 2.786s including compilation.
+Two rejected prototypes are preserved: alphabetical expected-token ordering was
+wrong; a state-dependent correction was also wrong. The complete comparison proves
+that expected tokens retain grammar declaration order in every tested state.
+No production change was made during those diagnostics.
+
+The implementation now removes the general generator from the production and
+qualification dependency graphs, keeps the former grammar as historical evidence,
+and leaves detailed SQL lowering as the same authority. Before adoption the actual
+production function must pass the same independent comparison, all relevant tests
+and component/native qualification. Component receipts have not yet been rebuilt;
+they must not be treated as current on this work-in-progress candidate.

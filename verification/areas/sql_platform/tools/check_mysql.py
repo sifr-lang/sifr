@@ -37,7 +37,7 @@ def validate(data: dict[str, Any]) -> list[str]:
     }
     if data.get("toolchain") != expected_record_tools:
         errors.append("MySQL recorded producer toolchain does not match the historical baseline")
-    expected_root_tools = {"lalrpop": "0.23.1", "lalrpop-util": "0.23.1", "tokio": "1.53.1", "rustls": "0.23.44"}
+    expected_root_tools = { "tokio": "1.53.1", "rustls": "0.23.44"}
     errors.extend(check_mysql_dependencies.validate(check_mysql_dependencies.load_inputs()))
     root_cargo = ROOT_CARGO.read_text(encoding="utf-8")
     for crate, version in expected_root_tools.items():

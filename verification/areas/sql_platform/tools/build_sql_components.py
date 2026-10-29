@@ -81,7 +81,8 @@ def build(family: str) -> int:
         manifest["provenance"] = provenance(family, rust, **tools)
         manifest["artifacts"] = artifacts
         if family == "mysql":
-            manifest["parser_generator"] = {"name": "lalrpop", "version": "0.23.1"}
+            manifest["parser"] = {"name": "sifr-mysql", "statement_framing": "provider-owned",
+                                  "syntax_lowering": "provider-owned"}
         elif family == "sqlite":
             manifest["parser"] = {"name": "syntaqlite", "version": "0.9.0", "sqlite_version": "3.53.4",
                                   "sqlite_version_number": 3053004, "compile_flags": []}

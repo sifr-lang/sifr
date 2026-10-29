@@ -29,8 +29,6 @@ the checked-in live producer records retain their original toolchain identities.
 
 | Purpose | Tool | Exact version | Selected features |
 | --- | --- | ---: | --- |
-| Parser generator | `lalrpop` | 0.23.1 | lexer and Unicode build support |
-| Parser runtime | `lalrpop-util` | 0.23.1 | standard library and Unicode |
 | Component ABI generator | `wit-bindgen` | 0.61.1 | macros, reallocation, and standard support |
 | Component capability virtualizer | WASI-Virt | 0.2.0 at `448f6df8f688cee5d6995e96b1ffc31f9bf00742` | deny-by-default WASI composition |
 | Async MySQL client | `mysql_async` | 0.37.1 | `aws-lc-rs`, `minimal-rust`, `rustls-tls`, and `tls12` |
@@ -87,7 +85,7 @@ release in one line needs a new complete matrix run before the evidence changes.
 
 ## Strict compiler component
 
-`sifr_sql_mysql` owns its lexer, `mysql.lalrpop` grammar, AST, lowering, and
+`sifr_sql_mysql` owns its lexer, statement framing, AST, SQL lowering, and
 semantic analyzer. It does not use `sqlparser-rs`, a server parser library, or a
 generic SQL AST.
 
@@ -99,7 +97,10 @@ The lexer handles MySQL comments, backtick identifiers, strings, parameters,
 operators, and keywords. `ANSI_QUOTES` changes double quotes from strings to
 quoted identifiers. SQL modes are normalized to uppercase before parsing.
 
-The grammar accepts the supported query, write, and DDL envelopes. Provider
+The statement framer admits the nine supported query, write, and DDL starters
+and separates statements without interpreting tokens inside a statement. It
+preserves token values, byte spans, lexer errors and diagnostic declaration order.
+The lexer owns quoted separators and SQL modes. Provider
 lowering owns CTEs, projections, joins, filters, grouping, ordering, limits,
 row locking, inserts, replaces, updates, deletes, conflict forms, tables,
 views, indexes, generated columns, constraints, character sets, and collations.
@@ -306,3 +307,11 @@ focused suites also cover recovery input,
 property stability, malformed codecs, cancellation, stream close, session
 reset, statement caching, provisioning shape, migration boundaries, portable
 requirements, and editor settings.
+
+The former LALRPOP statement grammar is retained as historical evidence in
+`verification/areas/sql_platform/data/history/mysql_statement_grammar.lalrpop`.
+It is not a production build input or fallback. The replacement is compared against
+the original generated parser before adoption; existing compiler, property and
+component checks continue to execute. Historical live producer records retain their
+original generator identity, while newly built component receipts describe the
+current provider-owned parser.

@@ -1,6 +1,6 @@
 //! Exact MySQL compiler component for Sifr SQL.
 //!
-//! The crate owns its lexer, LALRPOP grammar, AST, schema normalization,
+//! The crate owns its lexer, statement framing, SQL lowering, AST, schema normalization,
 //! semantic analysis, recovery tokens, migration classification, and editor
 //! facts. It does not contain a runtime driver or use a generic SQL parser.
 
@@ -16,6 +16,7 @@ mod lexer;
 mod migration;
 mod parser;
 mod schema;
+mod statement_framing;
 mod syntax_lowering;
 mod types;
 
