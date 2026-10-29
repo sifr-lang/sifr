@@ -2711,3 +2711,21 @@ relocated source anchors or unchanged classifications. No payload field or runti
 implementation changes. Validate inventory and its full self-tests, source size,
 unchanged emitted selection, and independent review, then resume complete discovery
 with all failed/blocked evidence preserved.
+
+
+Admission candidate `211f508d19729d29ce85d624614936a6e13c0bb4` passes the actual
+inventory, all 15 self-tests, file-size guard and profile validation in a 9.692s
+session. Its emitted merge-correctness plan is exactly identical to the failed
+sweep's selection. The new regression rejects the former discovery boundaries.
+A one-to-one relocation reconciliation maps all 1,154 original rows to distinct
+current rows, including split test helpers; the three classification changes above
+are the only operation/classification changes. No Rust or Cargo inputs change.
+
+Both the failed-admission archive and the 31-payload focused qualification archive
+are SHA-256 verified locally. Focused archive:
+`dev-verify-d18-admission-qualified.tar.gz`,
+`99ad073aa62ae1140f82aeddc8b17548f9e374143010911a84e627d451f986d3`.
+The final qualification-record edit changes only this phase document. Independent
+review of the admission repair remains required before merging and resuming the
+complete normal-allocation sweep. No main-test execution or full-gate timing is
+claimed from admission-only checks.
