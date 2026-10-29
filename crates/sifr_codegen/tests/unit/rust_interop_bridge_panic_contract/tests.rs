@@ -32,8 +32,7 @@ fn rejects_ambiguous_recoverable_panic_unions() {
 
 #[test]
 fn classifies_only_the_nominal_panic_error() {
-    let similarly_named =
-        Type::Result(Box::new(Type::Str), Box::new(error("RustPanicErrorish")));
+    let similarly_named = Type::Result(Box::new(Type::Str), Box::new(error("RustPanicErrorish")));
     let panic_only = Type::Result(Box::new(Type::Str), Box::new(error("RustPanicError")));
 
     assert_eq!(

@@ -161,8 +161,7 @@ fn direct_rust_function_body_converts_int_arguments_and_return() {
         type_params: Vec::new(),
     };
 
-    let body =
-        direct_rust_function_body(&func).expect("direct int interop should lower to a body");
+    let body = direct_rust_function_body(&func).expect("direct int interop should lower to a body");
     let [RustStmt::Return(Some(expr))] = body.as_slice() else {
         panic!("direct int interop should lower to a return expression");
     };

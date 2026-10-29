@@ -247,7 +247,8 @@ fn test_module_body_flows_through_assembled_body_items() {
 #[test]
 fn test_generator_init_emission_is_structured_only() {
     let stmt_entrypoints_src = include_str!("../../../src/structured_stmt_entrypoints.rs");
-    let statement_output_src = include_str!("../../../src/stmt_support_emitter/statement_output.rs");
+    let statement_output_src =
+        include_str!("../../../src/stmt_support_emitter/statement_output.rs");
     assert!(statement_output_src.contains("self.lower_stmt_expr_for_ir(value)"));
     assert!(
         stmt_entrypoints_src

@@ -86,8 +86,7 @@ fn compile_native(source: &str) {
             .arg(output)
             .output()
             .expect("rustc");
-    std::fs::write(directory.path().join("stderr"), &result.stderr)
-        .expect("native diagnostics");
+    std::fs::write(directory.path().join("stderr"), &result.stderr).expect("native diagnostics");
     if !result.status.success() {
         let path = directory.keep();
         panic!(

@@ -250,5 +250,3 @@ pub use compiled_identity::compiled_input_tokens;
 #[cfg(test)]
 #[path = "../tests/unit/generated_rust_canonicalizer_ownership_tests.rs"]
 mod generated_rust_canonicalizer_ownership_tests;
-
-

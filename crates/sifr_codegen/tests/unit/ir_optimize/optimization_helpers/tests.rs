@@ -228,10 +228,7 @@ fn source_only_method_names_require_checked_place_protection() {
 
     let mut unprotected = make_items();
     assert_eq!(
-        remove_unneeded_mutability_in_items(
-            &mut unprotected,
-            &std::collections::HashSet::new()
-        ),
+        remove_unneeded_mutability_in_items(&mut unprotected, &std::collections::HashSet::new()),
         1
     );
 

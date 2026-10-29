@@ -1,7 +1,7 @@
 use super::*;
 use crate::{
-    Type, build_error_type_items, build_file_handle_infra_items,
-    build_file_handle_struct_items, build_io_error_items, render_items, sifr_type_to_rust_type,
+    Type, build_error_type_items, build_file_handle_infra_items, build_file_handle_struct_items,
+    build_io_error_items, render_items, sifr_type_to_rust_type,
 };
 
 fn count_raw_in_type(ty: &RustType) -> usize {
@@ -42,9 +42,7 @@ fn count_raw_in_expr(expr: &RustExpr) -> usize {
             error,
         } => count_raw_in_expr(duration) + count_raw_in_expr(future) + count_raw_in_expr(error),
         RustExpr::FormatMacro { args, .. } => args.iter().map(count_raw_in_expr).sum(),
-        RustExpr::BinOp { left, right, .. } => {
-            count_raw_in_expr(left) + count_raw_in_expr(right)
-        }
+        RustExpr::BinOp { left, right, .. } => count_raw_in_expr(left) + count_raw_in_expr(right),
         RustExpr::UnaryOp { operand, .. }
         | RustExpr::Deref(operand)
         | RustExpr::Clone(operand)
@@ -157,9 +155,7 @@ fn count_raw_in_stmt(stmt: &RustStmt) -> usize {
                 .sum::<usize>()
                 + body.iter().map(count_raw_in_stmt).sum::<usize>()
         }
-        RustStmt::Loop { body } | RustStmt::Block(body) => {
-            body.iter().map(count_raw_in_stmt).sum()
-        }
+        RustStmt::Loop { body } | RustStmt::Block(body) => body.iter().map(count_raw_in_stmt).sum(),
         RustStmt::LocalFn {
             params, ret, body, ..
         } => {
@@ -183,9 +179,7 @@ fn count_raw_in_stmt(stmt: &RustStmt) -> usize {
 
 fn count_raw_in_item(item: &RustItem) -> usize {
     match item {
-        RustItem::Struct { fields, .. } => {
-            fields.iter().map(|(_, t)| count_raw_in_type(t)).sum()
-        }
+        RustItem::Struct { fields, .. } => fields.iter().map(|(_, t)| count_raw_in_type(t)).sum(),
         RustItem::TupleStruct { inner, .. } => count_raw_in_type(inner),
         RustItem::Enum { variants, .. } => variants
             .iter()

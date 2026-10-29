@@ -3,8 +3,7 @@ use crate::render_expr;
 
 #[test]
 fn borrowed_nested_list_values_are_cloned_into_bridge_maps() {
-    let expr =
-        hash_map_to_bridge_index_map_expr("values", &Type::List(Box::new(Type::Str)), true);
+    let expr = hash_map_to_bridge_index_map_expr("values", &Type::List(Box::new(Type::Str)), true);
     let rendered = render_expr(&expr);
 
     assert!(rendered.starts_with("&values.iter()"));

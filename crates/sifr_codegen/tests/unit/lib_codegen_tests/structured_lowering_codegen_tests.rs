@@ -712,7 +712,8 @@ fn test_production_lowering_rules_uses_result_helpers_only() {
     let emitter_structured_stmt_src = include_str!("../../../src/lib_emitter_structured_stmt.rs");
     let lower_expr_src = include_str!("../../../src/lower_expr/leaves_and_plain_calls.rs");
     let module_constants_src = include_str!("../../../src/module_constants.rs");
-    let field_rewrites_src = include_str!("../../../src/expr_render_helpers/field_and_stdlib_rewrites.rs");
+    let field_rewrites_src =
+        include_str!("../../../src/expr_render_helpers/field_and_stdlib_rewrites.rs");
 
     assert!(
         emitter_structured_stmt_src

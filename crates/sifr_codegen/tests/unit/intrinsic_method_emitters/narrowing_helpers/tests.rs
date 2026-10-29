@@ -8,8 +8,10 @@ fn intrinsic_emit_wrapper_layer_is_absent() {
 
 #[test]
 fn registry_arg_lowering_avoids_inline_rawcode_paths() {
-    let collection_methods_src = include_str!("../../../../src/intrinsic_method_emitters/collection_methods.rs");
-    let recursive_exprs_src = include_str!("../../../../src/intrinsic_method_emitters/recursive_exprs.rs");
+    let collection_methods_src =
+        include_str!("../../../../src/intrinsic_method_emitters/collection_methods.rs");
+    let recursive_exprs_src =
+        include_str!("../../../../src/intrinsic_method_emitters/recursive_exprs.rs");
     let field_rewrites_src =
         include_str!("../../../../src/expr_render_helpers/field_and_stdlib_rewrites.rs");
     let prod_src = [

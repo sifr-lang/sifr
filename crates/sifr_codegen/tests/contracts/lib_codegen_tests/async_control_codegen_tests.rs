@@ -1,13 +1,11 @@
-use super::{empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections};
+use super::{
+    empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections,
+};
 use crate::generate_rust;
 use sifr_ir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
 use sifr_lowering::{ExternalDefs, lower_module, lower_module_with_externals};
 use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
-
-
-
-
 
 #[test]
 fn async_callable_parameter_emits_send_future_contract() {
@@ -117,8 +115,6 @@ fn async_dict_comprehension_clones_a_non_copy_key_reused_by_its_value() {
     );
     syn::parse_file(&rust_code).expect("async dictionary comprehension Rust should parse");
 }
-
-
 
 #[test]
 fn test_generate_rust_preserves_loop_else_recursion_and_try_except_returns() {

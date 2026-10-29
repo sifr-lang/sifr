@@ -25,9 +25,7 @@ fn result_callback_adapter_maps_values_and_display_errors() {
     let rendered = render_expr(&call_scoped_callback_adapter_expr(&param));
 
     assert!(rendered.contains("CallScopedCallbackBridge::new"));
-    assert!(
-        rendered.contains("handler(::std::string::String::as_str(&__sifr_callback_arg_0))")
-    );
+    assert!(rendered.contains("handler(::std::string::String::as_str(&__sifr_callback_arg_0))"));
     assert!(rendered.contains("Ok(__sifr_callback_ok) => Ok(())"));
     assert!(rendered.contains("__sifr_callback_error.to_string()"));
 }

@@ -2,8 +2,7 @@ use super::*;
 
 #[test]
 fn affine_union_uses_debug_without_clone_or_display_bounds() {
-    let buffer =
-        Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
+    let buffer = Type::PythonBuffer(Box::new(Type::FixedInt(sifr_type_system::FixedIntType::U8)));
     let members = vec![Type::None, Type::Int, buffer.clone()];
     let mut emitter = RustEmitter::new();
     emitter.register_union_type(&Type::Union(members));

@@ -188,9 +188,7 @@ fn renders_function_with_control_flow_statements() {
                         guard: None,
                         body: vec![RustStmt::Expr(RustExpr::MacroCall {
                             name: "println".to_string(),
-                            args: vec![RustExpr::Literal(RustLiteral::Str(
-                                "non-zero".to_string(),
-                            ))],
+                            args: vec![RustExpr::Literal(RustLiteral::Str("non-zero".to_string()))],
                         })],
                     },
                 ],
@@ -323,9 +321,7 @@ fn compiler_paths_are_absolute_without_rewriting_source_values() {
         "/* std::comment */ ::tokio::spawn // rayon::comment\n::rayon::join"
     );
     assert_eq!(
-        Renderer::render_compiler_path_string(
-            "not_std::value std::value ::std::value xstd::value"
-        ),
+        Renderer::render_compiler_path_string("not_std::value std::value ::std::value xstd::value"),
         "not_std::value ::std::value ::std::value xstd::value"
     );
     assert_eq!(

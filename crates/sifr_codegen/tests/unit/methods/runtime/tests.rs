@@ -18,13 +18,8 @@ fn runtime_registry_requires_exact_owner_and_arity() {
             ("__sifr_scope_spawn_process", 1),
         ] {
             assert!(
-                lower_runtime_receiver_method(
-                    &owner,
-                    method,
-                    &receiver,
-                    &vec![arg.clone(); arity]
-                )
-                .is_some()
+                lower_runtime_receiver_method(&owner, method, &receiver, &vec![arg.clone(); arity])
+                    .is_some()
             );
             assert!(
                 lower_runtime_receiver_method(
@@ -67,13 +62,8 @@ fn runtime_registry_requires_exact_owner_and_arity() {
         "__sifr_spawn_cpu",
     ] {
         assert!(
-            lower_runtime_receiver_method(
-                &join_set,
-                method,
-                &receiver,
-                std::slice::from_ref(&arg)
-            )
-            .is_some()
+            lower_runtime_receiver_method(&join_set, method, &receiver, std::slice::from_ref(&arg))
+                .is_some()
         );
         assert!(lower_runtime_receiver_method(&join_set, method, &receiver, &[]).is_none());
         assert!(

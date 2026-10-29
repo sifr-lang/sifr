@@ -61,8 +61,8 @@ fn support_imports_only_referenced_crate_root_reexports() {
     let prelude = "mod nominals { pub struct ParseError; pub struct Other; } pub use nominals::{ParseError, Other};";
     let support = "pub(crate) fn parse() -> ParseError { ParseError }";
 
-    let imported = import_project_prelude_bindings(prelude, support)
-        .expect("generated owners should parse");
+    let imported =
+        import_project_prelude_bindings(prelude, support).expect("generated owners should parse");
 
     assert!(imported.contains("use crate::ParseError;"));
     assert!(!imported.contains("crate::Other"));
@@ -73,8 +73,8 @@ fn support_does_not_import_already_qualified_root_reexports() {
     let prelude = "mod nominals { pub struct ParseError; } pub use nominals::ParseError;";
     let support = "pub(crate) fn parse() -> crate::ParseError { crate::ParseError }";
 
-    let imported = import_project_prelude_bindings(prelude, support)
-        .expect("generated owners should parse");
+    let imported =
+        import_project_prelude_bindings(prelude, support).expect("generated owners should parse");
 
     assert_eq!(imported, support);
 }

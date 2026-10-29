@@ -24,13 +24,9 @@ fn output(identity: u8) -> StaticSpecializationOutput {
 
 #[test]
 fn emission_contains_static_bytes_identity_and_typed_envelope() {
-    let emitted = emit_static_specialization_programs(
-        &[output(7)],
-        &BTreeSet::from(["Record".to_string()]),
-    );
-    assert!(
-        emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE")
-    );
+    let emitted =
+        emit_static_specialization_programs(&[output(7)], &BTreeSet::from(["Record".to_string()]));
+    assert!(emitted.contains("static __SIFR_STATIC_PROGRAM_BYTES_RECORD_SCHEMA_PACKAGE_DERIVE"));
     assert!(emitted.contains("StaticProgram<Record>"));
     assert!(emitted.contains("StaticProgramIdentity::from_bytes([7, 7"));
     assert!(emitted.contains("StaticProgramValue::Record"));

@@ -5,9 +5,8 @@ fn dependency_roots_are_exact_identifier_intersections() {
     let identifiers = rust_source_identifier_names(
         "fn selected() { dependency(); let _: Option<DependencyType> = None; }",
     );
-    let definitions = rust_source_defined_item_names(
-        "fn dependency() {} fn unused() {} struct DependencyType;",
-    );
+    let definitions =
+        rust_source_defined_item_names("fn dependency() {} fn unused() {} struct DependencyType;");
     let demanded = definitions
         .intersection(&identifiers)
         .cloned()
@@ -33,8 +32,7 @@ fn public_import_roots_seed_matching_transitive_private_definitions() {
             source_path: "stdlib/_sifr/fs.sifr".to_string(),
             source_sha256: "test".to_string(),
             nominal_types: HashSet::new(),
-            rust: "fn read_text() {} const INF: f64 = f64::INFINITY; fn unused() {}"
-                .to_string(),
+            rust: "fn read_text() {} const INF: f64 = f64::INFINITY; fn unused() {}".to_string(),
         },
     );
     stdlib.module_constants.insert(

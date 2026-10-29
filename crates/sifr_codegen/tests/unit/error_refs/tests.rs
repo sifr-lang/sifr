@@ -1,9 +1,7 @@
-use super::{
-    collect_module_intrinsic_function_names, collect_referenced_builtin_error_classes,
-};
+use super::{collect_module_intrinsic_function_names, collect_referenced_builtin_error_classes};
 use sifr_ir::{
-    CompilerIntrinsicId, HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction,
-    HirModule, HirParam, HirStmt, MethodKind,
+    CompilerIntrinsicId, HirAsyncWithKind, HirClass, HirClassKind, HirExpr, HirFunction, HirModule,
+    HirParam, HirStmt, MethodKind,
 };
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::{HashMap, HashSet};

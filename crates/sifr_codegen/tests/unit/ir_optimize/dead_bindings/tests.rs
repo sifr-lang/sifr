@@ -71,7 +71,5 @@ fn retains_unread_binary_expressions_with_unknown_operator_effects() {
     let RustItem::Fn { body, .. } = &items[0] else {
         unreachable!();
     };
-    assert!(
-        matches!(body.first(), Some(RustStmt::Let { name, .. }) if name == "__sifr_result")
-    );
+    assert!(matches!(body.first(), Some(RustStmt::Let { name, .. }) if name == "__sifr_result"));
 }

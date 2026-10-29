@@ -15,8 +15,8 @@ fn error(identity: &str) -> Type {
 fn carrier_is_deterministic_and_keeps_same_basename_identities_distinct() {
     let csv = error("sifr.csv.Error");
     let config = error("sifr.configparser.Error");
-    let carrier = exact_try_error_carrier(&[csv.clone(), config.clone(), csv])
-        .expect("carrier should exist");
+    let carrier =
+        exact_try_error_carrier(&[csv.clone(), config.clone(), csv]).expect("carrier should exist");
     let Type::Union(members) = carrier else {
         panic!("distinct exact errors should form a union carrier");
     };

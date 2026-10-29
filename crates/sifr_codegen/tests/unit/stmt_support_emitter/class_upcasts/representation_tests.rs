@@ -24,8 +24,7 @@ fn representation_conversion_flattens_nested_option_once() {
 fn representation_conversion_maps_option_union_once() {
     let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
     let source = sifr_type_system::safe_optional_result(payload);
-    let target =
-        sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
+    let target = sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
     let rendered = render_conversion(&target, &source);
 
     assert_eq!(rendered.matches(".map(").count(), 1, "{rendered}");

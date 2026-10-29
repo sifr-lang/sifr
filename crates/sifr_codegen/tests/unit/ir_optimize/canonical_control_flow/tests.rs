@@ -126,17 +126,17 @@ fn canonicalizes_returns_only_along_tail_position_paths() {
                         pattern: "0".to_string(),
                         bindings: Vec::new(),
                         guard: None,
-                        body: vec![RustStmt::Return(Some(RustExpr::Literal(
-                            RustLiteral::Int(2),
-                        )))],
+                        body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Int(
+                            2,
+                        ))))],
                     },
                     crate::RustMatchArm {
                         pattern: "_".to_string(),
                         bindings: Vec::new(),
                         guard: None,
-                        body: vec![RustStmt::Return(Some(RustExpr::Literal(
-                            RustLiteral::Int(3),
-                        )))],
+                        body: vec![RustStmt::Return(Some(RustExpr::Literal(RustLiteral::Int(
+                            3,
+                        ))))],
                     },
                 ],
             }]),

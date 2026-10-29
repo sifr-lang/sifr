@@ -800,6 +800,8 @@ include!("method_authority_tests/nonempty_pop.rs");
 
 include!("method_authority_tests/scalar_deque_representation.rs");
 
+#[path = "method_authority_tests/nominal_accessors.rs"]
 mod nominal_accessors;
 
+#[path = "method_authority_tests/runtime_methods.rs"]
 mod runtime_methods;
