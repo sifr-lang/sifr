@@ -1843,3 +1843,70 @@ byte-for-byte identical to the prior qualified artifacts; only the three source-
 receipts change. All four manifests validate, and the words fixture remains untouched.
 The refreshed outputs are transferred with SHA-256 verification before restarting
 integration. No old receipt is relabeled without executing its canonical producer.
+
+#### D11 admission closure and preparation recovery — 2026-10-29
+
+[PR #4521](https://github.com/sifr-lang/sifr/pull/4521) merged exact candidate
+`b74b293944cd7dd0a60cda0d63830f258b839b5b` as
+`b34d432f11fa7e10cb26e20ff9297ad6f7bdcfbd` after independent `SATISFIED` review.
+The focused archive `dev-verify-d11-repair-evidence.tar.gz` has 102 verified
+payloads and SHA-256
+`982322ce1acf3c33512b380dda7858eebd704a983ab0fe6c77f3e333f43e9b5d`.
+The full-profile CI job stopped before preparation because the performance
+reference was absent; this is not CI-green or final phase acceptance.
+
+The subsequent r2 discovery exhausted the aggregate preparation cap: 1787.561s
+outer elapsed, 1750.263s preparation, exit 124. Sanitizer preparation received
+194.940s of the remaining budget. All downstream consumers were blocked, not
+failed assertions. Connectivity recovery confirmed an empty owned process session
+and unchanged source. All 209 archive payloads verify in
+`dev-verify-integrated-d11-discovery-r2-evidence.tar.gz`, SHA-256
+`27a3c9074213afd9f45f79727c028c9a62f6fb7e204a3adae05f854b3c42392f`.
+
+Each unfinished preparation node then ran independently under a 1750s cap:
+
+| Preparation node | Guarded elapsed | Outcome |
+|---|---:|---|
+| Runtime sanitizers | 225.505s | Pass |
+| Fuzz/property | 34.473s | Pass |
+| SQL | 733.479s | Pass |
+| Maintained demos | 17.231s | Pass |
+| Compiler identity | 4.773s | Pass |
+
+Every session ended empty. These are preparation results, not consumer assertion
+counts. The recovery archive includes the initial helper import failure as well
+as the corrected execution; all 75 payloads verify in
+`dev-verify-d11-preparation-recovery-evidence.tar.gz`, SHA-256
+`6e6e5d1ce9b54a1d1db3b520ee930094e50cfa6caf994ce31569da164554155f`.
+
+#### D11 integration reconciliation — in progress
+
+The complete r3 discovery retains candidate `b74b29394`, the inspected selection,
+ordinary execution, failure continuation, and category caps. Preparation passes
+in 212.003s with retained products. This comparison with recovery is a build-state
+difference, not an implementation speedup. The remote execution inputs remain
+frozen while an independent local checkout prepares confirmed repairs.
+
+Three integration failures have been identified:
+
+1. Coverage readiness still classifies the MySQL `custom-build:build-script-build`
+   target removed by D10. Remove only this nonexistent target; retain the library,
+   compiler tests, property tests, and live differential classification. Readiness
+   and all 58 negative controls (including 31 Python-delivery mutations) pass locally.
+2. Sixteen generated diagnostic documents retain driver fixture paths from before
+   D6. Run the canonical `gen-error-docs` producer. Every generated change is a
+   representative-fixture relocation from `src/tests` to `tests/unit`; diagnostic
+   text, IDs, and examples are unchanged. The canonical docs-sync and link checks
+   pass. The other 185 diagnostic variants passed in the frozen discovery.
+3. The external diagnostic launcher selected an older Node runtime instead of the
+   already provisioned, exact editor-owned Node/npm pair. This is a diagnostic
+   environment defect. A separate read-only `node_toolchain_contract` check passes
+   in 0.366s with Node 26.8.2 and npm 12.0.2 at the same source candidate. The other
+   70 distribution variants passed. Preserve the original failed area and require
+   exact Node/npm preflight for subsequent launches; do not change repository pins.
+
+Batch the two source reconciliations with focused checks and independent review
+under the approved intermediate policy. This does not waive the remainder of the
+current discovery, any blocked category recovery, final complete gates, coverage
+and invalidation qualification, or repeated 480-second acceptance. Archive the
+frozen run before replacing any reports or transferring the repaired source.
