@@ -25,6 +25,24 @@ from architecture_policy_test_fixtures import (
 
 
 class PolicyFoundationTests(unittest.TestCase):
+    def test_each_obligation_field_can_distinguish_otherwise_equal_contracts(self):
+        from unsafe_policy_contracts import FIELDS, repeated_contract_groups
+        source = Source('crates/example/src/lib.rs',
+                        'fn first() { unsafe { ptr.read() }; }\n'
+                        'fn second() { unsafe { ptr.read() }; }')
+        sites = unsafe.discover(source)
+        self.assertEqual(len(sites), 2)
+        records = unsafe_records(sites)
+        for row in records['sites']:
+            row['contract'] = {field: f'Borrowed allocation remains valid; site={row["site"]}'
+                               for field in FIELDS}
+        self.assertEqual(len(repeated_contract_groups(sites, records)), 1)
+        for field in FIELDS:
+            with self.subTest(field=field):
+                changed = copy.deepcopy(records)
+                changed['sites'][1]['contract'][field] += '; ownership is transferred'
+                self.assertEqual(repeated_contract_groups(sites, changed), [])
+
     def test_workspace_verification_sources_remain_policy_inputs(self):
         from rust_policy_sites import rust_sources
         with tempfile.TemporaryDirectory() as directory:
