@@ -5169,7 +5169,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
       "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
       "owner": "X02",
       "scope": "local",
@@ -5188,13 +5188,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5206,13 +5206,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5224,13 +5224,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5242,13 +5242,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::1",
               "fingerprint": "856cd4aac9fe5eca5dc49d39b983d300904199dce6db743f95e93f300c48b277",
               "quote": "r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5258,7 +5258,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
       "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
       "owner": "X02",
       "scope": "local",
@@ -5277,13 +5277,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5295,13 +5295,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5313,13 +5313,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5331,13 +5331,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::filter_supports_async_const_unsafe_fn_and_static_mut::generated-rust::2",
               "fingerprint": "8467beae4f3fec65579f8e364a3b7b5efac1b36113646039b26fece94986b06c",
               "quote": "\"pub unsafe fn tick()\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "filter_supports_async_const_unsafe_fn_and_static_mut",
               "quote": "fn filter_supports_async_const_unsafe_fn_and_static_mut() {\n    let code = r#\"\npub static mut COUNTER: i64 = 0;\n\npub const fn seed() -> i64 {\n    COUNTER\n}\n\npub unsafe fn tick() -> i64 {\n    COUNTER + seed()\n}\n\npub async fn root() -> i64 {\n    tick()\n}\n\"#;\n    let imported = HashSet::from([\"root\".to_string()]);\n    let filtered = filter_stdlib_ir_to_needed(code, &imported);\n\n    assert!(filtered.contains(\"pub async fn root()\"));\n    assert!(filtered.contains(\"pub unsafe fn tick()\"));\n    assert!(filtered.contains(\"pub const fn seed()\"));\n    assert!(filtered.contains(\"pub static mut COUNTER\"));\n}",
               "context_fingerprint": "364f9d073fc8e54156a0bfb552fdce378f675d14926af155fd0e87f2a69f7b68"
@@ -5347,7 +5347,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
       "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
       "owner": "X02",
       "scope": "local",
@@ -5366,13 +5366,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5384,13 +5384,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5402,13 +5402,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5420,13 +5420,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::1",
               "fingerprint": "ef1e691c00e3a324a2cf15c097adbb791d3ee40031ac75d97c269280954cbd8b",
               "quote": "r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#"
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5436,7 +5436,7 @@
       }
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+      "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
       "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
       "owner": "X02",
       "scope": "local",
@@ -5455,13 +5455,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5473,13 +5473,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5491,13 +5491,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"
@@ -5509,13 +5509,13 @@
           "proofs": [
             {
               "kind": "operation",
-              "site": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
+              "site": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs::dedup_distinguishes_syn_3_impl_modifiers::generated-rust::2",
               "fingerprint": "254f59296ced58b473418d2304d8596ba05898be5acf76c8bc285ea3706cec9c",
               "quote": "\"unsafe impl Marker for Item\""
             },
             {
               "kind": "code",
-              "path": "crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs",
+              "path": "crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs",
               "scope": "dedup_distinguishes_syn_3_impl_modifiers",
               "quote": "fn dedup_distinguishes_syn_3_impl_modifiers() {\n    let code = r#\"\nstruct Item {}\ntrait Marker {}\n\nimpl Marker for Item {}\nimpl !Marker for Item {}\nunsafe impl Marker for Item {}\n\"#;\n    let mut emitted = RustItemDeduper::default();\n\n    let deduplicated = dedup_rust_items(code, &mut emitted, &HashSet::new());\n\n    assert!(deduplicated.contains(\"impl Marker for Item\"));\n    assert!(deduplicated.contains(\"impl !Marker for Item\"));\n    assert!(deduplicated.contains(\"unsafe impl Marker for Item\"));\n    let parsed = syn::parse_file(&deduplicated).expect(\"deduplicated impls parse\");\n    assert_eq!(\n        parsed\n            .items\n            .iter()\n            .filter(|item| matches!(item, syn::Item::Impl(_)))\n            .count(),\n        3\n    );\n}",
               "context_fingerprint": "ee51342234538ea0dab4ef5a971e3be87413739fe038d110f0db83a356c48fe7"

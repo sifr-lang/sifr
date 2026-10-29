@@ -23,38 +23,13 @@ SELF_TEST_TMP_ROOT = REPO_ROOT / "target"
 NORMAL_DEP_SECTIONS = ("dependencies", "build-dependencies")
 ALL_DEP_SECTIONS = ("dependencies", "build-dependencies", "dev-dependencies")
 
-ALL_SIFR_CRATES = {
-    "sifr",
-    "sifr_analysis",
-    "sifr_codegen",
-    "sifr_diagnostics",
-    "sifr_driver",
-    "sifr_format",
-    "sifr_frontend",
-    "sifr_ir",
-    "sifr_identity",
-    "sifr_ipc",
-    "sifr_lint",
-    "sifr_lowering",
-    "sifr_lsp",
-    "sifr_metadata",
-    "sifr_semantic_services",
-    "sifr_package",
-    "sifr_runtime",
-    "sifr_source",
-    "sifr_stdlib",
-    "sifr_stdlib_artifact",
-    "sifr_stdlib_imports",
-    "sifr_stdlib_manifest",
-    "sifr_sysroot",
-    "sifr_syntax",
-    "sifr_type_system",
-}
+ALL_SIFR_CRATES = semantic_graph.COMPILER_CRATES
 
 IR_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_ipc",
@@ -72,6 +47,7 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_lint",
@@ -87,6 +63,7 @@ GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_ir",
@@ -151,6 +128,12 @@ class CrateRule:
 
 RULES = (
     CrateRule(
+        crate="sifr_generated_rust",
+        allowed_normal_dependencies=frozenset({"syn", "quote", "proc-macro2", "prettyplease", "unicode-ident"}),
+        forbidden_source_references=frozenset({"sifr_ir", "sifr_type_system", "sifr_lowering", "sifr_frontend", "sifr_driver"}),
+        skip_test_sources=True,
+    ),
+    CrateRule(
         crate="sifr_metadata",
         forbidden_all_dependencies=frozenset(
             (ALL_SIFR_CRATES | {"sifr_compiler_services"}) - {"sifr_metadata", "sifr_identity"}),
@@ -162,7 +145,7 @@ RULES = (
     ),
     *(CrateRule(crate=crate, forbidden_all_dependencies=frozenset({"sifr_metadata"}),
                 forbidden_source_references=frozenset({"sifr_metadata"}), scan_manifest_targets=True)
-      for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend")),
+      for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_generated_rust", "sifr_frontend")),
     # Keep identity stateless; its optional manifest parser belongs to build helpers.
     CrateRule(
         crate="sifr_identity",
@@ -619,6 +602,14 @@ def run_self_test() -> int:
     if found:
         failures.append(f"positive fixture unexpectedly failed: {found!r}")
 
+    assert_self_test_case(
+        "generated Rust must remain independent of compiler identities",
+        lambda root: write_manifest(
+            root / "crates" / "sifr_generated_rust", "sifr_generated_rust", ["sifr_type_system"]
+        ),
+        "sifr_generated_rust: unexpected normal dependency",
+        failures,
+    )
     assert_self_test_case(
         "sifr_identity reverse compiler dependency",
         lambda root: write_manifest(

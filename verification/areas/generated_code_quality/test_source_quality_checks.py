@@ -14,7 +14,44 @@ from unittest.mock import patch
 
 from failure_artifacts import preserve_clippy_output
 from fresh_corpus import snapshot
-from source_quality_checks import run_strict_clippy
+from source_quality_checks import (
+    codegen_source_files,
+    gate_intrinsic_panic_lint,
+    run_strict_clippy,
+    scan_codegen_source_emissions,
+)
+
+
+class SourceEmissionTests(unittest.TestCase):
+    def test_forbidden_emissions_are_rejected_in_each_production_owner(self):
+        for owner in ("sifr_codegen", "sifr_generated_rust"):
+            with self.subTest(owner=owner), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                for crate in ("sifr_codegen", "sifr_generated_rust"):
+                    src = root / "crates" / crate / "src"
+                    src.mkdir(parents=True)
+                    (src / "lib.rs").write_text("// production owner\n")
+                source = root / "crates" / owner / "src" / "emitter.rs"
+                source.write_text('fn emit() { output.push_str("value.unwrap()"); }\n')
+                with self.assertRaisesRegex(RuntimeError, "emitted source contains unwrap"):
+                    gate_intrinsic_panic_lint(root, lambda _area, _case, check: check())
+                self.assertEqual(scan_codegen_source_emissions(root),
+                                 [f"{source}:1: emitted source contains unwrap"])
+
+    def test_test_source_exclusions_are_preserved_for_both_owners(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            expected = []
+            for owner in ("sifr_codegen", "sifr_generated_rust"):
+                src = root / "crates" / owner / "src"
+                (src / "tests").mkdir(parents=True)
+                production = src / "emitter.rs"
+                production.write_text('fn emit() { output.push_str("value"); }\n')
+                expected.append(production)
+                for relative in ("tests.rs", "emitter_tests.rs", "tests/nested.rs"):
+                    (src / relative).write_text('fn test() { output.push_str("value.unwrap()"); }\n')
+            self.assertEqual(codegen_source_files(root), sorted(expected))
+            self.assertEqual(scan_codegen_source_emissions(root), [])
 
 
 class ClippyIsolationTests(unittest.TestCase):

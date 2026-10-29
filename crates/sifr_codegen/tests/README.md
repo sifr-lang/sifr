@@ -21,13 +21,14 @@ uv run --project verification --locked cargo test --locked -p sifr_codegen --tes
 uv run --project verification --locked cargo test --locked -p sifr_codegen --lib <filter>
 ```
 
-The complete package check remains:
+The complete codegen and generated-Rust responsibility check is:
 
 ```sh
-uv run --project verification --locked cargo test --locked -p sifr_codegen
+uv run --project verification --locked cargo test --locked -p sifr_codegen -p sifr_generated_rust
 ```
 
-It includes both targets, the native `project_slice_abi` tests, and doctests.
+It includes both codegen targets, the generated-Rust private invariants, the native
+`project_slice_abi` tests, and doctests. See the [syntax owner](../../sifr_generated_rust/README.md).
 Neither focused command substitutes for complete candidate qualification. New
 behavior tests should use the public API when it expresses the contract; private
 invariant tests should stay with their owning module. Keep fixtures, assertions,

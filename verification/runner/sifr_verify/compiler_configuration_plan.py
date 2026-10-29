@@ -12,7 +12,7 @@ ADDITIVE_COMPILER_PACKAGES = frozenset({
     "sifr_frontend", "sifr_analysis", "sifr_lsp", "sifr_package", "sifr_ipc",
     "sifr_stdlib_artifact", "sifr_stdlib_imports", "sifr_stdlib_manifest", "sifr_dependency_contracts", "sifr_type_system",
     "sifr_format", "sifr_lint", "sifr_source", "sifr_sysroot", "sifr_metadata", "sifr_ir",
-    "sifr_codegen", "sifr_driver", "sifr",
+    "sifr_codegen", "sifr_generated_rust", "sifr_driver", "sifr",
 })
 
 @dataclass(frozen=True)

@@ -122,7 +122,7 @@
       "merge_suite": "sifr_codegen:cargo-test",
       "nightly_release_suite": "generated_code_quality:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo test -p sifr_codegen"
+      "reproduction_command": "uv run --project verification --locked cargo test --locked -p sifr_codegen -p sifr_generated_rust"
     },
     {
       "surface_id": "generated_rust_toolchain_survival",
@@ -144,7 +144,7 @@
       "merge_suite": "sifr_codegen:cargo-test",
       "nightly_release_suite": "generated_code_quality:full",
       "regression_suite": "regression:fixedbugs",
-      "reproduction_command": "cargo test -p sifr_codegen"
+      "reproduction_command": "uv run --project verification --locked cargo test --locked -p sifr_codegen -p sifr_generated_rust"
     },
     {
       "surface_id": "runtime_platform_golden",

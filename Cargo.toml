@@ -40,6 +40,7 @@ members = [
     "crates/sifr_lsp",
     "crates/sifr_package",
     "crates/sifr_codegen",
+    "crates/sifr_generated_rust",
     "crates/sifr_cache_storage",
     "crates/sifr_compiler_services",
     "crates/sifr_semantic_services",
@@ -125,6 +126,7 @@ sifr_analysis = { path = "crates/sifr_analysis" }
 sifr_lsp = { path = "crates/sifr_lsp" }
 sifr_package = { path = "crates/sifr_package" }
 sifr_codegen = { path = "crates/sifr_codegen" }
+sifr_generated_rust = { path = "crates/sifr_generated_rust" }
 sifr_cache_storage = { path = "crates/sifr_cache_storage" }
 sifr_compiler_services = { path = "crates/sifr_compiler_services" }
 sifr_driver = { path = "crates/sifr_driver" }
@@ -280,6 +282,8 @@ opt-level = 2
 [profile.dev.package.sifr_type_system]
 opt-level = 2
 [profile.dev.package.sifr_codegen]
+opt-level = 2
+[profile.dev.package.sifr_generated_rust]
 opt-level = 2
 
 # These syntax libraries execute on every development-compiler bootstrap.

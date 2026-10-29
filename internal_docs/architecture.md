@@ -11,6 +11,12 @@
   Codegen public emission contracts use one integration target against the production library;
   private invariants retain their unit-module access. See [codegen test ownership](../crates/sifr_codegen/tests/README.md).
 
+- Generated Rust syntax normalization, support pruning and visibility live in
+  `sifr_generated_rust`, independently of HIR, type-system and compiler build services.
+  Codegen supplies language-owned naming replacements and builtin-error catalogs.
+  Private syntax tests stay with that authority; full source-to-emission contracts
+  remain in codegen. [Generated Rust ownership](../crates/sifr_generated_rust/README.md).
+
 - Source method-call HIR carries an explicit typed dispatch authority alongside receiver convention, checked mutable places and source ranges. Typed lowering assigns builtin/intrinsic, protocol, local or inherited nominal, imported, or Rust-adapted authority from the resolved receiver and declaration before publishing HIR; unsupported pairs receive diagnostics, and an unclassified call cannot leave lowering. The indexed metadata v5 wire record round-trips that authority and rejects older or malformed authority records.
   The validated builtin `len(...)` producer assigns builtin authority for its supported optional payloads while retaining the optional receiver representation. This admission does not extend to direct optional methods. Codegen routes typed defaultdict bucket mutations to the canonical insertion authority before plain-dict representation shortcuts.
 - LSP embedding entrypoints require the caller's explicit compiler context (or product identity for the identity entrypoint), carried into session/workspace construction before any queries. Dependency-bound test identity construction is confined to the test session constructor.
@@ -374,6 +380,7 @@ sifr/
     sifr_type_system/       (type definitions, inference, checking, subtyping)
     sifr_stdlib_artifact/   (checked stdlib data shared by metadata and native emission; no emitter dependency)
     sifr_codegen/           (Rust source code generation from HIR via structured Rust IR)
+    sifr_generated_rust/    (generated Rust syntax normalization and support ownership)
     sifr_cache_storage/     (private cache entry, lease, bounded wait, and atomic publication primitives)
     sifr_semantic_services/ (checked stdlib, shared metadata reader, SQL frontend/profile services)
     sifr_compiler_services/ (native stdlib and metadata production; Python services; generated preview and saved editor checks)

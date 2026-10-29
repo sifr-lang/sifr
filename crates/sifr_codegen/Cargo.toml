@@ -8,6 +8,7 @@ rust-version = { workspace = true }
 license = { workspace = true }
 
 [dependencies]
+sifr_generated_rust = { workspace = true }
 sifr_stdlib_artifact = { workspace = true }
 serde_json = { workspace = true }
 # Wired early for diagnostic registry migration; compiler emission migration uses this dependency.
@@ -22,7 +23,6 @@ syn = { workspace = true, features = ["printing", "visit-mut"] }
 prettyplease = "0.3.0"
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
-unicode-ident = { workspace = true }
 bigdecimal = { workspace = true }
 rust_decimal = { workspace = true }
 
@@ -41,4 +41,4 @@ sifr_identity = { workspace = true, features = ["build"] }
 
 [package.metadata.sifr-build]
 production-inputs = ["src", "build.rs"]
-production-workspace-inputs = ["crates/sifr_structural_identity", "third_party/ruff"]
+production-workspace-inputs = ["crates/sifr_generated_rust", "crates/sifr_structural_identity", "third_party/ruff"]

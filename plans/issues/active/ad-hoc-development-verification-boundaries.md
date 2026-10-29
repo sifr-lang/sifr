@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D14; final phase qualification open
-- Latest delivery: D14 bounded CLI allocation; corrected matched performance qualification
+- Status: in progress; intermediate deliveries through D16; final phase qualification open
+- Latest delivery: D16 codegen test ownership; D17 compiler boundary investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2470,9 +2470,14 @@ validation above supplies the completed evidence.
 The 272-payload complete archive is SHA-256 verified:
 `dev-verify-d16-qualification.tar.gz`,
 `92ef330c99bd6192391db06e45b6099f1b52eb4a08d411713dd4de8f7954f2e4`.
-Draft PR #4528 awaits independent exact-candidate review and merge. Later
-qualification-record/README clarification edits are documentation only; they do
-not change the validated implementation inputs.
+PR [#4528](https://github.com/sifr-lang/sifr/pull/4528) merged as
+`a7cae3e12add975767e3dea1e9f0c3aa6a191b35`. Independent Claude Opus review of
+`e919b8f14e4f43a64138b1ce9488c82d88cad475` returned SATISFIED with no blockers.
+The final qualification-record/README edits are documentation only; reviewed and
+validated implementation inputs match. Review response SHA-256:
+`7554e589d8f5fdc1b54efbfe02438e9b83dde00e2d6edf5a4794cf10a69dd30a`.
+The unused shared helper and existing CLI lint warnings are deferred follow-ups,
+not reasons to repeat completed qualification.
 
 The 149.777s unit-target assertion and 453.473s implementation cycle remain above
 the preparation design budget. The next macro item must address substantial
@@ -2481,3 +2486,154 @@ measured units and coherent ownership before choosing crate extraction. Do not
 keep optimizing the already short public-contract cycle. The 90s preparation
 and 480s complete gate targets, complete phase gates, invalidation qualification,
 and any unresolved coverage obligations remain open.
+
+### D17 investigation — generated Rust compilation ownership
+
+The D16 implementation edit rebuilds a codegen unit-test executable and two normal
+codegen library configurations. The normal libraries use identical codegen features
+and optimization settings but differ in nine direct dependency fingerprints.
+This is an isolated codegen-test/CLI sequence: the canonical gate already groups
+additive compiler packages. Do not claim the complete gate lacks that grouping,
+or align unrelated feature configurations merely to force cache reuse.
+
+The generated Rust normalizer contains 107 source files and 26,951 lines. Its
+syntax transformations are coupled to adjacent generated-support filtering and
+visibility rules, plus compiler-owned nominal naming and builtin-error catalogs.
+Investigate a single generated-Rust responsibility with a narrow production API;
+keep language identities in their existing authority and pass resolved names or
+explicit catalogs across the boundary. Do not copy catalogs, introduce test-only
+public APIs, or drag HIR/type-system dependencies into a purported syntax-only
+owner. Existing production-workspace-inputs package ownership recursively respects
+the dependency's production-inputs, so relocated tests must remain excluded.
+
+A candidate must retain optimization semantics, every existing assertion and
+native ABI check, complete coverage selection, source-bound identity, private
+invariant tests, and byte-equivalent generated outputs. Reconcile test discovery
+across owners. Compare complete retained implementation and test-edit cycles with
+D16, not initial configuration preparation. Require a material measured saving
+before adoption; use the 90s preparation budget to decide whether more work is
+needed, and stop optimizing categories already within budget. Run applicable
+policy/identity regressions and independent exact-candidate review. Full phase
+coverage, ordinary invalidation scenarios and the 480s gate remain open.
+
+
+#### D17 implementation — generated Rust syntax owner
+
+The candidate extracts normalization, generated-support filtering, visibility and
+macro-syntax invariants into `sifr_generated_rust`. Its production dependencies are
+only Rust syntax libraries. Language nominal identities and builtin-error catalogs
+remain in codegen/type-system ownership and are passed explicitly. The codegen
+facade retains its public normalization contract. Both crates retain opt-level 2;
+this is an ownership change, not a weaker compilation profile.
+
+Private invariants move with their implementation; frontend-to-native integration
+contracts remain in codegen. The expected original discovery union is unchanged:
+1,220 codegen unit tests, 268 generated-Rust unit tests, and 297 public emission
+contracts, plus the existing 18 native ABI checks. No test-only public fields or
+syntax APIs were introduced. All 31 split support-filter test functions retain
+identical assertion tokens and literals; four language-identity tests remain in
+codegen and 27 syntax tests move. A task-local integration helper independently
+checks the emitted declaration instead of accessing the syntax owner's private
+parser fields.
+
+All four delivery profiles retain their previous selections and enroll the new
+crate alongside codegen. The additive compiler preparation/execution group,
+coverage inventory, dependency-direction checks, semantic/native dependency graph,
+method-authority scanner and generated unsafe-ABI scanner include the new owner.
+Production input ownership recurses into the new package's declared `src` inputs;
+its test-only files remain outside production identity.
+
+#### D17 qualification — retained edit cycles and unchanged generated output
+
+Rust implementation candidate `ca428c254534d1928f234224602a1bd681227bac`
+passes the complete affected test selection, typechecking and production CLI build
+in 260.846s. That candidate-preparation run is not a recurring speedup claim.
+Every subsequent control executes all 1,785 original test identities and 18 native
+ABI tests, with no ignored tests and an empty owned process session afterward.
+
+| Retained scenario | D16 complete cycle | D17 complete cycle | D17 tests / CLI commands |
+|---|---:|---:|---:|
+| Unchanged | 25.205s | 25.196s | 20.605s / 0.568s |
+| Private assertion edit | 149.777s | 29.208s | 24.393s / 0.659s |
+| Normalization implementation edit | 453.473s | 226.822s | 207.261s / 15.603s |
+| Emitter implementation edit | Not measured | 119.768s | 89.377s / 26.371s |
+
+These are separate scenarios, not additive gate components. The private assertion
+cycle improves 80.5%; normalization implementation improves 50.0%. The emitter
+control has no matched before measurement. Cargo reports 186s test preparation for
+the normalization edit and 69s for the emitter edit, before their respective CLI
+builds. The 90s preparation budget remains unmet; the already short private-test
+category needs no further optimization. Actual Cargo artifact evidence confirms
+that the extracted production library is shared between tests and the CLI rather
+than duplicated for their different codegen configurations.
+
+All diagnostic source edits are restored. The private-test control retains the
+original CLI bytes; both implementation controls rebuild and change the CLI.
+Restoration reproduces its original SHA-256
+`7cce985d797fc42d51681d26fa490b17a413ea2a330ac2a70494d19ec77c557d`.
+Source comparison records 133 relocated files with identical tokens and ten
+explicit boundary edits. All 31 split support-filter test functions retain their
+tokens and literals. Six added test-helper method-policy sites remove none of the
+previous 6,458; all 235 authority-node meanings remain.
+
+The full policy sweep passes 14 checks, including formatting, size, method authority
+and its 19 self-tests, dependency boundaries and negative controls, 14 execution
+configuration tests, 11 build-identity tests, filesystem policy, emitted inventory,
+coverage readiness and profile checks. Its unsafe inventory check correctly fails
+on 16 code-proof paths for two moved tests. Data-only correction
+`7dad324982ad3764708a1c39e699b697060716e5` fixes those paths without changing proof
+text, fingerprints or Rust implementation. The original failed run remains failed;
+the corrected inventory is checked separately. The six emitted plans (four delivery
+profiles and create-PR/merge correctness scopes) preserve all previous selections;
+only the new mandatory crate membership is added.
+
+All 93 selected generated projects materialize successfully in 179.183s and compare
+byte-for-byte against retained baseline `368ac774c1c2eaba6b910d388ac3d4e004086721`,
+allowing only exact candidate revision substitution in Cargo.toml/Cargo.lock.
+The first locked fetch fails because the candidate revision is not yet published.
+After publishing the branch, recovery reuses the recorded trees and unchanged CLI;
+it does not repeat materialization or reinterpret the failed fetch as a pass.
+Recovery passes all 93 locked fetches in a 43.214s guard. The corrected unsafe
+inventory passes remotely in a 28.209s guard, retaining all 410 sites and three
+partitions. A structural comparison proves that the only difference from the Rust
+qualified candidate is those 16 proof paths; the CLI still has the qualified hash.
+All validation sessions end empty, with no reserve cancellation or unexpected
+source mutation.
+
+The complete 814-payload archive, including failed attempts and the 93 generated
+trees, is verified locally: `dev-verify-d17-qualification.tar.gz`, SHA-256
+`43508c09fbd70ee44d38295f9227d217fa8b46cad44d41b952431f9029df5de6`.
+The remaining qualification-record update is documentation only; source and policy
+inputs match their recorded candidates. Independent exact-candidate review remains
+required before merge. Complete phase coverage, ordinary invalidation qualification
+and the 480s gate remain open.
+
+
+#### D17 independent review correction — preserve the emitted-source guard
+
+Initial review of `a4d53785b9f4ae304ef78a8071751abf76928963` returns NOT SATISFIED:
+the intrinsic-panic/source-emission guard still walks only codegen, dropping 16
+matching production lines after relocation. No current forbidden emission was
+found, but future detection coverage was lost. Candidate
+`28828536aa46aedb1aafa87b9d6552e72b1d5763` restores the same scan and test-file
+exclusions across both production owners. Two new regression tests reject the old
+single-owner scanner and pass after repair. The canonical intrinsic-panic-lint
+case, all 18 source-quality helper tests, coverage matrix and size guard pass in a
+7.190s guarded session. Both codegen surface reproduction commands now select both
+packages; their actual profile enrollment was already complete.
+
+The 23-payload remediation archive is `dev-verify-d17-review-remediation.tar.gz`,
+SHA-256 `f04c210beb87d9b25a32ef10cac4f5041952fef55fb46321a2f0b6e603c2aa29`.
+No Rust/compiler/Cargo input changes in the remediation; retain the completed
+1,803-test, edit-cycle, generated-byte, identity and unrelated policy evidence.
+The source guard and its new tests are independently reviewed again at the final
+candidate. The first review remains rejected evidence, not a pass.
+
+Follow-up assigned to the DX metadata-inventory owner: the already stale
+`internal_docs/compiler_dx_metadata_consumers.md` / `check_dx_metadata_inventory.py`
+need reconciliation, including the new syntax owner and its three moved
+project-support-pruning consumer sites. This predates D17 and is not selected by
+its affected gate; do not silently repair that separate inventory here. The
+reviewer's task-local parser suggestion needs no change: malformed syntax remains
+covered by the relocated private invariant tests. Final phase timing and complete
+coverage qualification remain open.

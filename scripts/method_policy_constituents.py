@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from rust_policy_sites import Source, fingerprint
 
-CODEGEN = 'crates/sifr_codegen/'
+CODEGEN = ('crates/sifr_codegen/', 'crates/sifr_generated_rust/')
 from method_policy_nodes import CONSTITUENTS, ADAPTATIONS, ANALYSES, ROUTERS
 
 

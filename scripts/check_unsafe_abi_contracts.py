@@ -39,7 +39,7 @@ def discover(source: Source) -> list[Site]:
     spans = []
     for i, t in enumerate(ts):
         if t.kind == 'string':
-            if 'sifr_codegen' in source.path and re.search(r'\bunsafe\b', t.value):
+            if source.path.startswith(('crates/sifr_codegen/', 'crates/sifr_generated_rust/')) and re.search(r'\bunsafe\b', t.value):
                 spans.append(('generated-rust', i, i))
             continue
         if t.kind != 'ident' or t.value != 'unsafe':

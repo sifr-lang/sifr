@@ -28,9 +28,13 @@ SOURCE_FORBIDDEN_POLICY_IDS = {
 
 
 def codegen_source_files(repo_root: Path) -> list[Path]:
-    src_root = repo_root / "crates" / "sifr_codegen" / "src"
+    src_roots = (
+        repo_root / "crates" / owner / "src"
+        for owner in ("sifr_codegen", "sifr_generated_rust")
+    )
     return sorted(
         path
+        for src_root in src_roots
         for path in src_root.rglob("*.rs")
         if path.name not in {"tests.rs"}
         and not path.name.endswith("_tests.rs")

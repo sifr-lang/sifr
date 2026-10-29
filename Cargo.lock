@@ -7423,6 +7423,7 @@ dependencies = [
  "rust_decimal",
  "serde_json",
  "sifr_diagnostics",
+ "sifr_generated_rust",
  "sifr_identity",
  "sifr_ir",
  "sifr_lowering",
@@ -7433,7 +7434,6 @@ dependencies = [
  "static_assertions",
  "syn 3.0.5",
  "tempfile",
- "unicode-ident",
 ]
 
 [[package]]
@@ -7606,6 +7606,19 @@ dependencies = [
  "sifr_structural_identity",
  "sifr_syntax",
  "sifr_type_system",
+]
+
+[[package]]
+name = "sifr_generated_rust"
+version = "0.0.0"
+dependencies = [
+ "prettyplease 0.3.0",
+ "proc-macro2",
+ "quote",
+ "sifr_type_system",
+ "syn 3.0.5",
+ "tempfile",
+ "unicode-ident",
 ]
 
 [[package]]

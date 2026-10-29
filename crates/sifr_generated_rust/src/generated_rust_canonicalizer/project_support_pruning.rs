@@ -2,27 +2,37 @@ use super::impl_self_type_name;
 use super::method_demand::{demanded_inherent_method_names, prune_inherent_methods};
 use std::collections::HashSet;
 
-pub(crate) fn prune_generated_project_owners(
+pub fn prune_generated_project_owners(
     prelude_source: &str,
     support_source: &str,
     body_consumers: &[&str],
+    builtin_error_classes: &[&str],
 ) -> Result<(String, String), String> {
-    let mut prelude =
-        prune_generated_project_prelude_for_consumers(prelude_source, body_consumers)?;
+    let mut prelude = prune_generated_project_prelude_for_consumers(
+        prelude_source,
+        body_consumers,
+        builtin_error_classes,
+    )?;
     let mut support = String::new();
     for _ in 0..16 {
         let support_consumers = std::iter::once(prelude.as_str())
             .chain(body_consumers.iter().copied())
             .collect::<Vec<_>>();
-        let next_support =
-            prune_generated_support_for_consumers(support_source, &support_consumers)?;
+        let next_support = prune_generated_support_for_consumers(
+            support_source,
+            &support_consumers,
+            builtin_error_classes,
+        )?;
         let prelude_consumers = body_consumers
             .iter()
             .copied()
             .chain((!next_support.trim().is_empty()).then_some(next_support.as_str()))
             .collect::<Vec<_>>();
-        let next_prelude =
-            prune_generated_project_prelude_for_consumers(prelude_source, &prelude_consumers)?;
+        let next_prelude = prune_generated_project_prelude_for_consumers(
+            prelude_source,
+            &prelude_consumers,
+            builtin_error_classes,
+        )?;
         if next_prelude == prelude && next_support == support {
             return Ok((next_prelude, next_support));
         }
@@ -35,6 +45,7 @@ pub(crate) fn prune_generated_project_owners(
 pub(crate) fn prune_generated_support_for_consumers(
     support_source: &str,
     consumer_sources: &[&str],
+    builtin_error_classes: &[&str],
 ) -> Result<String, String> {
     let support_file = syn::parse_file(support_source)
         .map_err(|error| format!("failed to parse generated project support: {error}"))?;
@@ -63,7 +74,7 @@ pub(crate) fn prune_generated_support_for_consumers(
     let mut selected_names = crate::stdlib_filter::rust_source_defined_item_names(&selected_seed);
     selected_names.extend(crate::error_refs::collect_source_builtin_error_classes(
         &selected_seed,
-        crate::BUILTIN_ERROR_CLASSES,
+        builtin_error_classes,
     ));
 
     let mut demand_file = support_file.clone();
@@ -89,6 +100,7 @@ pub(crate) fn prune_generated_support_for_consumers(
 pub(crate) fn prune_generated_project_prelude_for_consumers(
     prelude_source: &str,
     consumer_sources: &[&str],
+    builtin_error_classes: &[&str],
 ) -> Result<String, String> {
     let mut prelude = syn::parse_file(prelude_source)
         .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
@@ -161,7 +173,11 @@ pub(crate) fn prune_generated_project_prelude_for_consumers(
     let nested_consumers = std::iter::once(outer_source.as_str())
         .chain(consumer_sources.iter().copied())
         .collect::<Vec<_>>();
-    let pruned_nested = prune_generated_support_for_consumers(&nested_source, &nested_consumers)?;
+    let pruned_nested = prune_generated_support_for_consumers(
+        &nested_source,
+        &nested_consumers,
+        builtin_error_classes,
+    )?;
     let nested_file = syn::parse_file(&pruned_nested)
         .map_err(|error| format!("failed to parse pruned project nominals: {error}"))?;
     if let syn::Item::Mod(module) = &mut prelude.items[nominal_index]
@@ -201,9 +217,7 @@ fn nominal_reexport_name(item: &syn::Item) -> Option<String> {
     }
 }
 
-pub(crate) fn import_root_bindings_in_project_nominals(
-    prelude_source: &str,
-) -> Result<String, String> {
+pub fn import_root_bindings_in_project_nominals(prelude_source: &str) -> Result<String, String> {
     let mut prelude = syn::parse_file(prelude_source)
         .map_err(|error| format!("failed to parse generated project prelude: {error}"))?;
     for item in &mut prelude.items {
@@ -223,7 +237,7 @@ pub(crate) fn import_root_bindings_in_project_nominals(
     Ok(prettyplease::unparse(&prelude))
 }
 
-pub(crate) fn import_generated_support_in_project_nominals(
+pub fn import_generated_support_in_project_nominals(
     prelude_source: &str,
     support_source: &str,
 ) -> Result<String, String> {
@@ -252,7 +266,7 @@ pub(crate) fn import_generated_support_in_project_nominals(
     Ok(prettyplease::unparse(&prelude))
 }
 
-pub(crate) fn import_project_prelude_bindings(
+pub fn import_project_prelude_bindings(
     prelude_source: &str,
     support_source: &str,
 ) -> Result<String, String> {

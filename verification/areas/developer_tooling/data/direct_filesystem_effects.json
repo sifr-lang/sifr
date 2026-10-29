@@ -5476,28 +5476,28 @@
       "classification": "build-identity"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/api_cleanup/visibility_cleanup/boundary_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/api_cleanup/visibility_cleanup/boundary_tests.rs",
       "symbol": "compile_native",
       "operation": "write",
       "site": "std::fs::write(&input, source).expect(\"native source\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/api_cleanup/visibility_cleanup/boundary_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/api_cleanup/visibility_cleanup/boundary_tests.rs",
       "symbol": "compile_native",
       "operation": "write",
       "site": "std::fs::write(directory.path().join(\"stderr\"), &result.stderr).expect(\"native diagnostics\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/field_name_cleanup/tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/field_name_cleanup/tests.rs",
       "symbol": "compile_modules",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&directory).expect(\"unique compiler output directory\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/field_name_cleanup/tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/field_name_cleanup/tests.rs",
       "symbol": "compile_modules",
       "operation": "remove_dir_all",
       "site": "std::fs::remove_dir_all(&directory).expect(\"remove owned test artifacts\");",
@@ -5532,28 +5532,28 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
       "symbol": "compile_pair",
       "operation": "write",
       "site": "std::fs::write(&input, text).expect(\"write native input\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/syntax_cleanup/method_slot_borrow_tests.rs",
       "symbol": "compile_pair",
       "operation": "write",
       "site": "std::fs::write(directory.join(format!(\"{name}.stderr\")), &output.stderr)",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer/syntax_cleanup/mutability_cleanup_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer/syntax_cleanup/mutability_cleanup_tests.rs",
       "symbol": "canonical_and_compile",
       "operation": "create_dir",
       "site": "std::fs::create_dir(&directory).expect(\"unique retained native evidence\");",
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_codegen/tests/unit/generated_rust_canonicalizer_capture_tests.rs",
+      "path": "crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer_capture_tests.rs",
       "symbol": "assert_native_output",
       "operation": "write",
       "site": "std::fs::write(&source, &output).expect(\"write canonical native regression\");",

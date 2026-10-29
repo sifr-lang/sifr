@@ -1,0 +1,24 @@
+[package]
+name = "sifr_generated_rust"
+version = "0.0.0"
+publish = false
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+unicode-ident = { workspace = true }
+syn = { workspace = true, features = ["printing", "visit-mut"] }
+prettyplease = "0.3.0"
+proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
+quote = "1.0.47"
+
+[dev-dependencies]
+sifr_type_system = { workspace = true }
+tempfile = "3.27.0"
+
+[lints]
+workspace = true
+
+[package.metadata.sifr-build]
+production-inputs = ["src"]

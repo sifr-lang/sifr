@@ -647,32 +647,15 @@ fn collect_text_error_refs(
     referenced: &mut ErrorReferences,
     builtin_error_classes: &[&str],
 ) {
-    let mut token = String::new();
-    for ch in text.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '_' {
-            token.push(ch);
-            continue;
-        }
-        if !token.is_empty() {
-            if builtin_error_classes.contains(&token.as_str()) {
-                referenced.builtins.insert(token.clone());
-            }
-            token.clear();
-        }
-    }
-    if !token.is_empty() && builtin_error_classes.contains(&token.as_str()) {
-        referenced.builtins.insert(token);
-    }
+    referenced
+        .builtins
+        .extend(collect_source_builtin_error_classes(
+            text,
+            builtin_error_classes,
+        ));
 }
 
-pub(crate) fn collect_source_builtin_error_classes(
-    source: &str,
-    builtin_error_classes: &[&str],
-) -> HashSet<String> {
-    let mut referenced = ErrorReferences::default();
-    collect_text_error_refs(source, &mut referenced, builtin_error_classes);
-    referenced.builtins
-}
+pub(crate) use sifr_generated_rust::collect_source_builtin_error_classes;
 
 #[cfg(test)]
 #[path = "../tests/unit/error_refs/tests.rs"]
