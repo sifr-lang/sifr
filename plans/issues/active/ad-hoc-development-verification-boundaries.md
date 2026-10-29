@@ -3219,3 +3219,22 @@ remain the already-qualified D20/D22 inputs; no duplicate runtime qualification 
 needed if an exact changed-path audit proves that binding on the final candidate.
 For subsequent source-fixture edits, run these dependent inventories with focused
 validation before review; do not rely only on frontend ownership classification.
+
+
+#### D23 inventory reconciliation delivery — 2026-10-29
+
+[PR #4535](https://github.com/sifr-lang/sifr/pull/4535) merges as
+`2459704782a776d6e1302d830622c1f0cfe08c3b`; reviewed candidate
+`0a507c18592e2952800c75221c4294ec1b606e60`. The merged tree equals the reviewed
+candidate. All six affected guard/self-test commands pass, and independent review
+is SATISFIED without blockers. Response SHA-256:
+`b66192067f85a647b0b7cce2eb5cbbe511497a6fe9d4ff823bbda512f69f0cc6`.
+The reviewer independently reruns all three actual inventory checks. Runtime,
+compiler, tests, runner, profiles and locks remain unchanged from D22 qualification.
+
+Follow-up owned by verification infrastructure: automate dependent inventory checks
+for fixture-source changes so location/fingerprint reconciliation is not missed by
+focused validation. The failed first discovery remains failed. Next run is
+`dev-verify-d23-discovery-r2`, the full canonical correctness selection with failure
+continuation and the same category/resource limits. This delivery closes only the
+inventory repair; integrated discovery and final phase qualification remain open.
