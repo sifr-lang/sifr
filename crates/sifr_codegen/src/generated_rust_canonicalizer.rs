@@ -86,28 +86,37 @@ pub fn canonicalize_generated_rust_project_with_names(
     let preserve_exported = sources.len() > 1;
     let fields = field_name_cleanup::canonicalize_fields(sources)?;
     let names = identifier_canonicalizer::project_name_map(&fields)?;
-    let canonical = fields
+    let prepared = fields
         .into_iter()
         .map(|(module, source)| {
-            canonicalize_source_with_names(&source, &names, preserve_exported)
-                .map(|source| (module, source))
+            prepare_source_with_names(&source, &names).map(|source| (module, source))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
+    // Resolve compiler-owned imports before expensive semantic normalization.
+    // Otherwise an overbroad support import keeps dead owners alive through the
+    // first normalization, only for the final import cleanup to repeat it all.
+    // Later transforms can remove more references, so final fixed-point cleanup
+    // remains authoritative below.
+    let canonical = support_import_cleanup::refresh_once(prepared)?
+        .into_iter()
+        .map(|(module, source)| {
+            let pruned = prune_closed_generated_binary(&source)?.unwrap_or(source);
+            canonicalize_named_source(pruned, preserve_exported).map(|source| (module, source))
+        })
+        .collect::<Result<BTreeMap<_, _>, String>>()?;
     Ok((
         support_import_cleanup::refresh_support_imports(canonical, preserve_exported)?,
         names,
     ))
 }
 
-fn canonicalize_source_with_names(
+fn prepare_source_with_names(
     source: &str,
     names: &BTreeMap<String, String>,
-    preserve_exported: bool,
 ) -> Result<String, String> {
     let structurally_pruned = prune_closed_generated_binary(source)?;
     let source = structurally_pruned.as_deref().unwrap_or(source);
-    let canonical = identifier_canonicalizer::canonicalize_identifiers(source, names)?;
-    canonicalize_named_source(canonical, preserve_exported)
+    identifier_canonicalizer::canonicalize_identifiers(source, names)
 }
 
 fn canonicalize_named_source(

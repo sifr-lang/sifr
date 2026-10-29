@@ -26,7 +26,9 @@ pub(super) fn refresh_support_imports(
     Err("generated support imports did not reach a fixed point".to_string())
 }
 
-fn refresh_once(sources: BTreeMap<String, String>) -> Result<BTreeMap<String, String>, String> {
+pub(super) fn refresh_once(
+    sources: BTreeMap<String, String>,
+) -> Result<BTreeMap<String, String>, String> {
     let owner = super::canonicalize_generated_rust_identifier("__sifr_generated_support");
     let mut support = None;
     let mut inherent = crate::stdlib_filter::InherentMethods::new();

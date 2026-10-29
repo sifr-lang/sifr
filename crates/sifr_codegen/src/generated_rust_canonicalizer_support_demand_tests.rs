@@ -1,6 +1,31 @@
 use super::canonicalize_generated_rust_source;
 
 #[test]
+fn support_import_cleanup_preserves_transitive_calls_and_reaches_a_fixed_point() {
+    let source = r#"
+        mod __sifr_generated_support {
+            pub fn retained(value: i64) -> i64 { helper(value) }
+            fn helper(value: i64) -> i64 { value + 1 }
+            pub fn unused(value: i64) -> i64 { value - 1 }
+        }
+        mod consumer {
+            use crate::__sifr_generated_support::{retained, unused};
+            pub fn run(value: i64) -> i64 { retained(value) }
+        }
+        fn main() { println!("{}", consumer::run(41)); }
+    "#;
+    let canonical = canonicalize_generated_rust_source(source).expect("support demand");
+    assert!(canonical.contains("fn retained("), "{canonical}");
+    assert!(canonical.contains("fn helper("), "{canonical}");
+    assert!(!canonical.contains("unused"), "{canonical}");
+    assert!(canonical.contains("consumer::run(41)"), "{canonical}");
+    assert_eq!(
+        canonicalize_generated_rust_source(&canonical).expect("stable support demand"),
+        canonical
+    );
+}
+
+#[test]
 fn retains_exact_support_demand_from_a_sibling_generated_module() {
     let source = r#"
         mod generated_support {

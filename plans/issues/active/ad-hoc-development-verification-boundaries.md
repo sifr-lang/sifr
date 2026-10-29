@@ -2252,3 +2252,63 @@ source replacement, changed-input invalidation and cleanup protection. Verify
 actual reused units and fresh runtime assertions, not fingerprint equality alone.
 Prioritize the largest current cost; do not turn this lead into an implementation
 before the baseline demonstrates value. All final phase obligations remain open.
+
+
+### D15 measured decision — reject finite materialization batching
+
+The isolated prototype `368ac774c1c2eaba6b910d388ac3d4e004086721` retains
+all 93 public scalar materializations, locked fetches and exact output-tree parity.
+The matched comparison takes 128.864s scalar versus 125.426s batched for
+materialization: 2.668% lower elapsed time. This does not justify another protocol;
+do not merge the prototype or change production preparation to use it. Total
+materialization plus fetch is 165.330s versus 149.436s, but the scalar side includes
+first-revision fetch work and is not a matched recurring-cost saving. Both guards
+finish with empty owned sessions. The complete experiment archive is
+`dev-verify-d15-batch-experiment.tar.gz`, SHA-256
+`324409f1c7ac7629d10949ee298989a612d0368b25aede036b1f7a9305d17561`.
+Failed precondition/helper attempts remain preserved, not reclassified as passes.
+
+The canonical retained full prerequisite baseline is 168.280s including both
+prerequisite proofs; materialization is 129.499s. Its preceding 341.389s pass is
+priming. The verified baseline archive is `dev-verify-d15-baseline-evidence.tar.gz`,
+SHA-256 `ce335fd51a1b3c0609244b3d17999e9eabe98d3246b511e3f7938017e8a046ce`.
+
+Diagnostic-only candidate `904f52db43240cdeac9699d513f8f5f1ef5851b7` executes all
+93 scalar materializations in 130.360s. Summed overlapping request stage durations
+include generated-project formatting 79.589s, Rust interop metadata/probes 68.754s,
+and standard-library loading 65.132s. Native Cargo children account for only
+15.487s within probe qualification. There are 1,224 rustfmt calls. These are nested
+and overlapping attribution measurements, not additive wall time or acceptance.
+Further representative instrumentation at `999693dc3b1ecfcc9c960d214b40277957187552`
+locates substantial project canonicalization and repeated file formatting costs.
+Do not merge either diagnostic candidate. The 769-payload verified archive is
+`dev-verify-d15-stage-evidence.tar.gz`, SHA-256
+`ab3e1dd70f051be0bc959cc43d2f2741d25c712becca7942dafec97205837fa7`.
+
+### D15 next candidate — resolve support demand before normalization
+
+Representative attribution narrows the formatting cost to repeated semantic syntax
+cleanup. Text/i18n runs 11 syntax cleanup passes, totaling 0.844s within 1.777s
+project canonicalization; refreshing support imports invokes another full source
+canonicalization. Native file-runtime similarly spends 1.103s in nine syntax
+passes within 2.093s project canonicalization. These instrumented samples are
+causal diagnostics, not corpus-wide savings. Repeated rustfmt inputs alone save
+only 0.42–0.47s per sampled project and do not justify a replay cache.
+
+Resolve compiler-owned support imports after project field/name preparation,
+then prune dead owners before expensive semantic normalization. Keep the existing
+final support-import/canonicalization fixed point: later transformations can still
+remove references. This changes ordering, not coverage, formatter authority or
+success caching. Do not adopt unless the generated source contract remains valid
+and the complete preparation measurement demonstrates material benefit.
+
+Require full codegen unit regressions and affected driver project/materialization
+checks, including transitive support demand, fixed-point stability, cross-file
+references, same-named fields, namespaces and bridges. Compare all 93 generated
+trees to preserved scalar outputs; separate manifest revision-only differences
+from generated source. Preserve locked fetches, portable relocation and
+source-sysroot proofs. Measure uninstrumented complete canonical preparation after
+priming; 90s remains the preparation design budget. Exact-candidate independent
+review is required before intermediate merge. Full phase coverage, invalidation,
+final gates and repeated 480s qualification remain open. No ordinary/expanded gate
+split or coverage reduction is authorized here.
