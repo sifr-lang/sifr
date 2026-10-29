@@ -94,9 +94,9 @@ fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
         tree.write("crates/owner/Cargo.toml", &format!(
             "[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs={inputs}\n"
         ));
-        let mut inputs = InputInventory::default();
+        let mut inventory = InputInventory::default();
         assert!(
-            visit_package(&tree.0, &tree.0.join("crates/owner"), &mut inputs).is_err(),
+            visit_package(&tree.0, &tree.0.join("crates/owner"), &mut inventory).is_err(),
             "accepted invalid workspace ownership: {inputs}"
         );
     }
