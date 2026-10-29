@@ -2674,3 +2674,40 @@ a warm optimization baseline. Use the current category budgets (90s preparation,
 categories out of the optimization loop. This checkpoint is discovery; it does not
 waive final gates, ordinary invalidation scenarios, independent clean-build or
 sanitizer obligations, repeated timing qualification, or the complete 480s target.
+
+
+#### D18 admission reconciliation — omitted consumer locations after D16/D17
+
+The first normal-allocation discovery at
+`07c113c25b1eb98f256e034aadcda0441d7da04a` stops at admission in 25.697s outer /
+22.254s facade elapsed. Five early guards pass; DX metadata inventory fails.
+Preparation and every consumer are blocked, not passed. The complete 17-payload
+failure archive is `dev-verify-d18-admission-failure.tar.gz`, SHA-256
+`1ed2c6d0f285287f38d42cf6665c4882a485c2c6855b7fe0d5a6e6316214bd1f`.
+Preflight verifies all exact tool versions, eight effective CPUs, approximately
+10.2GiB available memory and more than the required disk/memory reserves. Diagnostic
+thread/job overrides are removed; the existing allocator selects the work budget.
+
+Read-only historical reconstruction resolves the earlier D17 ownership uncertainty:
+the inventory matches all 1,154 rows before D16 (`fa02de4d84`) but no longer matches
+after D16 (`a7cae3e12a`), when discovery falls to 1,118 rows. The 36-row reduction
+is a net count, not a complete enumeration of omitted symbols. This is this phase's
+test-boundary integration omission, so reconcile it as a bounded admission repair;
+do not delegate it indefinitely as an unrelated external failure.
+
+The scanner must include each maintained owner's entire `tests` tree, covering
+both private units and public contracts exactly once, and include the extracted
+syntax owner. Preserve production/test classification and every payload-field/live
+authority check. A new regression covers production, private-unit and public-contract
+consumers in both codegen and generated-Rust owners without mocking the owner list.
+
+The refreshed inventory contains 1,171 rows. Comparing symbol/operation/classification
+multisets accounts for all three changed old keys: the already test-only
+`stdlib_error` helper now has its correct test classification; the two canonical
+stdlib-name operations delegate enumeration to `nominal_replacements`, with explicit
+codegen and syntax-owner read boundaries. Fourteen newly discovered external-test
+consumers are added, all classified as test setup/parity. Remaining changes are
+relocated source anchors or unchanged classifications. No payload field or runtime
+implementation changes. Validate inventory and its full self-tests, source size,
+unchanged emitted selection, and independent review, then resume complete discovery
+with all failed/blocked evidence preserved.

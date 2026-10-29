@@ -10,6 +10,29 @@ from check_dx_metadata_inventory import check_external_fields
 
 
 class MetadataInventoryTests(unittest.TestCase):
+    def test_syntax_and_codegen_consumers_include_all_test_boundaries_once(self):
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            expected = []
+            for owner in ("sifr_codegen", "sifr_generated_rust"):
+                for directory in ("src", "tests/unit", "tests/contracts"):
+                    relative = f"crates/{owner}/{directory}/consumer.rs"
+                    path = root / relative
+                    path.parent.mkdir(parents=True)
+                    path.write_text("fn consumer(externals: &ExternalDefs) { consume(externals); }")
+                    expected.append((relative, directory != "src"))
+            with patch.object(inventory, "ROOT", root), patch.object(inventory, "SHARED_TEST_SOURCES", ()):
+                sources = list(inventory.consumer_sources())
+                self.assertEqual(len(sources), len(expected))
+                self.assertEqual({(str(path.relative_to(root)), test) for _, path, test in sources},
+                                 set(expected))
+                rows = inventory.sites().splitlines()
+                for relative, test in expected:
+                    matching = [row for row in rows if f"`{relative}:1` `consumer`" in row]
+                    self.assertEqual(len(matching), 1)
+                    target = "test setup/parity" if test else "layered view + demanded record handles"
+                    self.assertIn(f"| {target} |", matching[0])
+
     def test_private_unit_modules_remain_discovered_after_production_separation(self):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)

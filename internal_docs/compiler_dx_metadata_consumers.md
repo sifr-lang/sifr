@@ -136,6 +136,11 @@ consumers. Struct fields and owners are covered by the payload and lifetime tabl
 above. `python3 scripts/check_dx_metadata_inventory.py` verifies site coverage and
 all `ExternalDefs`/IR struct fields; regeneration requires reviewing classifications.
 
+Each maintained compiler owner includes its production `src` and complete `tests`
+tree, including private unit modules and public integration contracts. Generated
+Rust syntax consumers remain covered under `sifr_generated_rust`; relocating a
+test or implementation does not remove its metadata-use obligations.
+
 The maintained shared corpus oracle under
 [verification/tools/corpus_oracle/src/lib.rs](../verification/tools/corpus_oracle/src/lib.rs)
 is explicitly included as a test/parity consumer after extraction from the driver.
@@ -825,25 +830,6 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/expr_render_helpers/field_and_stdlib_rewrites.rs:572` `rewrite_stdlib_constant_idents_in_stmt` | read | layered view + demanded record handles | 572, 584, 638, 646, 649, 653, 654, 685, 686, 730, 733, 736, 737, 741, 757, 760, 764, 775, 778, 782, 787, 795, 799, 806, 809, 817, 825, 829, 832, 838, 854, 860 |
 | `crates/sifr_codegen/src/expr_render_helpers/sifr_int_parse_helpers.rs:3` `rewrite_special_ident` | read | layered view + demanded record handles | 8 |
 | `crates/sifr_codegen/src/expr_render_helpers/sifr_int_parse_helpers.rs:317` `is_sifr_int_module_constant_func` | read, enumerate | layered view + demanded record handles | 321 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:179` `emitter_with_large_int_const` | read | test setup/parity | 181 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:189` `rewrites_large_int_module_const_arithmetic_to_sifr_int_operands` | read | test setup/parity | 191 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:224` `rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call` | read | test setup/parity | 226 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:275` `rewrites_large_int_modulo_by_nonzero_literal_to_checked_runtime_call` | read | test setup/parity | 277 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:301` `rewrites_large_int_module_const_let_type_to_sifr_int` | read | test setup/parity | 303 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:321` `local_binding_shadows_large_int_module_const_rewrite` | read | test setup/parity | 328 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:334` `rewrites_registered_sifr_int_local_arithmetic_to_sifr_int_operands` | read | test setup/parity | 336, 343 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:375` `rewrites_large_int_module_const_comparison_to_sifr_int_operands` | read | test setup/parity | 377 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:405` `rewrites_registered_sifr_int_local_comparison_uses_rust_implicit_borrows` | read | test setup/parity | 407, 414 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:437` `rewrites_forced_sifr_int_assignment_target_storage` | read | test setup/parity | 444, 463 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:483` `rewrites_sifr_int_value_position_aliases_to_clone` | read | test setup/parity | 494, 510 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:525` `rewrites_forced_sifr_int_augassign_to_assignment` | read | test setup/parity | 532 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:564` `rewrites_sifr_int_augassign_registered_source_to_borrowed_operand` | read | test setup/parity | 575 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:596` `rewrites_sifr_int_augassign_for_supported_ops` | read | test setup/parity | 604 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:624` `rewrites_sifr_int_floor_mod_augassign_by_nonzero_literal_to_assignment` | read | test setup/parity | 635 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:674` `rewrites_sifr_int_returning_function_call_let_type` | read | test setup/parity | 681 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:701` `rewrites_sifr_int_returning_function_call_named_i64_let_type` | read | test setup/parity | 708 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:728` `rewrites_sifr_int_returning_function_call_with_args_let_type` | read | test setup/parity | 735 |
-| `crates/sifr_codegen/src/expr_render_helpers/tests.rs:758` `closure_block_returns_do_not_inherit_sifr_int_return_state` | read | test setup/parity | 762 |
 | `crates/sifr_codegen/src/field_analysis_helpers.rs:67` `detect_recursive_fields` | read, enumerate, borrow/retain | layered view + demanded record handles | 95, 96, 98 |
 | `crates/sifr_codegen/src/function_emitter/generator_bodies.rs:15` `emit_function` | read, enumerate | layered view + demanded record handles | 56, 82, 93 |
 | `crates/sifr_codegen/src/function_emitter/scope_and_function_types.rs:332` `module_sifr_int_bindings` | read, enumerate | layered view + demanded record handles | 333 |
@@ -853,36 +839,15 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/generated_dependency_metadata.rs:43` `retains_stdlib_module` | read, enumerate | layered view + demanded record handles | 43, 45, 51, 53 |
 | `crates/sifr_codegen/src/generated_dependency_metadata.rs:56` `direct_features` | read, enumerate | layered view + demanded record handles | 66, 81 |
 | `crates/sifr_codegen/src/generated_dependency_metadata.rs:95` `visit_path` | read, enumerate | layered view + demanded record handles | 101 |
-| `crates/sifr_codegen/src/generated_dependency_metadata.rs:142` `removes_pruned_stdlib_and_runtime_metadata` | read | test setup/parity | 142 |
-| `crates/sifr_codegen/src/generated_dependency_metadata.rs:210` `retains_hyphenated_stdlib_features_for_rust_module_paths` | read | test setup/parity | 210, 230 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/project_support_pruning.rs:35` `prune_generated_support_for_consumers` | read | layered view + demanded record handles | 41, 45, 49, 62, 63, 81, 82 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/project_support_pruning.rs:89` `prune_generated_project_prelude_for_consumers` | read, enumerate | layered view + demanded record handles | 125, 135, 140 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/project_support_pruning.rs:255` `import_project_prelude_bindings` | read | layered view + demanded record handles | 277, 280 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/support_import_cleanup.rs:29` `refresh_once` | read, enumerate | layered view + demanded record handles | 32, 35 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/support_import_cleanup.rs:63` `refresh_scope` | read, enumerate | layered view + demanded record handles | 67 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer/support_import_cleanup.rs:106` `refresh_support_root_imports` | read, enumerate | layered view + demanded record handles | 144 |
-| `crates/sifr_codegen/src/generated_rust_canonicalizer_capture_tests.rs:153` `implicit_format_capture_support_imports_preserve_block_binding_lifetimes` | read | test setup/parity | 180 |
-| `crates/sifr_codegen/src/generated_support_regression_tests.rs:4` `support_impls_do_not_define_builtin_import_bindings` | read | test setup/parity | 13 |
-| `crates/sifr_codegen/src/generated_support_regression_tests.rs:134` `proven_inherent_calls_do_not_require_same_named_extension_traits` | read | test setup/parity | 136, 137, 141, 148 |
-| `crates/sifr_codegen/src/generated_support_regression_tests.rs:158` `shadowed_and_macro_receiver_calls_keep_required_extension_imports` | read | test setup/parity | 160, 172 |
-| `crates/sifr_codegen/src/generated_support_regression_tests.rs:181` `unrelated_user_type_basenames_do_not_prove_inherent_dispatch` | read | test setup/parity | 183, 184, 186 |
-| `crates/sifr_codegen/src/generated_support_regression_tests.rs:246` `external_type_paths_and_sibling_trait_parameters_do_not_prove_inherent_dispatch` | read | test setup/parity | 247, 256 |
-| `crates/sifr_codegen/src/generated_visibility.rs:63` `crate_visible_generated_support_source` | read, enumerate | layered view + demanded record handles | 64, 68, 73 |
-| `crates/sifr_codegen/src/generated_visibility.rs:212` `generated_support_import` | read | layered view + demanded record handles | 216 |
-| `crates/sifr_codegen/src/generated_visibility.rs:220` `generated_support_import_with_inherent` | read | layered view + demanded record handles | 223, 225, 226, 234 |
 | `crates/sifr_codegen/src/generic_bounds_helpers.rs:254` `rust_ir_class_type_with_generics` | read, enumerate | layered view + demanded record handles | 261, 270 |
 | `crates/sifr_codegen/src/generic_bounds_helpers.rs:403` `type_contains_generic_class` | read, enumerate | layered view + demanded record handles | 405 |
 | `crates/sifr_codegen/src/generic_bounds_helpers.rs:431` `render_generic_class_type` | read, enumerate | layered view + demanded record handles | 432, 447 |
 | `crates/sifr_codegen/src/generic_bounds_helpers.rs:454` `infer_generic_class_type_args` | read, enumerate | layered view + demanded record handles | 455 |
 | `crates/sifr_codegen/src/generic_bounds_helpers.rs:550` `collect_typevar_bindings` | read, enumerate | layered view + demanded record handles | 663 |
-| `crates/sifr_codegen/src/generic_bounds_helpers_tests.rs:26` `canonical_generic_class_rendering_preserves_concrete_arguments` | read | test setup/parity | 28, 37 |
-| `crates/sifr_codegen/src/generic_bounds_helpers_tests.rs:46` `nested_generic_classes_keep_emitter_owned_arguments` | read | test setup/parity | 48, 50 |
 | `crates/sifr_codegen/src/helpers/helpers_impl.rs:755` `collect_mutated_vars_with_sigs` | read | layered view + demanded record handles | 757, 759 |
 | `crates/sifr_codegen/src/hir_analysis/queries/queries_impl.rs:172` `collect_mutated_vars` | read, enumerate | layered view + demanded record handles | 174, 216, 223, 245, 259, 348, 364, 370 |
 | `crates/sifr_codegen/src/hir_analysis/queries/queries_impl.rs:214` `collect_local_function_param_conventions` | read, enumerate | layered view + demanded record handles | 216, 223 |
-| `crates/sifr_codegen/src/inline_syntax_tests.rs:163` `support_reuse_preserves_canonical_rendering_bytes_and_order` | read | test setup/parity | 164, 170, 172, 174 |
 | `crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs:11` `apply_intrinsic_registry_side_effects` | read | layered view + demanded record handles | 19, 20, 26, 27, 33, 34 |
-| `crates/sifr_codegen/src/intrinsic_method_emitters/builtin_core_methods.rs:577` `builtin_open_text_roots_text_handle_support` | read | test setup/parity | 588, 590 |
 | `crates/sifr_codegen/src/intrinsic_method_emitters/builtin_numeric.rs:10` `try_lower_registry_numeric_builtin_call_expr` | read, enumerate | layered view + demanded record handles | 771 |
 | `crates/sifr_codegen/src/intrinsic_method_emitters/literal_and_intrinsic_exprs.rs:108` `try_lower_registry_intrinsic_call_expr` | read, enumerate | layered view + demanded record handles | 123 |
 | `crates/sifr_codegen/src/intrinsic_method_emitters/plain_call_args.rs:372` `resolve_plain_call_param_info` | read | layered view + demanded record handles | 378, 386 |
@@ -890,117 +855,6 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/intrinsic_method_emitters/plain_call_args.rs:514` `resolve_registry_method_params` | read, enumerate | layered view + demanded record handles | 521 |
 | `crates/sifr_codegen/src/intrinsic_method_emitters/recursive_exprs.rs:9` `try_lower_registry_expr_recursive` | read, enumerate | layered view + demanded record handles | 289 |
 | `crates/sifr_codegen/src/intrinsics/registry/open_text_handles.rs:5` `encoding_constructor_path` | read | layered view + demanded record handles | 7 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:54` `math_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 54 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:74` `json_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 74 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:96` `encoding_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 96 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:126` `runtime_module_dependency_metadata_includes_observability_facades` | read, enumerate | test setup/parity | 127 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:142` `lowers_task_current_context_as_language_runtime_glue` | read | test setup/parity | 148 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:159` `unicode_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 159 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:189` `i18n_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 189 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:214` `env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 214 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:246` `os_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 246 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:256` `signal_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 256 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:266` `fs_text_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 266 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:282` `fs_path_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 282 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:352` `lowers_encoding_intrinsics_via_registry` | read | test setup/parity | 358, 363 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:423` `time_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 423 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:452` `random_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 452 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:478` `re_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 478 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:505` `url_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 505 |
-| `crates/sifr_codegen/src/intrinsics/registry_core_tests.rs:532` `core_hash_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 532 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:36` `python_primitive_constructors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 36 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:53` `python_primitive_extractors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 53 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:84` `python_object_core_is_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 84 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:117` `python_collection_constructors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 117 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:132` `python_call_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 132 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:164` `python_copy_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 164 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:213` `python_zero_copy_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 213 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:255` `python_context_coroutine_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 255 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:300` `toml_intrinsic_is_owned_by_compiled_stdlib_declaration` | read | test setup/parity | 300 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:312` `datetime_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 312 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:327` `process_sync_timeout_intrinsics_lower_through_private_stdlib` | read, enumerate | test setup/parity | 327 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:483` `compression_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 483 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:509` `base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 509 |
-| `crates/sifr_codegen/src/intrinsics/registry_extended_tests.rs:541` `extended_hash_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 541 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_control_codegen_tests.rs:13` `generate_rust_from_source_with_stdlib_collections` | read, mutate overlay/producer | test setup/parity | 13, 15, 16, 21 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:4` `test_task_timeout_context_manager_wraps_awaits` | read | test setup/parity | 23 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:177` `test_sync_main_does_not_require_tokio` | read | test setup/parity | 196 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_runtime_codegen_tests.rs:201` `test_generate_project_emits_tokio_dependency_when_required` | read | test setup/parity | 203 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:3` `test_task_group_basic_lowers_to_scope_runtime_substrate` | read | test setup/parity | 59 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:64` `test_task_gather_lowers_to_private_gather_helper` | read | test setup/parity | 103 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:108` `test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper` | read | test setup/parity | 152 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:197` `test_task_race_lowers_to_private_race_helper` | read | test setup/parity | 239 |
-| `crates/sifr_codegen/src/lib_codegen_tests/async_task_runtime_codegen_tests.rs:278` `test_task_select_lowers_to_private_select_helper` | read | test setup/parity | 334 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:102` `process_child_resource_derives_are_module_scoped` | read | test setup/parity | 138 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:313` `test_render_expr_lowering_rewrites_module_constant_ident` | read | test setup/parity | 316 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:334` `test_render_expr_lowering_uses_module_constant_for_stdlib_named_constant` | read | test setup/parity | 334, 338 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:357` `test_render_expr_lowering_rewrites_module_constant_helper_call` | read | test setup/parity | 359 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:423` `test_structured_stmt_path_rewrites_stdlib_constant_name` | read | test setup/parity | 423, 459, 460, 465 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:711` `test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` | read | test setup/parity | 711 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_codegen_tests.rs:790` `test_generate_rust_multi_with_metadata_omits_unused_dependency_closure` | read | test setup/parity | 852, 853, 860, 866 |
-| `crates/sifr_codegen/src/lib_codegen_tests/classes_and_basics_multi_module_codegen_tests.rs:4` `test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility` | read | test setup/parity | 73, 77 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:628` `test_generate_project_emits_sifr_runtime_path_dependency_when_required` | read | test setup/parity | 630 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:642` `test_async_main_entrypoint_gets_tokio_bootstrap_dependency` | read | test setup/parity | 662 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:667` `test_async_result_main_entrypoint_keeps_result_return` | read | test setup/parity | 694 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:699` `test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio` | read | test setup/parity | 719 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:724` `test_task_sleep_requires_tokio_without_async_main` | read | test setup/parity | 745 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:750` `test_task_scope_context_materializes_runtime_container` | read | test setup/parity | 778 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:783` `test_scope_spawn_lowers_to_owned_task_handle_substrate` | read | test setup/parity | 813 |
-| `crates/sifr_codegen/src/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:818` `test_spawn_blocking_lowers_to_distinct_blocking_task_substrate` | read | test setup/parity | 854 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:4` `variable_string_key_defaultdict_counter_keeps_entry_default_codegen` | read | test setup/parity | 5 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:18` `variable_integer_key_defaultdict_counter_keeps_entry_default_codegen` | read | test setup/parity | 19 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:32` `nested_shadowed_defaultdict_counters_keep_independent_key_types` | read | test setup/parity | 33 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:42` `nested_scalar_shadow_is_not_retyped_as_defaultdict` | read | test setup/parity | 43 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:53` `late_nested_shadow_does_not_clear_enclosing_defaultdict_annotation` | read | test setup/parity | 54 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:63` `owned_integer_defaultdict_read_clones_inserted_value_for_call` | read | test setup/parity | 64 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:4` `defaultdict_set_pop_uses_the_checked_bucket_without_compile_error` | read | test setup/parity | 5 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:25` `read_before_write_defaultdict_set_has_concrete_declaration_codegen` | read | test setup/parity | 26 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:36` `tuple_key_defaultdict_set_has_concrete_declaration_codegen` | read | test setup/parity | 37 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:47` `list_slice_append_uses_defaultdict_entry_insertion` | read | test setup/parity | 48 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:61` `string_slice_append_uses_defaultdict_entry_insertion` | read | test setup/parity | 62 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:75` `borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_lookup` | read | test setup/parity | 76 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:91` `borrowed_string_iterable_literals_store_owned_values` | read | test setup/parity | 92 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:108` `list_extend_mutates_the_defaultdict_entry_without_cloning_the_bucket` | read | test setup/parity | 109 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:121` `set_update_mutates_the_defaultdict_entry_without_cloning_the_bucket` | read | test setup/parity | 122 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:134` `generally_lowered_iterables_cannot_fall_back_to_cloned_defaultdict_buckets` | read | test setup/parity | 135 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:145` `iterable_arguments_are_materialized_before_borrowing_the_destination_bucket` | read | test setup/parity | 146 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:170` `variadic_set_bucket_updates_never_fall_back_to_cloned_receivers` | read | test setup/parity | 171 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:202` `iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow` | read | test setup/parity | 203 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:227` `scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow` | read | test setup/parity | 228 |
-| `crates/sifr_codegen/src/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:254` `scalar_mutation_remove_evaluates_value_outside_the_search_closure` | read | test setup/parity | 255 |
-| `crates/sifr_codegen/src/lib_codegen_tests/inline_assembly_contract_tests.rs:2` `test_generate_rust_with_stdlib_assembles_single_rust_file` | read | test setup/parity | 2 |
-| `crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:183` `test_generate_rust_open_uses_canonical_filehandle_constructor` | read | test setup/parity | 228 |
-| `crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:263` `test_generate_rust_defaultdict_int_augassign_uses_entry_default` | read | test setup/parity | 264 |
-| `crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:276` `test_generate_rust_defaultdict_list_len_borrows_string_literal_key` | read | test setup/parity | 277 |
-| `crates/sifr_codegen/src/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:382` `test_generate_rust_test_collects_imports_from_emitted_code` | read | test setup/parity | 462, 467 |
-| `crates/sifr_codegen/src/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:4` `test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_source` | read | test setup/parity | 4, 38, 39, 43, 54, 72 |
-| `crates/sifr_codegen/src/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:77` `test_generate_rust_multi_omits_runtime_for_unused_private_stdlib_bridge` | read | test setup/parity | 77, 103, 104, 108, 119, 122 |
-| `crates/sifr_codegen/src/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:128` `public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing` | read | test setup/parity | 128, 174, 175, 179, 190 |
-| `crates/sifr_codegen/src/lib_codegen_tests/performance_codegen_tests.rs:135` `defaultdict_set_membership_borrows_bucket_without_cloning` | read | test setup/parity | 136 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:11` `ordinary_class_codegen_skips_structural_impls` | read | test setup/parity | 24 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:99` `ordinary_union_codegen_skips_structural_impls_without_demand` | read | test setup/parity | 112 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:123` `direct_ordinary_union_gets_structural_impls_when_demanded` | read | test setup/parity | 139 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:148` `project_union_resolves_structural_members_from_their_defining_module` | read | test setup/parity | 168 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:180` `project_record_eligibility_resolves_nested_imported_members` | read | test setup/parity | 216 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:242` `project_root_record_keeps_qualified_structural_identity` | read | test setup/parity | 247 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:279` `named_single_file_record_keeps_unqualified_structural_identity` | read | test setup/parity | 282, 284 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:294` `imported_stdlib_record_gets_one_late_canonical_structural_impl` | read | test setup/parity | 294, 305, 306, 310, 322 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:333` `platform_integer_union_does_not_receive_structural_impls` | read | test setup/parity | 345 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:357` `project_structural_demand_enables_implicit_classes_across_modules` | read | test setup/parity | 373, 379 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:384` `test_project_root_record_keeps_qualified_structural_identity` | read | test setup/parity | 389 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_inheritance_codegen_tests.rs:7` `concrete_generic_child_flattens_parent_fields_for_structural_bridge` | read | test setup/parity | 58 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:12` `unused_import_only_stdlib_structural_impls_are_pruned_after_relocation` | read, enumerate | test setup/parity | 12, 21 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:36` `project_identity_with_stdlib_prefix_gets_no_origin_bypass` | read | test setup/parity | 36, 42, 44 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:72` `json_stdlib` | read | test setup/parity | 72, 76, 77, 81, 91 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:154` `imported_stdlib_structural_contracts_include_transitive_field_types_only` | read, enumerate | test setup/parity | 154, 155, 167, 168, 176, 180, 181, 189, 190, 200 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:218` `import_only_structural_registration_preserves_opaque_runtime_ownership` | read | test setup/parity | 226, 227, 238, 239, 241 |
-| `crates/sifr_codegen/src/lib_codegen_tests/structured_lowering_codegen_tests.rs:4` `test_nested_stdlib_constructor_uses_canonical_nominal_path` | read | test setup/parity | 4, 30, 31 |
-| `crates/sifr_codegen/src/lib_codegen_tests/support_assembly_codegen_tests.rs:5` `multi_module_support_has_one_private_owner_and_a_strict_size_budget` | read, enumerate | test setup/parity | 10 |
-| `crates/sifr_codegen/src/lib_codegen_tests/support_assembly_codegen_tests.rs:63` `support_visibility_exposes_signature_types_but_not_private_implementation_types` | read | test setup/parity | 366, 376 |
-| `crates/sifr_codegen/src/lib_codegen_tests/support_assembly_codegen_tests.rs:113` `support_imports_keep_implicit_format_captures_after_canonicalization` | read | test setup/parity | 366, 376 |
-| `crates/sifr_codegen/src/lib_codegen_tests/support_assembly_codegen_tests.rs:155` `support_imports_drop_reverse_nominal_edges_of_pruned_helpers` | read | test setup/parity | 366, 376 |
-| `crates/sifr_codegen/src/lib_codegen_tests/task_spawn_ownership_codegen_tests.rs:4` `test_thread_pool_executor_submit_reuses_blocking_task_substrate` | read | test setup/parity | 35 |
-| `crates/sifr_codegen/src/lib_codegen_tests.rs:16` `trait_impl_fixture_stdlib_code` | read | test setup/parity | 16, 17, 18 |
 | `crates/sifr_codegen/src/lib_emitter_state.rs:242` `new` | read | layered view + demanded record handles | 258, 276, 284, 285, 286, 287, 293, 294 |
 | `crates/sifr_codegen/src/lib_emitter_state.rs:358` `collect_nested_fn_lexical_captures` | read, enumerate | layered view + demanded record handles | 369 |
 | `crates/sifr_codegen/src/lib_emitter_structured_stmt.rs:8` `try_lower_structured_stmt_with_following` | read | layered view + demanded record handles | 89, 108, 148, 161, 193, 311, 319, 333, 371, 374, 506, 517 |
@@ -1014,12 +868,6 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/lib_modules_and_codegen.rs:163` `generate_rust_with_stdlib_for_module_with_project_policy` | read, enumerate | layered view + demanded record handles | 163, 165, 183, 187, 222, 238, 247 |
 | `crates/sifr_codegen/src/lib_modules_structural_policy.rs:6` `generate_rust_with_stdlib_for_module_with_structural_policy` | read | layered view + demanded record handles | 6, 8, 12, 14 |
 | `crates/sifr_codegen/src/lib_project_codegen/imported_unions.rs:3` `register_imported_union_types` | read | layered view + demanded record handles | 6, 12, 22 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:69` `project_unions_have_one_crate_root_definition` | read | test setup/parity | 87 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:113` `main_owned_union_is_imported_from_the_crate_root` | read | test setup/parity | 124 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:141` `dotted_union_user_imports_the_crate_root_definition` | read | test setup/parity | 159 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:171` `root_prelude_combines_try_conversions_with_ordinary_union_traits` | read | test setup/parity | 193 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:214` `root_prelude_uses_crate_rooted_nominal_payload_paths` | read | test setup/parity | 224 |
-| `crates/sifr_codegen/src/lib_project_codegen/tests.rs:245` `root_union_plan_distinguishes_non_class_nominal_identities` | read | test setup/parity | 302 |
 | `crates/sifr_codegen/src/lib_project_codegen.rs:30` `project_union_usage` | read, enumerate | layered view + demanded record handles | 32 |
 | `crates/sifr_codegen/src/lib_project_codegen.rs:162` `render_local_module_imports` | read, enumerate | layered view + demanded record handles | 165, 177 |
 | `crates/sifr_codegen/src/lib_project_codegen.rs:263` `register_imported_generic_classes` | read, enumerate, borrow/retain | layered view + demanded record handles | 264, 285, 286, 288 |
@@ -1027,13 +875,11 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/lib_project_codegen.rs:587` `generate_rust_multi` | read | layered view + demanded record handles | 590 |
 | `crates/sifr_codegen/src/lib_project_codegen.rs:599` `generate_project_with_deps` | read | layered view + demanded record handles | 602, 604 |
 | `crates/sifr_codegen/src/lib_project_codegen.rs:612` `generate_project_with_deps_and_crates` | read | layered view + demanded record handles | 615, 628 |
-| `crates/sifr_codegen/src/lib_project_codegen_opaque_import_tests.rs:9` `local_imports_bring_opaque_extension_traits_into_scope` | read | test setup/parity | 73 |
 | `crates/sifr_codegen/src/lib_project_signatures.rs:52` `project_class_fields` | read, enumerate | layered view + demanded record handles | 55 |
 | `crates/sifr_codegen/src/lib_project_signatures.rs:152` `module_class_fields` | read, enumerate | layered view + demanded record handles | 152 |
 | `crates/sifr_codegen/src/lib_runtime_needs.rs:17` `replace_sync_channel_runtime_items` | read | layered view + demanded record handles | 36 |
 | `crates/sifr_codegen/src/lib_test_project_codegen.rs:34` `generate_rust_test_project_with_metadata` | read, enumerate, clone projection | test setup/parity | 37, 43, 45, 48, 59, 61, 63, 64, 86, 92, 108, 110, 139, 142, 144, 151, 171, 174, 176, 180, 187, 189, 191, 194, 195, 197, 256, 260, 282, 284, 352, 362, 363, 372 |
 | `crates/sifr_codegen/src/method_call_emitter.rs:121` `is_generator_call` | read | layered view + demanded record handles | 125 |
-| `crates/sifr_codegen/src/method_call_emitter.rs:137` `generic_generator_calls_use_the_canonical_function_name` | read | test setup/parity | 139 |
 | `crates/sifr_codegen/src/module_constants.rs:21` `try_emit_lowered_module_constant_result` | read | layered view + demanded record handles | 44 |
 | `crates/sifr_codegen/src/module_constants.rs:49` `try_emit_expression_module_constant` | read | layered view + demanded record handles | 60 |
 | `crates/sifr_codegen/src/module_prescan.rs:63` `collect_import_metadata` | read, enumerate | layered view + demanded record handles | 77, 79 |
@@ -1046,66 +892,23 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/preamble/task_scope_offload_runtime.rs:182` `scoped_process_body` | read | layered view + demanded record handles | 194 |
 | `crates/sifr_codegen/src/project_constants.rs:4` `register_imported_constants` | read, enumerate | layered view + demanded record handles | 7, 10, 23 |
 | `crates/sifr_codegen/src/project_constants.rs:29` `extend_project_constant_mappings` | read, enumerate | layered view + demanded record handles | 30, 56, 68, 72, 73, 85, 86 |
-| `crates/sifr_codegen/src/project_stdlib_nominals/registry.rs:41` `corpus_repair_builtin_registration_preserves_identity` | read | test setup/parity | 89 |
-| `crates/sifr_codegen/src/project_stdlib_nominals/registry.rs:102` `corpus_repair_builtin_registration_rejects_nonbuiltin_names` | read | test setup/parity | 129 |
 | `crates/sifr_codegen/src/project_stdlib_nominals/relocation.rs:77` `relocate_project_stdlib_nominals` | read, enumerate | layered view + demanded record handles | 77, 92 |
 | `crates/sifr_codegen/src/project_stdlib_nominals/relocation.rs:102` `relocate_project_stdlib_nominals_owned_by` | read, enumerate | layered view + demanded record handles | 102 |
-| `crates/sifr_codegen/src/project_stdlib_nominals/relocation_tests.rs:18` `relocated_structural_contracts_have_one_shared_owner_across_importers` | read | test setup/parity | 22 |
-| `crates/sifr_codegen/src/project_stdlib_nominals/relocation_tests.rs:51` `relocated_structural_contracts_do_not_capture_a_same_name_local_owner` | read | test setup/parity | 54 |
-| `crates/sifr_codegen/src/project_stdlib_nominals/relocation_tests.rs:70` `relocated_structural_contracts_never_select_between_conflicting_bodies` | read | test setup/parity | 74 |
 | `crates/sifr_codegen/src/project_stdlib_nominals.rs:38` `project_stdlib_nominal_plan` | read, enumerate | layered view + demanded record handles | 38 |
 | `crates/sifr_codegen/src/project_stdlib_nominals.rs:132` `register_imported_structural_nominals` | read, enumerate | layered view + demanded record handles | 134, 139 |
 | `crates/sifr_codegen/src/project_stdlib_nominals.rs:161` `extract_project_stdlib_nominal_prelude` | read, enumerate | layered view + demanded record handles | 161, 164, 168 |
 | `crates/sifr_codegen/src/project_stdlib_nominals.rs:268` `register_transitive_stdlib_nominals` | read | layered view + demanded record handles | 268, 270, 274 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:496` `stdlib_error` | read | layered view + demanded record handles | 496 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:508` `same_basename_stdlib_errors_keep_distinct_nominal_declarations` | read | test setup/parity | 508, 514, 515 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:533` `same_basename_stdlib_errors_get_distinct_project_paths` | read | test setup/parity | 533, 534, 535, 538 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:556` `direct_crate_root_nominal_gets_a_project_path_without_other_nominals` | read | test setup/parity | 567 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:579` `builtin_error_union_keeps_its_shared_module_definition` | read | test setup/parity | 603 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:614` `task_scope_error_plan_includes_scope_failure_conversion` | read | test setup/parity | 645 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:660` `emitted_transitive_nominals_join_the_project_registry` | read | test setup/parity | 661, 662, 683 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:725` `builtin_registry_identity_does_not_replace_a_module_qualified_shadow` | read | test setup/parity | 755 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:769` `direct_io_error_kind_type_does_not_create_a_project_nominal` | read | test setup/parity | 784 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:796` `io_error_kind_handlers_do_not_create_dangling_project_nominals` | read | test setup/parity | 829 |
-| `crates/sifr_codegen/src/project_stdlib_nominals.rs:842` `relocation_retains_local_child_conversion_into_shared_parent` | read | test setup/parity | 857 |
 | `crates/sifr_codegen/src/project_structural_record_codegen.rs:4` `render_project_structural_record_prelude` | read | layered view + demanded record handles | 6 |
-| `crates/sifr_codegen/src/project_structural_record_codegen.rs:72` `build_order_and_module_order_reuse_one_crate_root_layout` | read, enumerate | test setup/parity | 77 |
-| `crates/sifr_codegen/src/project_structural_record_codegen.rs:99` `crate_root_body_does_not_import_its_local_structural_layout` | read | test setup/parity | 102 |
-| `crates/sifr_codegen/src/project_structural_record_codegen.rs:118` `support_module_imports_its_crate_root_structural_layout` | read | test setup/parity | 123 |
-| `crates/sifr_codegen/src/python_arrow_codegen_tests.rs:39` `arrow_bridge_producer_uses_resolved_runtime_target` | read, borrow/retain | test setup/parity | 47 |
 | `crates/sifr_codegen/src/rust_interop_plan.rs:22` `cache_key_fragment` | read | layered view + demanded record handles | 24, 28 |
 | `crates/sifr_codegen/src/stdlib_codegen_metadata.rs:14` `new` | read | layered view + demanded record handles | 14, 17 |
 | `crates/sifr_codegen/src/stdlib_codegen_metadata.rs:22` `bootstrap` | read | layered view + demanded record handles | 23, 24, 28 |
 | `crates/sifr_codegen/src/stdlib_demand_plan.rs:8` `plan_demanded_stdlib_sources` | read, enumerate, clone projection | layered view + demanded record handles | 8, 9, 35, 54, 74, 91, 100, 107, 121, 139, 143, 151 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:193` `public_import_roots_seed_matching_transitive_private_definitions` | read | test setup/parity | 194, 195, 199, 210, 218, 219 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:246` `growing_demands_cross_multiple_rounds_and_a_dependency_cycle` | read | test setup/parity | 247, 265, 266, 268, 269, 274, 275, 292 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:308` `canonical_references_constants_and_suppressed_types_survive_selection` | read | test setup/parity | 309, 311, 315, 316, 323, 324, 326, 333, 334 |
-| `crates/sifr_codegen/src/stdlib_demand_plan.rs:354` `whole_module_roots_keep_all_items_while_propagating_dependencies` | read | test setup/parity | 355, 356, 360, 361, 363, 364, 366, 367, 375 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:59` `seal_canonical_stdlib_names` | read, enumerate | layered view + demanded record handles | 59, 67, 72 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:132` `rewrite_canonical_stdlib_tokens` | read, enumerate | layered view + demanded record handles | 132, 158 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:174` `rewrite_rust_identifiers` | read | layered view + demanded record handles | 180 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:239` `filter_stdlib_ir_to_needed` | read | layered view + demanded record handles | 239, 243 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:258` `filter_canonical_stdlib_ir_to_needed` | read, enumerate | layered view + demanded record handles | 258, 267, 270, 272, 273 |
-| `crates/sifr_codegen/src/stdlib_filter/implementation.rs:493` `parse_stdlib_ir_file` | read, enumerate | layered view + demanded record handles | 493 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:65` `filter_keeps_transitive_dependencies_in_item_order` | read | test setup/parity | 82 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:92` `filter_ignores_name_mentions_in_strings_and_comments` | read | test setup/parity | 103 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:110` `filter_tracks_type_level_dependencies_via_identifiers` | read | test setup/parity | 119 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:126` `canonical_filter_restores_nominal_refs_before_dependency_closure` | read | test setup/parity | 127, 128, 141 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:155` `filter_supports_enum_trait_static_and_pub_items` | read | test setup/parity | 179 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:190` `filter_supports_async_const_unsafe_fn_and_static_mut` | read | test setup/parity | 207 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:216` `filter_tracks_type_alias_dependencies_and_drops_unused_aliases` | read | test setup/parity | 228 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:237` `filter_avoids_false_positive_from_local_variable_name` | read | test setup/parity | 249 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:255` `filter_tracks_dependencies_used_in_macro_arguments` | read | test setup/parity | 272 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:281` `filter_keeps_all_items_for_needed_type_name` | read | test setup/parity | 296 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:304` `filter_keeps_every_implementation_of_a_needed_trait` | read | test setup/parity | 323 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:645` `canonical_stdlib_names_are_sealed_across_declarations_and_uses` | read | test setup/parity | 645, 654, 671 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:680` `canonical_stdlib_sealing_uses_exact_module_identity` | read | test setup/parity | 680, 686, 691, 692, 699, 704, 709, 710, 715 |
-| `crates/sifr_codegen/src/stdlib_filter/tests.rs:724` `canonical_stdlib_sealing_preserves_external_qualified_path_segments` | read | test setup/parity | 724, 731, 732 |
+| `crates/sifr_codegen/src/stdlib_filter.rs:6` `nominal_replacements` | read, enumerate | layered view + demanded record handles | 10 |
+| `crates/sifr_codegen/src/stdlib_filter.rs:14` `seal_canonical_stdlib_names` | read | layered view + demanded record handles | 14, 19 |
+| `crates/sifr_codegen/src/stdlib_filter.rs:25` `filter_canonical_stdlib_ir_to_needed` | read | layered view + demanded record handles | 25, 35 |
 | `crates/sifr_codegen/src/stdlib_import_signatures.rs:5` `register_imported_stdlib_metadata` | read, enumerate, clone projection | layered view + demanded record handles | 5, 8, 13, 14, 15, 20, 21, 22, 27, 28, 29, 36, 38, 40, 51, 60, 61, 66, 69, 83, 86 |
 | `crates/sifr_codegen/src/stdlib_import_signatures.rs:101` `transitive_stdlib_signature` | read, enumerate | layered view + demanded record handles | 101, 102, 106, 109, 110 |
 | `crates/sifr_codegen/src/stdlib_import_signatures.rs:124` `register_imported_stdlib_signature` | read, clone projection | layered view + demanded record handles | 124, 126, 131, 132, 137, 141, 147, 149, 153 |
-| `crates/sifr_codegen/src/stdlib_import_signatures_tests.rs:17` `imported_metadata_preserves_aliases_methods_fields_generators_and_constants` | read, borrow/retain | test setup/parity | 38, 39, 48, 52, 53, 55, 57, 59, 65, 66, 67, 69, 77, 78, 80, 83, 85 |
-| `crates/sifr_codegen/src/stdlib_import_signatures_tests.rs:91` `private_alias_registration_preserves_local_signatures_without_overwriting_origin` | read | test setup/parity | 92, 93, 97, 103, 109, 116, 117, 118 |
 | `crates/sifr_codegen/src/stdlib_interop_demand/observation.rs:17` `observe_stdlib_interop_selection` | read | layered view + demanded record handles | 17 |
 | `crates/sifr_codegen/src/stdlib_interop_demand.rs:31` `application_plan` | read, enumerate | layered view + demanded record handles | 32, 36, 37 |
 | `crates/sifr_codegen/src/stdlib_interop_demand.rs:46` `select` | read, enumerate | layered view + demanded record handles | 46, 49, 60, 79, 121 |
@@ -1117,14 +920,13 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/stmt_support_emitter/call_args_and_returns.rs:329` `lower_recursive_capture_arg_for_ir` | read | layered view + demanded record handles | 335 |
 | `crates/sifr_codegen/src/stmt_support_emitter/call_args_and_returns.rs:526` `lower_return_value_expr_for_ir` | read | layered view + demanded record handles | 636 |
 | `crates/sifr_codegen/src/stmt_support_emitter/call_args_and_returns.rs:642` `lower_rendered_expr_for_ir` | read | layered view + demanded record handles | 649, 673 |
-| `crates/sifr_codegen/src/stmt_support_emitter/class_upcasts.rs:308` `render_ancestor_rust_type` | read | layered view + demanded record handles | 316 |
-| `crates/sifr_codegen/src/stmt_support_emitter/class_upcasts.rs:379` `ancestor_paths_are_local_stdlib_or_crate_rooted_by_identity` | read | test setup/parity | 379, 390 |
+| `crates/sifr_codegen/src/stmt_support_emitter/class_upcasts.rs:265` `render_ancestor_rust_type` | read | layered view + demanded record handles | 273 |
 | `crates/sifr_codegen/src/stmt_support_emitter/condition_lowering.rs:3` `lower_condition_expr_for_ir` | read | layered view + demanded record handles | 132, 137 |
 | `crates/sifr_codegen/src/stmt_support_emitter/print_calls.rs:44` `try_lower_stmt_expr_statement_only` | read, enumerate | layered view + demanded record handles | 118 |
 | `crates/sifr_codegen/src/stmt_support_emitter/stmt_block.rs:7` `try_lower_stmt_block_for_ir_inner` | read, enumerate | layered view + demanded record handles | 96, 147, 220, 252, 894 |
 | `crates/sifr_codegen/src/stmt_support_emitter/stmt_expr_method_and_question_mark.rs:490` `lower_stmt_expr_for_ir` | read, enumerate | layered view + demanded record handles | 543 |
 | `crates/sifr_codegen/src/structural_impl_codegen/stdlib_implementations.rs:15` `imported_classes` | read, enumerate | layered view + demanded record handles | 17, 20, 21, 28 |
-| `crates/sifr_codegen/src/structural_impl_codegen.rs:17` `emit_imported_stdlib_structural_impls` | read, enumerate, clone projection | layered view + demanded record handles | 17, 20, 25, 35 |
+| `crates/sifr_codegen/src/structural_impl_codegen.rs:18` `emit_imported_stdlib_structural_impls` | read, enumerate, clone projection | layered view + demanded record handles | 18, 21, 26, 36 |
 | `crates/sifr_codegen/src/support_plan.rs:52` `from_emitter` | read, enumerate | layered view + demanded record handles | 79, 80 |
 | `crates/sifr_codegen/src/support_plan.rs:107` `merge_project_module` | read, enumerate | layered view + demanded record handles | 116, 117, 118, 119 |
 | `crates/sifr_codegen/src/support_plan.rs:139` `needs_support` | read | layered view + demanded record handles | 142 |
@@ -1132,9 +934,215 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_codegen/src/support_plan.rs:170` `render_support` | read | layered view + demanded record handles | 172, 174, 175, 178, 187, 188, 190, 192, 231, 232, 233, 240, 254, 290, 295, 332 |
 | `crates/sifr_codegen/src/support_plan.rs:399` `render_stdlib_support` | read, enumerate | layered view + demanded record handles | 399, 401, 406, 410, 412, 417, 418, 420, 421, 441, 463 |
 | `crates/sifr_codegen/src/support_plan.rs:486` `append_stdlib_dependencies` | read, enumerate | layered view + demanded record handles | 486, 488, 495, 498 |
-| `crates/sifr_codegen/src/support_plan.rs:628` `single_file_user_error_suppresses_late_runtime_demand` | read | test setup/parity | 637 |
-| `crates/sifr_codegen/src/support_plan.rs:644` `project_merge_does_not_promote_a_module_shadow_to_a_crate_veto` | read | test setup/parity | 650, 656, 657, 668 |
 | `crates/sifr_codegen/src/union_type_helpers.rs:115` `collect_union_types` | read, enumerate | layered view + demanded record handles | 123, 128, 165, 193 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_runtime_codegen_tests.rs:4` `test_task_timeout_context_manager_wraps_awaits` | read | test setup/parity | 23 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_runtime_codegen_tests.rs:177` `test_sync_main_does_not_require_tokio` | read | test setup/parity | 196 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_runtime_codegen_tests.rs:201` `test_generate_project_emits_tokio_dependency_when_required` | read | test setup/parity | 203 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_task_runtime_codegen_tests.rs:3` `test_task_group_basic_lowers_to_scope_runtime_substrate` | read | test setup/parity | 59 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_task_runtime_codegen_tests.rs:64` `test_task_gather_lowers_to_private_gather_helper` | read | test setup/parity | 103 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_task_runtime_codegen_tests.rs:108` `test_scope_spawn_fallible_coroutine_lowers_to_result_spawn_helper` | read | test setup/parity | 152 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_task_runtime_codegen_tests.rs:197` `test_task_race_lowers_to_private_race_helper` | read | test setup/parity | 239 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_task_runtime_codegen_tests.rs:278` `test_task_select_lowers_to_private_select_helper` | read | test setup/parity | 334 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/classes_and_basics_multi_module_codegen_tests.rs:4` `test_generate_rust_multi_with_metadata_preserves_trait_impl_visibility` | read | test setup/parity | 73, 77 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:4` `variable_string_key_defaultdict_counter_keeps_entry_default_codegen` | read | test setup/parity | 5 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:18` `variable_integer_key_defaultdict_counter_keeps_entry_default_codegen` | read | test setup/parity | 19 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:32` `nested_shadowed_defaultdict_counters_keep_independent_key_types` | read | test setup/parity | 33 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:42` `nested_scalar_shadow_is_not_retyped_as_defaultdict` | read | test setup/parity | 43 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:53` `late_nested_shadow_does_not_clear_enclosing_defaultdict_annotation` | read | test setup/parity | 54 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_augassign_codegen_tests.rs:63` `owned_integer_defaultdict_read_clones_inserted_value_for_call` | read | test setup/parity | 64 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:4` `defaultdict_set_pop_uses_the_checked_bucket_without_compile_error` | read | test setup/parity | 5 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:25` `read_before_write_defaultdict_set_has_concrete_declaration_codegen` | read | test setup/parity | 26 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:36` `tuple_key_defaultdict_set_has_concrete_declaration_codegen` | read | test setup/parity | 37 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:47` `list_slice_append_uses_defaultdict_entry_insertion` | read | test setup/parity | 48 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:61` `string_slice_append_uses_defaultdict_entry_insertion` | read | test setup/parity | 62 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:75` `borrowed_string_defaultdict_set_operations_use_owned_storage_and_direct_lookup` | read | test setup/parity | 76 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:91` `borrowed_string_iterable_literals_store_owned_values` | read | test setup/parity | 92 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:108` `list_extend_mutates_the_defaultdict_entry_without_cloning_the_bucket` | read | test setup/parity | 109 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:121` `set_update_mutates_the_defaultdict_entry_without_cloning_the_bucket` | read | test setup/parity | 122 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:134` `generally_lowered_iterables_cannot_fall_back_to_cloned_defaultdict_buckets` | read | test setup/parity | 135 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:145` `iterable_arguments_are_materialized_before_borrowing_the_destination_bucket` | read | test setup/parity | 146 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:170` `variadic_set_bucket_updates_never_fall_back_to_cloned_receivers` | read | test setup/parity | 171 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:202` `iterable_mutation_evaluates_key_before_arguments_and_bucket_borrow` | read | test setup/parity | 203 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:227` `scalar_mutation_stages_key_and_arguments_before_one_bucket_borrow` | read | test setup/parity | 228 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/defaultdict_order_independent_codegen_tests.rs:254` `scalar_mutation_remove_evaluates_value_outside_the_search_closure` | read | test setup/parity | 255 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:4` `test_generate_rust_multi_with_metadata_infers_fs_feature_from_private_stdlib_source` | read | test setup/parity | 4, 38, 39, 43, 54, 72 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:77` `test_generate_rust_multi_omits_runtime_for_unused_private_stdlib_bridge` | read | test setup/parity | 77, 103, 104, 108, 119, 122 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/multi_module_stdlib_feature_tests.rs:128` `public_stdlib_reexport_uses_transitive_private_signature_for_call_borrowing` | read | test setup/parity | 128, 174, 175, 179, 190 |
+| `crates/sifr_codegen/tests/contracts/lib_codegen_tests/task_spawn_ownership_codegen_tests.rs:4` `test_thread_pool_executor_submit_reuses_blocking_task_substrate` | read | test setup/parity | 35 |
+| `crates/sifr_codegen/tests/support/codegen.rs:14` `generate_rust_from_source_with_stdlib_collections` | read, mutate overlay/producer | test setup/parity | 14, 16, 17, 22 |
+| `crates/sifr_codegen/tests/support/codegen.rs:37` `trait_impl_fixture_stdlib_code` | read | test setup/parity | 37, 38, 39 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:179` `emitter_with_large_int_const` | read | test setup/parity | 181 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:189` `rewrites_large_int_module_const_arithmetic_to_sifr_int_operands` | read | test setup/parity | 191 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:224` `rewrites_large_int_floor_division_by_nonzero_literal_to_checked_runtime_call` | read | test setup/parity | 226 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:275` `rewrites_large_int_modulo_by_nonzero_literal_to_checked_runtime_call` | read | test setup/parity | 277 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:301` `rewrites_large_int_module_const_let_type_to_sifr_int` | read | test setup/parity | 303 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:321` `local_binding_shadows_large_int_module_const_rewrite` | read | test setup/parity | 328 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:334` `rewrites_registered_sifr_int_local_arithmetic_to_sifr_int_operands` | read | test setup/parity | 336, 343 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:375` `rewrites_large_int_module_const_comparison_to_sifr_int_operands` | read | test setup/parity | 377 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:405` `rewrites_registered_sifr_int_local_comparison_uses_rust_implicit_borrows` | read | test setup/parity | 407, 414 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:437` `rewrites_forced_sifr_int_assignment_target_storage` | read | test setup/parity | 444, 463 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:483` `rewrites_sifr_int_value_position_aliases_to_clone` | read | test setup/parity | 494, 510 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:525` `rewrites_forced_sifr_int_augassign_to_assignment` | read | test setup/parity | 532 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:564` `rewrites_sifr_int_augassign_registered_source_to_borrowed_operand` | read | test setup/parity | 575 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:596` `rewrites_sifr_int_augassign_for_supported_ops` | read | test setup/parity | 604 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:624` `rewrites_sifr_int_floor_mod_augassign_by_nonzero_literal_to_assignment` | read | test setup/parity | 635 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:674` `rewrites_sifr_int_returning_function_call_let_type` | read | test setup/parity | 681 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:701` `rewrites_sifr_int_returning_function_call_named_i64_let_type` | read | test setup/parity | 708 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:728` `rewrites_sifr_int_returning_function_call_with_args_let_type` | read | test setup/parity | 735 |
+| `crates/sifr_codegen/tests/unit/expr_render_helpers/tests.rs:758` `closure_block_returns_do_not_inherit_sifr_int_return_state` | read | test setup/parity | 762 |
+| `crates/sifr_codegen/tests/unit/generated_dependency_metadata/tests.rs:4` `removes_pruned_stdlib_and_runtime_metadata` | read | test setup/parity | 4 |
+| `crates/sifr_codegen/tests/unit/generated_dependency_metadata/tests.rs:72` `retains_hyphenated_stdlib_features_for_rust_module_paths` | read | test setup/parity | 72, 92 |
+| `crates/sifr_codegen/tests/unit/generic_bounds_helpers_tests.rs:26` `canonical_generic_class_rendering_preserves_concrete_arguments` | read | test setup/parity | 28, 37 |
+| `crates/sifr_codegen/tests/unit/generic_bounds_helpers_tests.rs:46` `nested_generic_classes_keep_emitter_owned_arguments` | read | test setup/parity | 48, 50 |
+| `crates/sifr_codegen/tests/unit/inline_syntax_tests.rs:163` `support_reuse_preserves_canonical_rendering_bytes_and_order` | read | test setup/parity | 164, 170, 172, 174 |
+| `crates/sifr_codegen/tests/unit/intrinsic_method_emitters/builtin_core_methods/tests.rs:4` `builtin_open_text_roots_text_handle_support` | read | test setup/parity | 15, 17 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:54` `math_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 54 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:74` `json_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 74 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:96` `encoding_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 96 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:126` `runtime_module_dependency_metadata_includes_observability_facades` | read, enumerate | test setup/parity | 127 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:142` `lowers_task_current_context_as_language_runtime_glue` | read | test setup/parity | 148 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:159` `unicode_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 159 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:189` `i18n_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 189 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:214` `env_and_sys_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 214 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:246` `os_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 246 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:256` `signal_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 256 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:266` `fs_text_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 266 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:282` `fs_path_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 282 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:352` `lowers_encoding_intrinsics_via_registry` | read | test setup/parity | 358, 363 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:423` `time_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 423 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:452` `random_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 452 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:478` `re_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 478 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:505` `url_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 505 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_core_tests.rs:532` `core_hash_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 532 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:36` `python_primitive_constructors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 36 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:53` `python_primitive_extractors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 53 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:84` `python_object_core_is_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 84 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:117` `python_collection_constructors_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 117 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:132` `python_call_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 132 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:164` `python_copy_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 164 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:213` `python_zero_copy_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 213 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:255` `python_context_coroutine_helpers_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 255 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:300` `toml_intrinsic_is_owned_by_compiled_stdlib_declaration` | read | test setup/parity | 300 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:312` `datetime_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 312 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:327` `process_sync_timeout_intrinsics_lower_through_private_stdlib` | read, enumerate | test setup/parity | 327 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:483` `compression_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 483 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:509` `base_encoding_intrinsics_are_owned_by_compiled_stdlib_declarations` | read, enumerate | test setup/parity | 509 |
+| `crates/sifr_codegen/tests/unit/intrinsics/registry_extended_tests.rs:541` `extended_hash_intrinsics_are_owned_by_compiled_stdlib_declarations` | read | test setup/parity | 541 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:102` `process_child_resource_derives_are_module_scoped` | read | test setup/parity | 138 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:313` `test_render_expr_lowering_rewrites_module_constant_ident` | read | test setup/parity | 316 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:334` `test_render_expr_lowering_uses_module_constant_for_stdlib_named_constant` | read | test setup/parity | 334, 338 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:357` `test_render_expr_lowering_rewrites_module_constant_helper_call` | read | test setup/parity | 359 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:423` `test_structured_stmt_path_rewrites_stdlib_constant_name` | read | test setup/parity | 423, 459, 460, 465 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:711` `test_generate_rust_multi_skips_stdlib_use_paths_in_non_main_modules` | read | test setup/parity | 711 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/classes_and_basics_codegen_tests.rs:790` `test_generate_rust_multi_with_metadata_omits_unused_dependency_closure` | read | test setup/parity | 852, 853, 860, 866 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:628` `test_generate_project_emits_sifr_runtime_path_dependency_when_required` | read | test setup/parity | 630 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:642` `test_async_main_entrypoint_gets_tokio_bootstrap_dependency` | read | test setup/parity | 662 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:667` `test_async_result_main_entrypoint_keeps_result_return` | read | test setup/parity | 694 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:699` `test_task_sleep_lowers_to_tokio_sleep_and_requires_tokio` | read | test setup/parity | 719 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:724` `test_task_sleep_requires_tokio_without_async_main` | read | test setup/parity | 745 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:750` `test_task_scope_context_materializes_runtime_container` | read | test setup/parity | 778 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:783` `test_scope_spawn_lowers_to_owned_task_handle_substrate` | read | test setup/parity | 813 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/collections_and_stdlib_codegen_tests.rs:818` `test_spawn_blocking_lowers_to_distinct_blocking_task_substrate` | read | test setup/parity | 854 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/inline_assembly_contract_tests.rs:2` `test_generate_rust_with_stdlib_assembles_single_rust_file` | read | test setup/parity | 2 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:183` `test_generate_rust_open_uses_canonical_filehandle_constructor` | read | test setup/parity | 228 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:263` `test_generate_rust_defaultdict_int_augassign_uses_entry_default` | read | test setup/parity | 264 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:276` `test_generate_rust_defaultdict_list_len_borrows_string_literal_key` | read | test setup/parity | 277 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/iterators_and_generators_codegen_tests.rs:382` `test_generate_rust_test_collects_imports_from_emitted_code` | read | test setup/parity | 462, 467 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/performance_codegen_tests.rs:135` `defaultdict_set_membership_borrows_bucket_without_cloning` | read | test setup/parity | 136 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:11` `ordinary_class_codegen_skips_structural_impls` | read | test setup/parity | 24 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:99` `ordinary_union_codegen_skips_structural_impls_without_demand` | read | test setup/parity | 112 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:123` `direct_ordinary_union_gets_structural_impls_when_demanded` | read | test setup/parity | 139 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:148` `project_union_resolves_structural_members_from_their_defining_module` | read | test setup/parity | 168 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:180` `project_record_eligibility_resolves_nested_imported_members` | read | test setup/parity | 216 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:242` `project_root_record_keeps_qualified_structural_identity` | read | test setup/parity | 247 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:279` `named_single_file_record_keeps_unqualified_structural_identity` | read | test setup/parity | 282, 284 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:294` `imported_stdlib_record_gets_one_late_canonical_structural_impl` | read | test setup/parity | 294, 305, 306, 310, 322 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:333` `platform_integer_union_does_not_receive_structural_impls` | read | test setup/parity | 345 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:357` `project_structural_demand_enables_implicit_classes_across_modules` | read | test setup/parity | 373, 379 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_impl_demand_codegen_tests.rs:384` `test_project_root_record_keeps_qualified_structural_identity` | read | test setup/parity | 389 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_inheritance_codegen_tests.rs:7` `concrete_generic_child_flattens_parent_fields_for_structural_bridge` | read | test setup/parity | 58 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:12` `unused_import_only_stdlib_structural_impls_are_pruned_after_relocation` | read, enumerate | test setup/parity | 12, 21 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:36` `project_identity_with_stdlib_prefix_gets_no_origin_bypass` | read | test setup/parity | 36, 42, 44 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:72` `json_stdlib` | read | test setup/parity | 72, 76, 77, 81, 91 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:154` `imported_stdlib_structural_contracts_include_transitive_field_types_only` | read, enumerate | test setup/parity | 154, 155, 167, 168, 176, 180, 181, 189, 190, 200 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structural_stdlib_impl_codegen_tests.rs:218` `import_only_structural_registration_preserves_opaque_runtime_ownership` | read | test setup/parity | 226, 227, 238, 239, 241 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/structured_lowering_codegen_tests.rs:4` `test_nested_stdlib_constructor_uses_canonical_nominal_path` | read | test setup/parity | 4, 30, 31 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/support_assembly_codegen_tests.rs:5` `multi_module_support_has_one_private_owner_and_a_strict_size_budget` | read, enumerate | test setup/parity | 10 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/support_assembly_codegen_tests.rs:63` `support_visibility_exposes_signature_types_but_not_private_implementation_types` | read | test setup/parity | 366, 376 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/support_assembly_codegen_tests.rs:113` `support_imports_keep_implicit_format_captures_after_canonicalization` | read | test setup/parity | 366, 376 |
+| `crates/sifr_codegen/tests/unit/lib_codegen_tests/support_assembly_codegen_tests.rs:155` `support_imports_drop_reverse_nominal_edges_of_pruned_helpers` | read | test setup/parity | 366, 376 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:69` `project_unions_have_one_crate_root_definition` | read | test setup/parity | 87 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:113` `main_owned_union_is_imported_from_the_crate_root` | read | test setup/parity | 124 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:141` `dotted_union_user_imports_the_crate_root_definition` | read | test setup/parity | 159 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:171` `root_prelude_combines_try_conversions_with_ordinary_union_traits` | read | test setup/parity | 193 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:214` `root_prelude_uses_crate_rooted_nominal_payload_paths` | read | test setup/parity | 224 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen/tests.rs:245` `root_union_plan_distinguishes_non_class_nominal_identities` | read | test setup/parity | 302 |
+| `crates/sifr_codegen/tests/unit/lib_project_codegen_opaque_import_tests.rs:9` `local_imports_bring_opaque_extension_traits_into_scope` | read | test setup/parity | 73 |
+| `crates/sifr_codegen/tests/unit/method_call_emitter/tests.rs:4` `generic_generator_calls_use_the_canonical_function_name` | read | test setup/parity | 6 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/registry/tests.rs:7` `corpus_repair_builtin_registration_preserves_identity` | read | test setup/parity | 55 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/registry/tests.rs:68` `corpus_repair_builtin_registration_rejects_nonbuiltin_names` | read | test setup/parity | 95 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/relocation_tests.rs:18` `relocated_structural_contracts_have_one_shared_owner_across_importers` | read | test setup/parity | 22 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/relocation_tests.rs:51` `relocated_structural_contracts_do_not_capture_a_same_name_local_owner` | read | test setup/parity | 54 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/relocation_tests.rs:70` `relocated_structural_contracts_never_select_between_conflicting_bodies` | read | test setup/parity | 74 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:4` `stdlib_error` | read | test setup/parity | 4 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:16` `same_basename_stdlib_errors_keep_distinct_nominal_declarations` | read | test setup/parity | 16, 22, 23 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:41` `same_basename_stdlib_errors_get_distinct_project_paths` | read | test setup/parity | 41, 42, 43, 46 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:64` `direct_crate_root_nominal_gets_a_project_path_without_other_nominals` | read | test setup/parity | 75 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:87` `builtin_error_union_keeps_its_shared_module_definition` | read | test setup/parity | 111 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:122` `task_scope_error_plan_includes_scope_failure_conversion` | read | test setup/parity | 150 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:165` `emitted_transitive_nominals_join_the_project_registry` | read | test setup/parity | 166, 167, 188 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:230` `builtin_registry_identity_does_not_replace_a_module_qualified_shadow` | read | test setup/parity | 260 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:274` `direct_io_error_kind_type_does_not_create_a_project_nominal` | read | test setup/parity | 289 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:301` `io_error_kind_handlers_do_not_create_dangling_project_nominals` | read | test setup/parity | 334 |
+| `crates/sifr_codegen/tests/unit/project_stdlib_nominals/tests.rs:347` `relocation_retains_local_child_conversion_into_shared_parent` | read | test setup/parity | 362 |
+| `crates/sifr_codegen/tests/unit/project_structural_record_codegen/tests.rs:45` `build_order_and_module_order_reuse_one_crate_root_layout` | read, enumerate | test setup/parity | 50 |
+| `crates/sifr_codegen/tests/unit/project_structural_record_codegen/tests.rs:72` `crate_root_body_does_not_import_its_local_structural_layout` | read | test setup/parity | 75 |
+| `crates/sifr_codegen/tests/unit/project_structural_record_codegen/tests.rs:91` `support_module_imports_its_crate_root_structural_layout` | read | test setup/parity | 96 |
+| `crates/sifr_codegen/tests/unit/python_arrow_codegen_tests.rs:39` `arrow_bridge_producer_uses_resolved_runtime_target` | read, borrow/retain | test setup/parity | 47 |
+| `crates/sifr_codegen/tests/unit/stdlib_demand_plan/tests.rs:22` `public_import_roots_seed_matching_transitive_private_definitions` | read | test setup/parity | 23, 24, 28, 38, 46, 47 |
+| `crates/sifr_codegen/tests/unit/stdlib_demand_plan/tests.rs:74` `growing_demands_cross_multiple_rounds_and_a_dependency_cycle` | read | test setup/parity | 75, 93, 94, 96, 97, 102, 103, 120 |
+| `crates/sifr_codegen/tests/unit/stdlib_demand_plan/tests.rs:136` `canonical_references_constants_and_suppressed_types_survive_selection` | read | test setup/parity | 137, 139, 143, 144, 151, 152, 154, 161, 162 |
+| `crates/sifr_codegen/tests/unit/stdlib_demand_plan/tests.rs:182` `whole_module_roots_keep_all_items_while_propagating_dependencies` | read | test setup/parity | 183, 184, 188, 189, 191, 192, 194, 195, 203 |
+| `crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs:5` `canonical_filter_restores_nominal_refs_before_dependency_closure` | read | test setup/parity | 6, 7, 20 |
+| `crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs:34` `canonical_stdlib_names_are_sealed_across_declarations_and_uses` | read | test setup/parity | 34, 43, 60 |
+| `crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs:69` `canonical_stdlib_sealing_uses_exact_module_identity` | read | test setup/parity | 69, 75, 80, 81, 88, 93, 98, 99, 104 |
+| `crates/sifr_codegen/tests/unit/stdlib_filter/tests.rs:113` `canonical_stdlib_sealing_preserves_external_qualified_path_segments` | read | test setup/parity | 113, 120, 121 |
+| `crates/sifr_codegen/tests/unit/stdlib_import_signatures_tests.rs:17` `imported_metadata_preserves_aliases_methods_fields_generators_and_constants` | read, borrow/retain | test setup/parity | 38, 39, 48, 52, 53, 55, 57, 59, 65, 66, 67, 69, 77, 78, 80, 83, 85 |
+| `crates/sifr_codegen/tests/unit/stdlib_import_signatures_tests.rs:91` `private_alias_registration_preserves_local_signatures_without_overwriting_origin` | read | test setup/parity | 92, 93, 97, 103, 109, 116, 117, 118 |
+| `crates/sifr_codegen/tests/unit/stmt_support_emitter/class_upcasts/tests.rs:33` `ancestor_paths_are_local_stdlib_or_crate_rooted_by_identity` | read | test setup/parity | 33, 44 |
+| `crates/sifr_codegen/tests/unit/support_plan/tests.rs:6` `single_file_user_error_suppresses_late_runtime_demand` | read | test setup/parity | 15 |
+| `crates/sifr_codegen/tests/unit/support_plan/tests.rs:22` `project_merge_does_not_promote_a_module_shadow_to_a_crate_veto` | read | test setup/parity | 28, 34, 35, 46 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs:45` `prune_generated_support_for_consumers` | read | layered view + demanded record handles | 52, 56, 60, 73, 74, 92, 93 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs:100` `prune_generated_project_prelude_for_consumers` | read, enumerate | layered view + demanded record handles | 137, 147, 152 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/project_support_pruning.rs:269` `import_project_prelude_bindings` | read | layered view + demanded record handles | 291, 294 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/support_import_cleanup.rs:29` `refresh_once` | read, enumerate | layered view + demanded record handles | 32, 35 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/support_import_cleanup.rs:63` `refresh_scope` | read, enumerate | layered view + demanded record handles | 67 |
+| `crates/sifr_generated_rust/src/generated_rust_canonicalizer/support_import_cleanup.rs:106` `refresh_support_root_imports` | read, enumerate | layered view + demanded record handles | 144 |
+| `crates/sifr_generated_rust/src/generated_visibility.rs:63` `crate_visible_generated_support_source` | read, enumerate | layered view + demanded record handles | 64, 68, 73 |
+| `crates/sifr_generated_rust/src/generated_visibility.rs:212` `generated_support_import` | read | layered view + demanded record handles | 216 |
+| `crates/sifr_generated_rust/src/generated_visibility.rs:220` `generated_support_import_with_inherent` | read | layered view + demanded record handles | 223, 225, 226, 234 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:58` `seal_canonical_stdlib_names` | read | layered view + demanded record handles | 58, 65 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:125` `rewrite_canonical_stdlib_tokens` | read, enumerate | layered view + demanded record handles | 125, 151 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:167` `rewrite_rust_identifiers` | read | layered view + demanded record handles | 170 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:229` `filter_stdlib_ir_to_needed` | read | layered view + demanded record handles | 229, 230 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:245` `filter_canonical_stdlib_ir_to_needed` | read | layered view + demanded record handles | 245, 251, 253, 254 |
+| `crates/sifr_generated_rust/src/stdlib_filter/implementation.rs:471` `parse_stdlib_ir_file` | read, enumerate | layered view + demanded record handles | 471 |
+| `crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer_capture_tests.rs:153` `implicit_format_capture_support_imports_preserve_block_binding_lifetimes` | read | test setup/parity | 180 |
+| `crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs:4` `support_impls_do_not_define_builtin_import_bindings` | read | test setup/parity | 13 |
+| `crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs:134` `proven_inherent_calls_do_not_require_same_named_extension_traits` | read | test setup/parity | 136, 137, 141, 148 |
+| `crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs:158` `shadowed_and_macro_receiver_calls_keep_required_extension_imports` | read | test setup/parity | 160, 172 |
+| `crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs:181` `unrelated_user_type_basenames_do_not_prove_inherent_dispatch` | read | test setup/parity | 183, 184, 186 |
+| `crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs:246` `external_type_paths_and_sibling_trait_parameters_do_not_prove_inherent_dispatch` | read | test setup/parity | 247, 256 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:65` `filter_keeps_transitive_dependencies_in_item_order` | read | test setup/parity | 82 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:92` `filter_ignores_name_mentions_in_strings_and_comments` | read | test setup/parity | 103 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:110` `filter_tracks_type_level_dependencies_via_identifiers` | read | test setup/parity | 119 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:126` `filter_supports_enum_trait_static_and_pub_items` | read | test setup/parity | 150 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:161` `filter_supports_async_const_unsafe_fn_and_static_mut` | read | test setup/parity | 178 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:187` `filter_tracks_type_alias_dependencies_and_drops_unused_aliases` | read | test setup/parity | 199 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:208` `filter_avoids_false_positive_from_local_variable_name` | read | test setup/parity | 220 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:226` `filter_tracks_dependencies_used_in_macro_arguments` | read | test setup/parity | 243 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:252` `filter_keeps_all_items_for_needed_type_name` | read | test setup/parity | 267 |
+| `crates/sifr_generated_rust/tests/unit/stdlib_filter/tests.rs:275` `filter_keeps_every_implementation_of_a_needed_trait` | read | test setup/parity | 294 |
 | `crates/sifr_analysis/src/host/construction.rs:8` `open_project` | read, mutate overlay/producer, clone projection, borrow/retain | layered view + demanded record handles | 20, 21, 24 |
 | `crates/sifr_analysis/src/host/construction.rs:30` `open_single_file` | read, borrow/retain | layered view + demanded record handles | 36 |
 | `crates/sifr_analysis/src/host/construction.rs:53` `new_with_sql_profiles` | read, enumerate, borrow/retain | layered view + demanded record handles | 71 |
@@ -1298,6 +1306,20 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr/src/build_output.rs:187` `sysroot_dependency_plan` | read | layered view + demanded record handles | 189 |
 | `crates/sifr/src/sysroot_cli.rs:36` `cmd_doctor` | read | layered view + demanded record handles | 112, 113, 115, 147 |
 | `crates/sifr/src/sysroot_cli.rs:184` `print_sysroot` | read | layered view + demanded record handles | 199, 200, 201, 204, 205 |
+| `crates/sifr/tests/e2e_support/batch_execution.rs:385` `build_and_run_with_deps` | read | test setup/parity | 388, 395 |
+| `crates/sifr/tests/e2e_support/dependency_plan_authority_tests.rs:66` `case_with_plan` | read | test setup/parity | 71, 74, 88 |
+| `crates/sifr/tests/e2e_support/dependency_plan_authority_tests.rs:96` `former_module_inference_inventory_is_owned_by_typed_production_metadata` | read, enumerate | test setup/parity | 99, 123 |
+| `crates/sifr/tests/e2e_support/direct_execution.rs:153` `build_and_run_capture_with_deps` | read | test setup/parity | 156, 161 |
+| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:25` `test_codegen_corpus_subset_parity` | read | test setup/parity | 55, 78 |
+| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:497` `test_e2e_runtime_fail` | read | test setup/parity | 511, 527 |
+| `crates/sifr/tests/e2e_support/fixture_compilation.rs:58` `compiled_metadata` | read, enumerate | test setup/parity | 64, 68 |
+| `crates/sifr/tests/e2e_support/fixture_compilation.rs:75` `compile_source_with_metadata_and_stats` | read, enumerate | test setup/parity | 81, 88 |
+| `crates/sifr/tests/e2e_support/fixture_compilation.rs:234` `compile_fixture_inner` | read | test setup/parity | 239, 243, 261 |
+| `crates/sifr/tests/e2e_support/harness_behavior_tests.rs:3` `compiled_case_for_test` | read | test setup/parity | 8, 11, 19 |
+| `crates/sifr/tests/e2e_support/harness_model.rs:407` `dependency_plan_matches_metadata` | read, enumerate | test setup/parity | 408, 410 |
+| `crates/sifr/tests/e2e_support/session_tests.rs:9` `equivalent` | read | test setup/parity | 15, 23 |
+| `crates/sifr/tests/runtime_observability_boundary.rs:55` `standalone_runtime_diagnostics_use_only_the_stdlib_boundary` | read | test setup/parity | 55 |
+| `crates/sifr/tests/sysroot_cli.rs:125` `write_skeleton` | read | test setup/parity | 147 |
 | `verification/tools/corpus_oracle/src/lib.rs:4` `full_corpus_exact_emission` | read, enumerate | test setup/parity | 7, 8, 9, 22, 66, 85, 89, 91, 94, 115, 152 |
 
 <!-- dx5-sites:end -->
