@@ -1,10 +1,6 @@
-use super::{
-    empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections,
-};
+use super::generate_rust_from_source;
 use crate::generate_rust;
 use sifr_ir::{HirExpr, HirFStringPart, HirFunction, HirModule, HirParam, HirStmt, MethodKind};
-use sifr_lowering::{ExternalDefs, lower_module, lower_module_with_externals};
-use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 
 #[test]

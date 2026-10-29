@@ -13,36 +13,11 @@ use sifr_python_parser::parse_module;
 use sifr_type_system::{ParamConvention, Type};
 use std::collections::HashSet;
 
-fn trait_impl_fixture_stdlib_code() -> StdlibCode {
-    let mut code = StdlibCode::default();
-    code.module_rust_code.insert(
-        "sifr.tomllib".to_string(),
-        StdlibRustSource {
-            module: "sifr.tomllib".to_string(),
-            source_path: "stdlib/sifr/tomllib.sifr".to_string(),
-            source_sha256: "fixture".to_string(),
-            nominal_types: HashSet::new(),
-            rust: r#"
-struct TOMLDecodeError { message: String }
-impl std::fmt::Display for TOMLDecodeError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-fn loads(_text: String) -> Result<String, TOMLDecodeError> {
-    Err(TOMLDecodeError { message: "fixture".to_string() })
-}
-"#
-            .to_string(),
-        },
-    );
-    code
-}
-
 #[path = "../support/codegen.rs"]
 mod codegen_support;
 pub(crate) use codegen_support::{
     empty_module, generate_rust_from_source, generate_rust_from_source_with_stdlib_collections,
+    trait_impl_fixture_stdlib_code,
 };
 #[cfg(test)]
 #[path = "lib_codegen_tests/class_trait_contract_codegen_tests.rs"]
@@ -92,3 +67,12 @@ mod structured_lowering_codegen_tests;
 #[cfg(test)]
 #[path = "lib_codegen_tests/support_assembly_codegen_tests.rs"]
 mod support_assembly_codegen_tests;
+
+#[path = "lib_codegen_tests/classes_and_basics_codegen_tests.rs"]
+mod classes_and_basics_codegen_tests;
+
+#[path = "lib_codegen_tests/structured_condition_codegen_tests.rs"]
+mod structured_condition_codegen_tests;
+
+#[path = "lib_codegen_tests/structured_delete_codegen_tests.rs"]
+mod structured_delete_codegen_tests;

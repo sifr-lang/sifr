@@ -1,4 +1,3 @@
-
 use super::*;
 use sifr_ir::{HirStmt, MethodKind};
 
