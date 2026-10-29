@@ -3238,3 +3238,36 @@ focused validation. The failed first discovery remains failed. Next run is
 `dev-verify-d23-discovery-r2`, the full canonical correctness selection with failure
 continuation and the same category/resource limits. This delivery closes only the
 inventory repair; integrated discovery and final phase qualification remain open.
+
+#### D23 dependency-inventory reconciliation (prospective)
+
+The retry remains frozen remotely at `0e36952fb786d3b357002616842d90750f85a96d`.
+All 36 completed top-level categories pass before crate execution. SQL completes
+all 72 variants in 669.408s, including the mandatory clean/reused/independent-clean
+protocol at 475.600s. These observations do not establish full-gate acceptance.
+
+The additive Rust configuration subsequently fails 13 dependency-contract tests
+at the same inventory admission: `crates/sifr_generated_rust/Cargo.toml` is absent
+from the maintained Cargo inventory. This is an omitted dependent record from
+D17's crate extraction, owned by this phase. Independent reconstruction from the
+Git index and every maintained TOML manifest finds exactly one additional
+manifest, four additional direct declarations, and no removed declarations.
+The required totals are 161 manifests and 217 direct declarations. The new
+prettyplease, proc-macro2, quote and tempfile owners use already-audited versions;
+no dependency version, checksum, lockfile, pinned graph or audit policy changes.
+
+Prepare the two JSON record corrections locally while the remote candidate and
+its inputs stay unchanged. Continue independent test groups, preserve the failed
+sweep, and archive its evidence before changing the remote source or overwriting
+reports. Then run the entire `sifr_dependency_contracts` crate, including its
+existing missing/extra/duplicate/input/checksum mutation controls, plus the
+affected policy checks and file-size guard. Require exact-candidate independent
+review under the approved intermediate policy. Reuse unrelated runtime evidence
+only after proving that the final changed paths contain these two records and
+phase prose exclusively; retain the original observed candidate identity.
+
+The reconciliation does not eliminate any measured runtime cost or close the
+480s goal. Do not rerun the full sweep solely for these record updates. Finish
+coverage reconciliation, then choose the next macro improvement from the current
+preparation and execution measurements. Complete final phase gates, invalidation
+and repeated timing qualification remain required.

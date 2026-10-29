@@ -13,6 +13,7 @@
     "crates/sifr_driver/Cargo.toml",
     "crates/sifr_format/Cargo.toml",
     "crates/sifr_frontend/Cargo.toml",
+    "crates/sifr_generated_rust/Cargo.toml",
     "crates/sifr_identity/Cargo.toml",
     "crates/sifr_ipc/Cargo.toml",
     "crates/sifr_ir/Cargo.toml",
