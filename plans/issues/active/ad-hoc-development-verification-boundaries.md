@@ -1792,3 +1792,29 @@ qualification or permission to exclude expensive guarantees. Select the next
 bounded repair from the current largest measured cost and its real assertion
 boundary. Prefer removing repeated compilation/preparation or an unnecessarily
 expensive test boundary over replacing the runner for a marginal gain.
+
+
+D11's first complete selection at `567d6b8597005d47ccad0a5c0da555bce8a9f592`
+stops at admission in 24.701s outer / 23.380s facade elapsed. The dependency-direction
+guard still permits only SHA-2 for `sifr_identity`, although D6 introduced optional
+TOML parsing behind its explicit build feature. The other five early guards pass.
+The runner correctly blocks all preparation and consumers for invalid inventory;
+no broad test timing or coverage was measured. The complete incomplete-run archive
+is retained as `dev-verify-integrated-d10-discovery-evidence.tar.gz`, SHA-256
+`585b16b4890642aad9e61c22ccfc3170ba041350f219b3375ef68d5efec991c1`.
+
+A separate smallest affected check reveals the related default-feature omission:
+`cargo test --locked --offline -p sifr_identity --lib --no-run` fails in 1.200s
+because cfg(test) includes the build helpers but no TOML dev dependency exists.
+The earlier explicit-feature checks did not cover this configuration. Preserve
+that diagnostic instead of treating the successful build-feature run as sufficient.
+
+The bounded admission repair will retain optional, explicitly selected production
+build helpers, add the same workspace TOML dependency for unit tests, and make the
+policy recognize that precise boundary. Negative controls must reject unconditional,
+default/transitively default, renamed and target-specific production activation.
+Check the actual default and build-feature unit-test configurations and resolved
+normal dependency graph; keep all existing assertions. Do not add TOML to ordinary
+identity consumers or bypass the admission guard. Refresh affected producer receipts
+through actual production, then resume full discovery on a frozen candidate. The
+previous failed selection and unexecuted categories remain explicit.

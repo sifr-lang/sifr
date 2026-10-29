@@ -13,6 +13,9 @@ toml = { workspace = true, optional = true }
 [features]
 build = ["dep:toml"]
 
+[dev-dependencies]
+toml.workspace = true
+
 [lints]
 workspace = true
 
