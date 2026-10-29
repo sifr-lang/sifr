@@ -803,5 +803,5 @@ impl RustEmitter {
 }
 
 #[cfg(test)]
-#[path = "control_flow_tests.rs"]
+#[path = "../../tests/unit/checked_place/control_flow_tests.rs"]
 mod tests;

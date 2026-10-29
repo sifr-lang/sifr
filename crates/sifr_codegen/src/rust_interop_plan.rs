@@ -787,12 +787,12 @@ fn push_span(out: &mut String, span: ruff_text_size::TextRange) {
 }
 
 #[cfg(test)]
-#[path = "rust_interop_plan_demand_tests.rs"]
+#[path = "../tests/unit/rust_interop_plan_demand_tests.rs"]
 mod rust_interop_plan_demand_tests;
 #[cfg(test)]
-#[path = "rust_interop_plan_tests.rs"]
+#[path = "../tests/unit/rust_interop_plan_tests.rs"]
 mod rust_interop_plan_tests;
 
 #[cfg(test)]
-#[path = "rust_interop_plan_identity_tests.rs"]
+#[path = "../tests/unit/rust_interop_plan_identity_tests.rs"]
 mod identity_tests;

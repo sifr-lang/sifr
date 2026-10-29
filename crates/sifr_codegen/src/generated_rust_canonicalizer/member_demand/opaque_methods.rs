@@ -249,18 +249,5 @@ fn implementation_owner(item: &syn::ItemImpl) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn shadowed_standard_namespace_keeps_opaque_ufcs_demand() {
-        let mut file = syn::parse_file(
-            r#"
-            extern crate unknown as std;
-            trait SifrGeneratedOpaqueExampleMethods { fn sub(&self); }
-            fn run() { ::std::ops::Sub::sub(); }
-        "#,
-        )
-        .expect("test syntax");
-        super::prune(&mut file);
-        assert!(quote::quote!(#file).to_string().contains("fn sub"));
-    }
-}
+#[path = "../../../tests/unit/generated_rust_canonicalizer/member_demand/opaque_methods/tests.rs"]
+mod tests;

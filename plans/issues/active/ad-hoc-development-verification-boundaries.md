@@ -2366,3 +2366,32 @@ semantics, weaken identities, or silently split the acceptance gate. Measure the
 complete affected development cycle and require a material improvement before
 adoption, plus independent exact-candidate review. Continue the approved focused
 intermediate policy; complete final phase gates and 480s qualification remain open.
+
+
+### D16 implementation candidate — codegen test ownership and public contracts
+
+A controlled assertion-message edit at `fa02de4d84b914ea8e478f016cf36ae4e7db9bee`
+passes all 1,785 tests but costs 144.777s for the unit-test command (14.78s actual
+assertions) and 20.054s for the subsequent production CLI build. Cargo reports
+one rebuilt codegen test unit and six rebuilt production units. The CLI hash
+changes despite no production logic edit. The complete guard is 167.790s. The
+preceding 388.475s baseline includes configuration/revision priming and is not the
+recurring comparison. Verified evidence: `dev-verify-d16-before-evidence.tar.gz`,
+SHA-256 `e796cdb77efa120e12c71898090cd722c5c0f87a99ed47c3368b8098e4f15441`.
+
+Move explicitly test-owned sources outside `src`, retaining logical private module
+paths through cfg(test) declarations. Actual production dep-info independently
+confirms exclusion of the moved test files. Extract inline test modules without
+changing their assertions. Move public emission contracts into one integration
+target consuming the existing public library; retain private invariants as unit
+tests. Shared source-to-emission helpers have one test-owned definition. No new
+product API, optimization-profile change, result replay, or coverage exemption.
+
+Before adoption require exact discovered-test reconciliation, all codegen tests
+(including the existing native ABI target), positive production invalidation,
+unchanged/assertion/fixture/edit controls, production artifact reuse, relevant
+identity and coverage-policy checks, and independent review. Reconcile source
+evidence paths where relocation affects executable contracts. Measure retained
+complete affected cycles after configuration preparation; 90s/480s budgets and
+all final phase acceptance obligations remain open. This candidate is not yet
+qualified or merged.

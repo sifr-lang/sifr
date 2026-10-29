@@ -193,4 +193,5 @@ fn lower_method_impl(
 }
 
 #[cfg(test)]
+#[path = "../../tests/unit/methods/tests.rs"]
 mod tests;

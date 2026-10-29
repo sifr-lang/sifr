@@ -5,7 +5,7 @@ use crate::stdlib_filter::{
 use std::collections::{BTreeMap, HashSet};
 
 #[cfg(test)]
-#[path = "relocation_tests.rs"]
+#[path = "../../tests/unit/project_stdlib_nominals/relocation_tests.rs"]
 mod tests;
 
 /// Imported contracts are emitted in consumers but implemented exactly once,

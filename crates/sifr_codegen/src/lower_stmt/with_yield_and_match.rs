@@ -750,23 +750,5 @@ pub(super) fn try_lower_match_literal_pattern(expr: &HirExpr) -> Option<String> 
 }
 
 #[cfg(test)]
-mod reserved_literal_identifier_tests {
-    use super::*;
-
-    #[test]
-    fn capture_names_cannot_be_reinterpreted_as_boolean_literals() {
-        for (name, expected) in [
-            ("true", "sifr_source_74727565"),
-            ("false", "sifr_source_66616c7365"),
-        ] {
-            let pattern = HirPattern::Capture {
-                name: name.to_string(),
-                ty: Type::Bool,
-            };
-            let (rendered, bindings) =
-                try_lower_match_pattern(&pattern).expect("capture pattern should lower");
-            assert_eq!(rendered, expected);
-            assert_eq!(bindings, [name]);
-        }
-    }
-}
+#[path = "../../tests/unit/lower_stmt/with_yield_and_match/reserved_literal_identifier_tests.rs"]
+mod reserved_literal_identifier_tests;

@@ -349,31 +349,8 @@ fn expression_is_syntactic_constant(expression: &syn::Expr) -> bool {
 }
 
 #[cfg(test)]
-mod receiver_tests {
-    #[test]
-    fn mutable_copy_receiver_does_not_get_shared_receiver_expectation() {
-        let signature = syn::parse_quote!(fn change(&mut self));
-        let body = syn::parse_quote!({});
-        let mut attrs = Vec::new();
-        super::refresh_function_expectations(
-            &mut attrs,
-            &signature,
-            &body,
-            super::FunctionExpectationContext {
-                owner_has_display: false,
-                copy_receiver_lint: true,
-                trait_impl: false,
-                restricted_api: true,
-                ref_option_lint: true,
-            },
-        );
-        assert!(
-            !quote::quote!(#(#attrs)*)
-                .to_string()
-                .contains("trivially_copy_pass_by_ref")
-        );
-    }
-}
+#[path = "../../tests/unit/generated_rust_canonicalizer/source_expectations/receiver_tests.rs"]
+mod receiver_tests;
 
 const EXACT_FLOAT_REASON: &str = "language necessity: Sifr float equality preserves IEEE-754 exact comparison; owner arithmetic; remove when the source contract changes";
 

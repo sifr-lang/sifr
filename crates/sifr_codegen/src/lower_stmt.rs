@@ -67,28 +67,41 @@ pub(crate) use subscript_assignment::{
 };
 
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/augassign_edge_tests.rs"]
 mod augassign_edge_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/augassign_tests.rs"]
 mod augassign_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/binding_tests.rs"]
 mod binding_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/core_and_tuple_tests.rs"]
 mod core_and_tuple_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/for_loop_tests.rs"]
 mod for_loop_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/match_nested_try_tests.rs"]
 mod match_nested_try_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/raise_assert_tests.rs"]
 mod raise_assert_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/return_assert_if_tests.rs"]
 mod return_assert_if_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/return_tests.rs"]
 mod return_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/subscript_augassign_assignment_tests.rs"]
 mod subscript_augassign_assignment_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/subscript_augassign_tests.rs"]
 mod subscript_augassign_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/while_loop_tests.rs"]
 mod while_loop_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_stmt/yield_unpack_with_tests.rs"]
 mod yield_unpack_with_tests;

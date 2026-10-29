@@ -641,8 +641,9 @@ edition = "2024"
 }
 
 #[cfg(test)]
-#[path = "lib_project_codegen_opaque_import_tests.rs"]
+#[path = "../tests/unit/lib_project_codegen_opaque_import_tests.rs"]
 mod opaque_import_tests;
 
 #[cfg(test)]
+#[path = "../tests/unit/lib_project_codegen/tests.rs"]
 mod tests;

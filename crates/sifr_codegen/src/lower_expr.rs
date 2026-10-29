@@ -77,8 +77,11 @@ pub(crate) fn typed_empty_list_expr(ty: &Type) -> Option<RustExpr> {
 }
 
 #[cfg(test)]
+#[path = "../tests/unit/lower_expr/comprehension_and_misc_tests.rs"]
 mod comprehension_and_misc_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_expr/leaves_and_compound_tests.rs"]
 mod leaves_and_compound_tests;
 #[cfg(test)]
+#[path = "../tests/unit/lower_expr/option_compare_tests.rs"]
 mod option_compare_tests;

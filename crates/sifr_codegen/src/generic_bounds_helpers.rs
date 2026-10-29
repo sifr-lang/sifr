@@ -801,5 +801,5 @@ impl RustEmitter {
 }
 
 #[cfg(test)]
-#[path = "generic_bounds_helpers_tests.rs"]
+#[path = "../tests/unit/generic_bounds_helpers_tests.rs"]
 mod tests;

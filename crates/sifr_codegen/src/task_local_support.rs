@@ -91,5 +91,5 @@ pub(crate) fn split_declarations(item: syn::Item) -> Vec<syn::Item> {
 }
 
 #[cfg(test)]
-#[path = "task_local_support_tests.rs"]
+#[path = "../tests/unit/task_local_support_tests.rs"]
 mod tests;

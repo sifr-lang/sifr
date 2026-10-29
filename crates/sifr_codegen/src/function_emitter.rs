@@ -25,4 +25,5 @@ mod scope_and_function_types;
 mod sifr_int_analysis;
 pub(crate) use sifr_int_analysis::*;
 #[cfg(test)]
+#[path = "../tests/unit/function_emitter/tests.rs"]
 mod tests;

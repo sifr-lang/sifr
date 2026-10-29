@@ -259,51 +259,8 @@ impl RustEmitter {
 }
 
 #[cfg(test)]
-mod representation_tests {
-    use super::*;
-
-    fn render_conversion(target: &Type, source: &Type) -> String {
-        let emitter = RustEmitter::new();
-        crate::render_expr(&emitter.consuming_value_conversion_for_ir(
-            target,
-            source,
-            crate::RustExpr::Ident("value".to_string()),
-        ))
-    }
-
-    #[test]
-    fn representation_conversion_flattens_nested_option_once() {
-        let target = sifr_type_system::make_union(vec![Type::Str, Type::None]);
-        let source = Type::Union(vec![target.clone(), Type::None]);
-        let rendered = render_conversion(&target, &source);
-
-        assert_eq!(rendered.matches(".flatten(").count(), 1, "{rendered}");
-        assert_eq!(rendered.matches(".map(").count(), 0, "{rendered}");
-        assert_eq!(rendered.matches(".unwrap_or(").count(), 0, "{rendered}");
-    }
-
-    #[test]
-    fn representation_conversion_maps_option_union_once() {
-        let payload = sifr_type_system::make_union(vec![Type::Int, Type::Str]);
-        let source = sifr_type_system::safe_optional_result(payload);
-        let target =
-            sifr_type_system::make_union(vec![Type::Bool, Type::Int, Type::Str, Type::None]);
-        let rendered = render_conversion(&target, &source);
-
-        assert_eq!(rendered.matches(".map(").count(), 1, "{rendered}");
-        assert_eq!(rendered.matches(".unwrap_or(").count(), 1, "{rendered}");
-    }
-
-    #[test]
-    fn representation_conversion_materializes_nullable_union_once() {
-        let target = sifr_type_system::make_union(vec![Type::Int, Type::Str, Type::None]);
-        let source = sifr_type_system::safe_optional_result(target.clone());
-        let rendered = render_conversion(&target, &source);
-
-        assert_eq!(rendered.matches(".map(").count(), 0, "{rendered}");
-        assert_eq!(rendered.matches(".unwrap_or(").count(), 1, "{rendered}");
-    }
-}
+#[path = "../../tests/unit/stmt_support_emitter/class_upcasts/representation_tests.rs"]
+mod representation_tests;
 
 fn render_ancestor_rust_type(current_module: Option<&str>, ancestor: &str) -> String {
     let Some((module, name)) = ancestor.rsplit_once('.') else {
@@ -343,51 +300,5 @@ fn map_value(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::render_ancestor_rust_type;
-    use crate::{RustEmitter, RustExpr};
-    use sifr_type_system::Type;
-
-    fn class(identity: &str, name: &str, parent_class: Option<&str>) -> Type {
-        Type::Class {
-            identity: Some(identity.to_string()),
-            type_args: Vec::new(),
-            name: name.to_string(),
-            fields: Vec::new().into(),
-            methods: Vec::new().into(),
-            parent_class: parent_class.map(str::to_string),
-        }
-    }
-
-    #[test]
-    fn basename_only_ancestor_match_does_not_emit_an_upcast() {
-        let source = class("pkg.Child", "Child", Some("pkg.Root"));
-        let unrelated_root = class("other.Root", "Root", None);
-        let value = RustExpr::Ident("value".to_string());
-
-        assert_eq!(
-            RustEmitter::new().consuming_value_conversion_for_ir(
-                &unrelated_root,
-                &source,
-                value.clone(),
-            ),
-            value
-        );
-    }
-
-    #[test]
-    fn ancestor_paths_are_local_stdlib_or_crate_rooted_by_identity() {
-        assert_eq!(
-            render_ancestor_rust_type(Some("models"), "models.Mid"),
-            "Mid"
-        );
-        assert_eq!(
-            render_ancestor_rust_type(Some("adapter"), "models.Mid"),
-            "crate::models::Mid"
-        );
-        assert_eq!(
-            render_ancestor_rust_type(Some("adapter"), "sifr.resource.NullContext"),
-            sifr_type_system::stdlib_class_rust_name("sifr.resource", "NullContext")
-        );
-    }
-}
+#[path = "../../tests/unit/stmt_support_emitter/class_upcasts/tests.rs"]
+mod tests;
