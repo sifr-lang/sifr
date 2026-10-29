@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
-- Latest delivery: D6 production-input ownership; D7 native corpus execution investigation
+- Latest delivery: D6 production-input ownership; D7/D8 investigated; D9 input aggregation in qualification
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1508,3 +1508,67 @@ qualification. Measure the actual identity producer before/after with the same
 source tree/environment and retain preparation separately. Then qualify affected
 compiler/host-tool consumer pairing and obtain independent review under the
 approved intermediate policy. The full phase gates and480s acceptance remain open.
+
+
+#### D9 input aggregation qualification — 2026-10-29
+
+Runtime candidate `cea605c1a875746a198dbfc50a311f7a04f29844` implements the
+per-calculation root union. No persistent cache, excluded production input,
+profile change, or compatibility path is introduced. Both local-package and
+product identity framing advance explicitly to v3. This invalidates the old
+representation; unchanged identities across that migration are not expected.
+
+All11 focused identity tests pass (10.390s command including preparation,8.28s
+libtest), including real Cargo source-archive add/remove/rename/symlink/configuration
+invalidation, shared ownership, exclusion boundaries, and private-test isolation.
+The first attempt failed to compile because an assertion message referenced a
+shadowed inventory variable; the corrected attempt and original failure are kept.
+
+Three alternating old/new actual producer runs on the same source tree give
+median9.655s before and1.833s after,81.02% lower. The old producer visits174,350
+logical file entries; the new producer visits18,758, exactly the same unique
+inventory with each file read once. Complete input paths/content hashes and both
+producer binaries are retained. Preparation and inventory verification are outside
+those per-producer timers; the complete diagnostic command is42.332s. This is a
+local producer comparison, not full-gate acceptance.
+
+Actual generated Rust consumer controls pass unchanged reuse, declared producer
+asset edits, and restoration. An independent source-archive control passes with
+Rust1.98.1 and installed1.99.0-nightly: source identity remains toolchain-independent,
+configured identity changes, repeated builds are fresh, and an actual production
+code edit rebuilds and changes the executed result. The initial1.98.0 attempt
+correctly failed the declared minimum Rust version; preserve that diagnostic.
+
+The complete SQL native protocol passes, retaining all339 selected artifacts,
+all three linked executables, constant two-root remaps and the original dev
+profile. Clean A255.488s, reused A1.083s (339/339 fresh), independent clean B262.834s;
+A was removed before B. All three executable hashes match across all three builds.
+Outer elapsed520.937s versus baseline528.929s. This small observed difference is
+not repeated host-performance qualification. Peak sampled aggregate RSS1.68GB,
+minimum available9.75GB; no reserve stop, surviving process or source mutation.
+The baseline's B run overlapped a read-only input census; retain that limitation.
+The large producer improvement does not solve independent clean-build latency.
+
+Seven real compiler/native-tool sandbox tests pass in52.59s, including direct and
+confined MySQL/PostgreSQL/SQLite schema execution, admission/lock drift, missing
+grants and incorrect compiler selection. Native tool preparation reports1m24s;
+test preparation51.16s; complete guarded command189.594s. These preparation costs
+are not steady-state runtime assertions. All10 protocol controls also pass (six compiler-session and four native-controller
+cases): identity mismatch, worker death, timeout, diagnostics, shutdown and lazy
+selection. Complete guarded command130.775s includes2m04s compilation; execution
+remains separate in the logs. Independent review remains pending at this record.
+
+Method-authority and filesystem-effect guards initially identified the extracted
+exclusion predicate, changed lexical contexts and two new fixture reads. Explicit
+ownership records were updated without changing either guard. Corrected guards,
+unsafe-ABI and DX metadata inventories pass; formatting/file-size checks pass.
+These policy-record changes follow the runtime candidate and leave its Rust,
+manifest, lock, toolchain and consumer inputs unchanged. The reviewed final
+candidate must retain that binding. Full phase gates, outstanding SQL component
+provenance repair and repeated480s qualification remain open.
+
+D9 evidence archive: `dev-verify-d9-evidence.tar.gz`, SHA-256
+`09bae68ef6b1df5d4e16bfe3429661631373f9414eaf2d3be7dbdd496d61e3b4`;
+all200 payloads verified after transfer. It includes failed attempts, source/input
+bindings, actual producer executables, complete SQL timings/artifact selection,
+consumer controls and policy results. Build targets remain retained separately.
