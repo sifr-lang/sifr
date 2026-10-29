@@ -20254,7 +20254,7 @@
       "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/generated_rust_canonicalizer_tests.rs::similar_parameter_renaming_preserves_shorthand_field_values enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts::literal-comparison::1",
+      "site": "crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts::literal-comparison::1",
       "fingerprint": "2d559d9de50b841bdf2525ba4f3e5ba69963f5c83e456e2fdda95373b59afd28",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -20262,11 +20262,11 @@
       "inputs": "fn mutable_apis_do_not_acquire_spurious_must_use_contracts ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::mutable_apis_do_not_acquire_spurious_must_use_contracts enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions::literal-comparison::1",
+      "site": "crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions::literal-comparison::1",
       "fingerprint": "e2079f280f69da1d25adfcf9c9f50a1eb3b9e37c06f161cf70669eba518ce806",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -20274,8 +20274,8 @@
       "inputs": "fn borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_codegen/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_generated_rust/tests/unit/generated_support_regression_tests.rs::borrowed_tuple_field_getters_are_const_without_owned_drop_or_deref_assumptions enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_generated_rust/src/generated_visibility.rs::set_impl_function_visibility::literal-comparison::1",

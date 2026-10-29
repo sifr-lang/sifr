@@ -241,10 +241,6 @@ mod lib_codegen_tests;
 #[path = "../tests/unit/type_conversion_tests.rs"]
 mod type_conversion_tests;
 
-#[cfg(test)]
-#[path = "../tests/unit/generated_support_regression_tests.rs"]
-mod generated_support_regression_tests;
-
 mod compiled_identity;
 #[doc(hidden)]
 pub use compiled_identity::compiled_input_tokens;

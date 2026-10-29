@@ -13,3 +13,7 @@ pub use error_refs::collect_source_builtin_error_classes;
 #[cfg(test)]
 #[path = "../tests/unit/generated_rust_canonicalizer_ownership_tests.rs"]
 mod generated_rust_canonicalizer_ownership_tests;
+
+#[cfg(test)]
+#[path = "../tests/unit/generated_support_regression_tests.rs"]
+mod generated_support_regression_tests;
