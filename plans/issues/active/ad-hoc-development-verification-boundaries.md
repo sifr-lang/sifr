@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D20; final phase qualification open
-- Latest delivery: D20 isolated CLI fixture dependency reuse; D21 SQL artifact requalification in progress
+- Status: in progress; intermediate deliveries through D21; final phase qualification open
+- Latest delivery: D21 SQL artifact requalification; D22 ignored frontend assertion ownership in progress
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3071,3 +3071,53 @@ Require exact-candidate independent review before intermediate merge. This repai
 artifact correctness and makes no gate speedup claim. The independent SQL clean
 build protocol, ignored deque assertion and final integrated qualification remain
 separate obligations; no ordinary/expanded gate split is approved.
+
+
+#### D21 closure — 2026-10-29
+
+[PR #4533](https://github.com/sifr-lang/sifr/pull/4533) merges as
+`992d16aa33ff7a4b56549be863f6a5a31a5ee4bb`; reviewed candidate
+`61577a7894ddb69e4d8a9fa8c72df63fdc98986f`. Canonical producers run on frozen
+`cf04295a853ee71946cb0bc952510ed6973f9185`: MySQL 28.311s, PostgreSQL all six
+majors 233.431s, SQLite 19.294s. All ten binaries are byte-identical to the prior
+artifacts. Each receipt changes only root Cargo manifest/lock hashes and aggregate
+source digest. All 13 transferred outputs are SHA-256 verified. Words remains
+unchanged and validates. No code, tool identity, profile or selection changes.
+
+All eight component/provider contract and mutation commands pass. Specifically,
+D18's four failures are `sql-component-qualification`,
+`sql-component-qualification-mutations`, `sql-postgresql-compiler-qualification`
+and `sql-postgresql-compiler-qualification-mutations`: the two shared component
+variants check multiple families, explaining four repaired variants from three
+receipt changes. Native consumers pass all 33 tests (17 MySQL, two PostgreSQL
+executing six majors, 14 SQLite), zero failed, ignored or filtered. Guarded
+qualification takes 80.233s including compilation. All producer and successful
+consumer sessions end empty, without drift or reserve stops.
+
+All 108 payloads in `dev-verify-d21-qualified.tar.gz` are hash/size verified;
+archive SHA-256 `c6d66f18bbd3e877b6450ad336d7560c85622b5f8d58a2215af53e5ee39d456e`.
+Review SATISFIED, no blockers; response SHA-256
+`bc53621dd71bf46c0088441b5fb32c24c441be073ebfd0c05f9b562a89d04a91`.
+The initial abbreviated-SHA consumer launch stops before tests in 0.687s and is
+preserved as failure; diagnostic launchers should reject abbreviated input earlier.
+Coarse root Cargo input invalidation remains a known producer-contract follow-up.
+No gate speedup is claimed. Historical integrated failures remain failures; final
+correctness, coverage, invalidation and timing qualification remain open.
+
+### D22 — give the ignored deque assertion its frontend owner (prospective)
+
+The lowering test `test_bare_deque_call_resolves_without_import` is ignored because
+its source imports the driver-loaded standard-library compatibility surface. Move
+its exact unannotated `deque([1])`, append and popleft source/assertion to the driver
+frontend test owner, which supplies that registry through the canonical public
+lowering API. Use a name that accurately describes imported constructor inference.
+Do not add a registry substitute to the standalone lowering layer or alter product
+behavior merely to satisfy the old placement. Remove the old ignored copy only
+when the new ordinary owner executes successfully.
+
+Require the focused assertion, its complete frontend group, the remaining lowering
+ownership/async group, unchanged profile selection, formatting/size/source ownership
+checks, and independent exact-candidate review. Verify the exact source string and
+ordinary discovery; required execution must not be substituted with a skip. If a
+real semantic failure remains in the correct layer, preserve it and diagnose its
+owner before claiming coverage. This is a coverage repair, not a gate speedup.

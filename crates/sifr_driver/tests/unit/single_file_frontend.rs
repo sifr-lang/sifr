@@ -194,6 +194,19 @@ fn test_parse_source_surfaces_malformed_integer_token_as_typed_diagnostic() {
 }
 
 #[test]
+fn test_imported_deque_constructor_infers_element_type() {
+    let result = lower_source(
+        &crate::CompilerContext::for_test(),
+        "from sifr.collections import deque\n\ndef main():\n    q = deque([1])\n    q.append(2)\n    assert q.popleft() == 1\n",
+    );
+    assert!(
+        result.is_ok(),
+        "deque(...) should resolve through the compat stdlib surface: {:?}",
+        result.err()
+    );
+}
+
+#[test]
 fn test_lower_source_and_type_check_source_surface_type_errors() {
     let errors = match lower_source(
         &crate::CompilerContext::for_test(),
