@@ -23,6 +23,7 @@ class ProfileError(VerificationError):
 
 _WORKSPACE_PACKAGE_NAMES: set[str] | None = None
 DELIVERY_PROFILE_NAMES = ("create-pr", "merge", "nightly", "release")
+SQL_EDITOR_PACKAGES = ("sifr_frontend", "sifr_analysis", "sifr_lsp")
 E2E_PASS_FIXTURE_DIR = REPO_ROOT / "crates" / "sifr" / "tests" / "e2e" / "pass"
 PYTHON_INTEROP_CAPABILITY_MATRIX = (
     REPO_ROOT / "verification" / "areas" / "python_interop" / "declaration_capabilities.json"
@@ -62,6 +63,7 @@ def load_profile(profile: str, profiles_dir: Path = PROFILES_DIR) -> dict[str, A
         raise ProfileError(str(error)) from error
     validate_toolchain_steps(payload)
     validate_crate_test_membership(payload)
+    validate_editor_ownership(payload)
     validate_step_budgets(payload)
     return payload
 
@@ -457,6 +459,24 @@ def crate_test_mode(profile: dict[str, Any]) -> str | None:
     if len(selected) > 1:
         raise ProfileError(f"profile {profile.get('name')} selects more than one crate-test mode")
     return selected[0] if selected else None
+
+
+def validate_editor_ownership(profile: dict[str, Any]) -> None:
+    """The focused SQL editor check supplements complete crate execution."""
+    if not any(area["area"] == "sql_platform" and "incremental-editor" in area["suites"]
+               for area in profile.get("selected_areas", [])):
+        return
+    mode = crate_test_mode(profile)
+    suites = crate_test_suites_for_mode(profile, mode) if mode else []
+    for package in SQL_EDITOR_PACKAGES:
+        if not any(suite.get("package") == package
+                   and suite.get("command") == ["test", "-p", package]
+                   and suite.get("status") == "blocking"
+                   and suite.get("executed_in_merge") is True for suite in suites):
+            raise ProfileError(
+                f"profile {profile.get('name')} SQL incremental-editor requires "
+                f"complete blocking {package} tests in its selected crate mode"
+            )
 
 
 def print_summary(requested_profile: str) -> None:

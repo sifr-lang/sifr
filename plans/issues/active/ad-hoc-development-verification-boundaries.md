@@ -1963,3 +1963,79 @@ control. Both complete inventory checks pass unchanged counts: 6,458 method site
 main-check elapsed is 13.226s + 14.661s = 27.887s. File-size and diff checks pass.
 These results use Python 3.14.7; remote comparison and independent review remain
 pending. No policy inventory or compiler/runtime source changed.
+
+#### D11 completed diagnostic and D12 closure — 2026-10-29
+
+D11 executes all selected categories: canonical wall 5006.040s, facade 5019.521s,
+guard 5022.365s. Thirty-five steps pass; coverage readiness, diagnostic docs-sync,
+and the Node environment contract fail as previously recorded. No category is
+blocked or unexecuted. The source is unchanged and the owned session ends empty.
+The original run stays failed despite the subsequent focused repairs.
+
+All 19 crate configurations pass in 1735.989s, including 805 ordinary driver tests
+(508.368s),80 generated-driver assertions (420.286s), and six generated CLI
+assertions (47.442s). Of the driver's82 ordinarily ignored cases,80 have generated
+execution, one is explicit preparation, and the corpus assertion is owned by the
+selected installed metadata corpus. All 732 native fixtures pass in 136.833s;
+frontend compilation44.357s, native-build stage79.011s, runtime11.908s. All 186
+native groups reuse fresh artifacts but still perform Cargo validation. The
+external one-thread diagnostic override remains a material timing caveat.
+All 6868 archive payloads verify in `dev-verify-integrated-d11-discovery-r3-evidence.tar.gz`,
+SHA-256 `ef27d985bbd8daa30a398d35680b49402c53489d642c5109be081b621d76e881`.
+
+[PR #4523](https://github.com/sifr-lang/sifr/pull/4523) merges reviewed candidate
+`1c407e4cd0ffaa04d689b0cdc0919b185470b358` as
+`6bf629893c3cf050044ff76379e4616338244c8c`. Independent review is `SATISFIED`,
+without blocking findings. Remote main scans pass in 25.108s and 26.975s, versus
+34.321s and 59.198s in D11: 93.519s→52.083s. Including both self-test entry points
+and the architecture suite, affected elapsed is 183.755s→95.773s (one ordinary
+same-host comparison, not repeated phase qualification). All 57 tests pass remotely,
+including cold copies; main outputs match local outputs byte-for-byte. The
+103.717s guarded run includes file-size/diff checks and ends empty without drift.
+The baseline suite has 56 tests; the candidate adds one four-field regression.
+
+Final evidence archive `dev-verify-d12-evidence.tar.gz` has 23 verified payloads,
+including the separately verified 28-file remote packet; SHA-256
+`b6f40204ad5434dbd6da05d912bf223cee7f63a2ee89875fde48eac02c384a0a`.
+Review records remain outside Git, keyed by candidate. Follow-up suggestions
+(unused record parameter and additional binding-label variants) are optional
+policy-maintenance work. Full-profile CI again stops before preparation for the
+missing performance reference; final phase gates and 480-second acceptance stay open.
+
+### D13 — SQL editor execution boundary (prospective)
+
+The current SQL incremental-editor case runs all tests and doctests in
+`sifr_frontend`, `sifr_analysis`, and `sifr_lsp`, taking 116.518s. The ordinary
+crate phase then executes those same suites. All four delivery profiles already
+enroll the three complete, unfiltered crates in both smoke and full modes.
+The SQL area inherits the same execution environment, with only its category
+deadline differing; observed executable paths match. The expensive language-server
+run includes unrelated workspace and protocol tests (104.90s in the SQL case).
+
+Narrow this area case to library tests for SQL, embedded analysis and template
+documents. Current discovery selects 12 frontend, 11 analysis and two LSP tests.
+Keep every complete crate command, integration target, doctest, feature graph,
+and existing ignored-test owner in the ordinary profile selection. The SQL query,
+migration and schema integration cases keep their existing area enrollment.
+Standalone incremental-editor verification becomes an explicit focused check;
+complete development validation still owns the full crates.
+
+Require three nonempty, successful harness outcomes for the focused case; zero
+selection, ignored-only execution or missing crate output cannot pass. Validate
+profile ownership before execution: selecting this area requires each original
+complete crate in the profile's actual crate-test mode. Negative controls must
+reject removed, filtered, disabled or wrong-mode owners. Keep one shared command
+definition for preparation and execution, and preserve all profile selections.
+
+Acceptance: compare actual selected test identities with current discovery;
+execute all 25 focused assertions with the existing pinned environment and verify
+unchanged complete crate selections in every delivery profile/mode. Run SQL
+incremental-editor qualification/mutation checks, runner ownership/preparation
+controls, profile checks and file-size checks. Measure the complete affected case
+and reject a negligible gain. Independent review and final phase gates remain.
+Do not introduce cached-success reuse or a general delegation framework.
+
+Prior profile experiments remain authoritative: blanket opt0 caused 6.697x slower
+metadata validation, and selective semantic opt0 caused 2.133x slower source checks.
+They are not repeated as a shortcut. CLI allocation, Python fixture identities,
+native artifact validation and the independent SQL build cost remain separate leads.
