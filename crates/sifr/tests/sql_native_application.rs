@@ -1,5 +1,8 @@
 #![allow(clippy::expect_used)]
 //! Real Sifr packages, actual provider components, and native SQLite execution.
+#[path = "support/cli_fixture.rs"]
+mod cli_fixture;
+
 use sha2::{Digest as _, Sha256};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -13,7 +16,7 @@ impl Project {
         Self::with_provider("sqlite", "3.53.4")
     }
     fn with_provider(family: &str, version: &str) -> Self {
-        let root = tempfile::tempdir().expect("project directory");
+        let root = cli_fixture::project("sql-native-");
         let database = root.path().join("actual.sqlite3");
         rusqlite::Connection::open(&database)
             .expect("actual database")

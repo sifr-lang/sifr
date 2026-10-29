@@ -1,19 +1,21 @@
 #![allow(clippy::expect_used)]
 
+#[path = "support/cli_fixture.rs"]
+mod cli_fixture;
+
 use std::path::Path;
 use std::process::{Command, Output};
 
-fn run_sifr(root: &Path, cwd: &Path, args: &[&str]) -> Output {
+fn run_sifr(cwd: &Path, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_sifr"))
         .args(args)
         .current_dir(cwd)
-        .env("SIFR_CACHE_DIR", root.join("cache"))
         .output()
         .expect("Sifr CLI should start")
 }
 
-fn assert_success(root: &Path, cwd: &Path, args: &[&str]) -> Output {
-    let output = run_sifr(root, cwd, args);
+fn assert_success(cwd: &Path, args: &[&str]) -> Output {
+    let output = run_sifr(cwd, args);
     assert!(
         output.status.success(),
         "{args:?} failed:\n{}",
@@ -24,7 +26,7 @@ fn assert_success(root: &Path, cwd: &Path, args: &[&str]) -> Output {
 
 #[test]
 fn legal_source_method_names_single_file_cli() {
-    let workspace = tempfile::tempdir().expect("single-file workspace");
+    let workspace = cli_fixture::project("legal-method-single-file-");
     let root = workspace.path();
     std::fs::write(
         root.join("main.sifr"),
@@ -32,18 +34,18 @@ fn legal_source_method_names_single_file_cli() {
     )
     .expect("write source");
 
-    assert_success(root, root, &["check", "main.sifr"]);
-    let emitted = assert_success(root, root, &["emit", "main.sifr"]);
+    assert_success(root, &["check", "main.sifr"]);
+    let emitted = assert_success(root, &["emit", "main.sifr"]);
     let rust = String::from_utf8_lossy(&emitted.stdout);
     assert!(rust.contains(".unwrap("), "{rust}");
     assert!(rust.contains(".expect("), "{rust}");
-    assert_success(root, root, &["build", "main.sifr", "-o", "out"]);
-    assert_success(root, root, &["run", "main.sifr"]);
+    assert_success(root, &["build", "main.sifr", "-o", "out"]);
+    assert_success(root, &["run", "main.sifr"]);
 }
 
 #[test]
 fn legal_source_method_name_inherited_check_emit() {
-    let workspace = tempfile::tempdir().expect("inherited-name workspace");
+    let workspace = cli_fixture::project("legal-method-inherited-");
     let root = workspace.path();
     std::fs::write(
         root.join("main.sifr"),
@@ -51,14 +53,14 @@ fn legal_source_method_name_inherited_check_emit() {
     )
     .expect("write source");
 
-    assert_success(root, root, &["check", "main.sifr"]);
-    let emitted = assert_success(root, root, &["emit", "main.sifr"]);
+    assert_success(root, &["check", "main.sifr"]);
+    let emitted = assert_success(root, &["emit", "main.sifr"]);
     assert!(String::from_utf8_lossy(&emitted.stdout).contains(".expect("));
 }
 
 #[test]
 fn legal_source_method_names_project_and_test_cli() {
-    let workspace = tempfile::tempdir().expect("project workspace");
+    let workspace = cli_fixture::project("legal-method-project-");
     let root = workspace.path();
     std::fs::write(root.join("sifr.toml"), "[source]\nroot = \".\"\n")
         .expect("write project manifest");
@@ -96,13 +98,14 @@ def expect(value: Carrier) -> int:
     )
     .expect("write test source");
 
-    let invocation_cwd = std::env::temp_dir();
+    let invocation = cli_fixture::project("legal-method-invocation-");
+    let invocation_cwd = invocation.path();
     let main = root.join("main.sifr").to_string_lossy().into_owned();
     let tests = root.join("tests").to_string_lossy().into_owned();
     let output = root.join("out").to_string_lossy().into_owned();
-    assert_success(root, &invocation_cwd, &["check", &main]);
-    assert_success(root, &invocation_cwd, &["emit", &main]);
-    assert_success(root, &invocation_cwd, &["build", &main, "-o", &output]);
-    assert_success(root, &invocation_cwd, &["run", &main]);
-    assert_success(root, &invocation_cwd, &["test", &tests]);
+    assert_success(invocation_cwd, &["check", &main]);
+    assert_success(invocation_cwd, &["emit", &main]);
+    assert_success(invocation_cwd, &["build", &main, "-o", &output]);
+    assert_success(invocation_cwd, &["run", &main]);
+    assert_success(invocation_cwd, &["test", &tests]);
 }

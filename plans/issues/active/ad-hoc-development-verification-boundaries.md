@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D18 admission; final phase qualification open
+- Status: in progress; intermediate deliveries through D19; final phase qualification open
 - Latest delivery: D17 generated Rust ownership; D18 integrated normal-allocation discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
@@ -2925,3 +2925,81 @@ checks remain applicable because their implementation inputs are unchanged.
 Control evidence: `dev-verify-d19-cargo-role-control.json`. Its first harness attempt
 stopped on macOS temporary-path canonicalization before producing a verdict; that
 incomplete attempt is retained and does not count as a pass.
+
+
+D18 r3 completes in 4,690.690s (78m10.690s): 32 selected steps pass, five fail and
+one is blocked. The crate category reaches its aggregate 1,750.546s diagnostic
+cap; the native corpus is blocked by that safety stop. This remains a failed,
+incomplete integrated run. Generated CLI passes 6/6; generated driver executes
+68 passing assertions, one capped assertion and 11 unexecuted assertions. The
+capped command exits for the category deadline, not an assertion failure.
+
+A separate recovery at the same frozen revision executes all 12 remaining driver
+assertions and all 732 native corpus fixtures successfully. Recovery takes
+223.323s outer; the corpus command takes 187.594s, including 44.788s source
+compilation. It does not turn the original run into a contiguous gate pass. All
+owned sessions end empty, without reserve stops or source changes. Both archives
+are verified locally, including every payload's size and SHA-256:
+
+- Discovery: 6,854 payloads; `dev-verify-d18-discovery-r3-guard-evidence.tar.gz`,
+  `0f8358bdf50ba1993fc601e68d96e314ce36e3c65f59fa1477cc02f18887e23e`.
+- Recovery: 38 payloads; `dev-verify-d18-remaining-r1-guard-evidence.tar.gz`,
+  `1f47a753fbd80d15e06a4ff7cfa2fc0b804dc73e6729eafaca22d2cae34a8015`.
+
+One additional lowering assertion, `test_bare_deque_call_resolves_without_import`,
+is still ignored because it needs the driver-loaded compatibility registry. Its
+execution owner must be resolved before final complete-coverage acceptance.
+
+D19 merges in [PR #4531](https://github.com/sifr-lang/sifr/pull/4531) as
+`a8fb4c04aa566294be0bbfd358a50fe6f341479d`. Exact candidate
+`e9b10dde21e769a88b7945fc895ecbe7117a7117` passes all 1,803 affected Rust tests
+(1,220 + 297 + 18 + 268), none ignored, and the padding runtime assertions. Padding
+emitted bytes are identical to baseline. All 93 generated projects retain identical
+file inventories and bytes, allowing only the expected candidate revision change
+in Cargo manifests and lockfiles. Candidate qualification takes 231.347s outer;
+materialization parity takes 113.754s. These include rebuilds and are not gate
+performance acceptance. The 51-payload qualification archive is verified locally:
+`dev-verify-d19-qualified.tar.gz`, SHA-256
+`c08905d9e422eedf544f4d1759cd22d017b3b157ac10b0a5ad0940d95fea0021`.
+
+Independent exact-candidate review returns SATISFIED, no blockers; response
+SHA-256 `f1362d86fa3a1d86e0f00cc8fd66a72358a6e9e43374afb08c4f00d3eb590d38`.
+Retained follow-ups: pre-existing module resolution for unannotated children of
+`#[path]` modules; missing regression-proof files producing a raw I/O exception;
+lexical rather than evaluated runtime-root discovery; diagnostics for invalid
+inherited editions and unsupported unstable Cargo build forms. No current missing
+production consumer was demonstrated. These do not change the final gate scope.
+
+### D20 — CLI fixture ownership and native dependency reuse (prospective)
+
+D18's lowering/CLI command passes in 441.843s. Its Cargo-ordered target summaries
+attribute 111.47s to SQL native applications, 70.18s to build-output behavior,
+39.88s to legal method names and 30.66s to runtime observability. These four targets
+contain 48 passing assertions; 252.19s is their body-time sum, not a matched
+optimization baseline. Source inspection shows fresh external fixture CWDs enter
+`owner_scope()` and therefore select distinct native artifact families. Legal-name
+fixtures additionally select fresh explicit cache roots. Repeated dependency
+compilation was observed in separate legal-name fixture targets.
+
+Keep unique per-case source projects, databases, generated roots and runtime
+processes. Investigate placing behavior-only fixture directories under one owned
+checkout root, using the existing retained native cache. Preserve production owner
+isolation and every assertion. Do not share storage in tests whose contracts
+require a fresh cache, permission boundary or lease. Preserve unrelated invocation
+CWD checks and application/workspace discovery behavior. Do not globally redirect
+temporary paths or introduce a compiler ownership override.
+
+Before adoption compare the same complete four-target selection, including its
+preparation, under matched pinned tools, retained targets, environment and the
+canonical four-slot libtest allocation. Measure baseline, first candidate use and
+retained candidate use; report reconstruction separately. Require all 48 assertions,
+unchanged public profile selection, formatting/size checks, independent review and
+no isolation failures. Investigate native family identities to corroborate the
+mechanism. Adoption requires at least 25% lower retained complete affected cycle;
+a 120s execution budget for this group is a provisional stopping point for this
+item, not permission to exceed the overall 120s integration or 480s gate budgets.
+If it does not earn a meaningful reduction, retain the evidence and reject it.
+
+SQL component provenance requalification remains a separate owned repair. The
+475s independent SQL clean-build obligation and final integrated coverage,
+invalidation and timing qualification remain mandatory; no gate split is approved.
