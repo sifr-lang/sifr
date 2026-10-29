@@ -1,4 +1,8 @@
-use super::{IdentityEncoder, input_tree::hash_tree, production_inputs::visit_package};
+use super::{
+    IdentityEncoder,
+    input_tree::{InputInventory, hash_tree},
+    production_inputs::visit_package,
+};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -40,7 +44,11 @@ fn production_ownership_requires_complete_valid_explicit_roots() {
     tree.write("src/lib.rs", "production");
     let hash = || {
         let mut encoder = IdentityEncoder::new("ownership-test");
-        visit_package(&tree.0, &tree.0, &mut encoder).map(|()| encoder.finish())
+        let mut inputs = InputInventory::default();
+        visit_package(&tree.0, &tree.0, &mut inputs)?;
+        inputs
+            .encode(&tree.0, &mut encoder)
+            .map(|()| encoder.finish())
     };
     for manifest in [
         "[package]\nname='probe'\n",
@@ -86,15 +94,15 @@ fn workspace_input_ownership_rejects_missing_assets_and_package_cycles() {
         tree.write("crates/owner/Cargo.toml", &format!(
             "[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs={inputs}\n"
         ));
-        let mut hash = IdentityEncoder::new("workspace-ownership-test");
+        let mut inventory = InputInventory::default();
         assert!(
-            visit_package(&tree.0, &tree.0.join("crates/owner"), &mut hash).is_err(),
+            visit_package(&tree.0, &tree.0.join("crates/owner"), &mut inventory).is_err(),
             "accepted invalid workspace ownership: {inputs}"
         );
     }
     tree.write("crates/owner/Cargo.toml", "[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs=['shared']\n");
-    let mut hash = IdentityEncoder::new("workspace-ownership-test");
-    visit_package(&tree.0, &tree.0.join("crates/owner"), &mut hash).unwrap();
+    let mut inputs = InputInventory::default();
+    visit_package(&tree.0, &tree.0.join("crates/owner"), &mut inputs).unwrap();
 }
 
 #[test]
@@ -158,7 +166,7 @@ impl CargoProbe {
         tree.write("src/main.rs", "fn main() { assert_eq!(env!(\"TRACKED_HASH\"), std::env::var(\"EXPECTED_HASH\").unwrap()); println!(\"input-verified\"); }\n");
         tree.write("build.rs", "use sifr_identity::IdentityEncoder;\n#[allow(dead_code)] mod inventory;\nfn main() { let root=std::path::PathBuf::from(std::env::var_os(\"CARGO_MANIFEST_DIR\").unwrap()); println!(\"cargo:rustc-env=TRACKED_HASH={}\", inventory::probe(&root).unwrap()); }\n");
         let source = fs::read_to_string(identity.join("src/input_tree.rs")).unwrap();
-        tree.write("inventory.rs", &(source + "\npub fn probe(root: &Path) -> io::Result<String> { let mut hash = IdentityEncoder::new(\"watch-test\"); visit(root, &root.join(\"inputs\"), &mut hash)?; visit(root, &root.join(\"config.txt\"), &mut hash)?; Ok(hash.finish()) }\n"));
+        tree.write("inventory.rs", &(source + "\npub fn probe(root: &Path) -> io::Result<String> { let mut hash = IdentityEncoder::new(\"watch-test\"); let mut inputs = InputInventory::default(); inputs.add(&root.join(\"inputs/nested\")); inputs.add(&root.join(\"inputs\")); inputs.add(&root.join(\"config.txt\")); inputs.encode(root, &mut hash)?; Ok(hash.finish()) }\n"));
         tree.write("inputs/nested/deep/value.txt", "before");
         tree.write("config.txt", "configuration");
         Self(tree)
@@ -166,8 +174,8 @@ impl CargoProbe {
     fn run(&self, label: &str, fresh: bool) {
         let tree = &self.0;
         let mut hash = IdentityEncoder::new("watch-test");
-        hash_tree(&tree.0, &tree.0.join("inputs"), &mut hash).unwrap();
         hash_tree(&tree.0, &tree.0.join("config.txt"), &mut hash).unwrap();
+        hash_tree(&tree.0, &tree.0.join("inputs"), &mut hash).unwrap();
         let mut cargo = Command::new(env!("CARGO"));
         cargo
             .current_dir(&tree.0)
@@ -421,4 +429,91 @@ fn product_source_identity_tracks_sources_independently_of_configuration() {
         run(true, Some(false)),
         "declared external assets reach the actual consumer"
     );
+}
+
+#[test]
+fn input_union_is_order_independent_and_retains_explicit_excluded_descendants() {
+    let tree = Scratch::new();
+    for (path, bytes) in [
+        ("inputs/a/value", "ordinary"),
+        ("inputs/.git/owned", "explicit Git-named input"),
+        ("inputs/target/owned", "explicit target-named input"),
+        ("inputs/__pycache__/owned", "explicit cache-named input"),
+        ("inputs/target/unowned", "excluded"),
+        ("inputs-neighbor/owned", "not a path descendant"),
+    ] {
+        tree.write(path, bytes);
+    }
+    let roots = [
+        "inputs/a",
+        "inputs",
+        "inputs/a/value",
+        "inputs/target/owned",
+        "inputs/.git/owned",
+        "inputs/__pycache__/owned",
+        "inputs-neighbor",
+    ];
+    let encode = |roots: Vec<&str>| {
+        let mut inputs = InputInventory::default();
+        for root in roots {
+            inputs.add(&tree.0.join(root));
+        }
+        let mut hash = IdentityEncoder::new("union-test");
+        inputs.encode(&tree.0, &mut hash).unwrap();
+        hash.finish()
+    };
+    let actual = encode(roots.to_vec());
+    assert_eq!(actual, encode(roots.into_iter().rev().collect()));
+    let mut expected = IdentityEncoder::new("union-test");
+    for path in [
+        "inputs/a/value",
+        "inputs/.git/owned",
+        "inputs/__pycache__/owned",
+        "inputs/target/owned",
+        "inputs-neighbor/owned",
+    ] {
+        expected.field(
+            &path.replace('/', std::path::MAIN_SEPARATOR_STR),
+            &fs::read(tree.0.join(path)).unwrap(),
+        );
+    }
+    assert_eq!(
+        actual,
+        expected.finish(),
+        "each declared logical file occurs exactly once"
+    );
+    tree.write("inputs/target/owned", "changed explicit input");
+    assert_ne!(actual, encode(roots.to_vec()));
+}
+
+#[test]
+fn diamond_package_ownership_hashes_shared_inputs_once() {
+    let tree = Scratch::new();
+    let mut files = Vec::new();
+    for (name, dependencies) in [
+        ("root", "['crates/a','crates/b']"),
+        ("a", "['shared']"),
+        ("b", "['shared']"),
+    ] {
+        let manifest = format!("crates/{name}/Cargo.toml");
+        let source = format!("crates/{name}/src/lib.rs");
+        tree.write(&manifest, &format!("[package.metadata.sifr-build]\nproduction-inputs=['src']\nproduction-workspace-inputs={dependencies}\n"));
+        tree.write(&source, name);
+        files.extend([manifest, source]);
+    }
+    tree.write("shared/owned.txt", "shared asset");
+    files.push("shared/owned.txt".into());
+    files.sort();
+    let mut inputs = InputInventory::default();
+    visit_package(&tree.0, &tree.0.join("crates/root"), &mut inputs).unwrap();
+    let mut actual = IdentityEncoder::new("diamond-test");
+    inputs.encode(&tree.0, &mut actual).unwrap();
+    let mut expected = IdentityEncoder::new("diamond-test");
+    for path in files {
+        expected.field(
+            &path.replace('/', std::path::MAIN_SEPARATOR_STR),
+            &fs::read(tree.0.join(path)).unwrap(),
+        );
+    }
+    assert_eq!(actual.finish(), expected.finish());
 }

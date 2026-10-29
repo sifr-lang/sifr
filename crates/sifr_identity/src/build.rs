@@ -11,7 +11,7 @@ use std::{
 mod input_tree;
 #[path = "production_inputs.rs"]
 mod production_inputs;
-use input_tree::visit;
+use input_tree::InputInventory;
 use production_inputs::{visit_package, workspace_packages};
 
 fn configuration(hash: &mut IdentityEncoder) -> io::Result<()> {
@@ -59,12 +59,14 @@ pub fn emit_local_token() -> io::Result<()> {
         .parent()
         .and_then(Path::parent)
         .ok_or_else(|| io::Error::other("missing workspace root"))?;
-    let mut hash = IdentityEncoder::new("compiled-package-inputs-v2");
-    visit_package(root, &package, &mut hash)?;
+    let mut inputs = InputInventory::default();
+    visit_package(root, &package, &mut inputs)?;
     for input in ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml", ".cargo"] {
-        visit(root, &root.join(input), &mut hash)?;
+        inputs.add(&root.join(input));
     }
-    visit_package(root, &root.join("crates/sifr_identity"), &mut hash)?;
+    visit_package(root, &root.join("crates/sifr_identity"), &mut inputs)?;
+    let mut hash = IdentityEncoder::new("compiled-package-inputs-v3");
+    inputs.encode(root, &mut hash)?;
     println!(
         "cargo:rustc-env=SIFR_PORTABLE_SOURCE_TOKEN={}",
         hash.clone().finish()
@@ -89,7 +91,7 @@ pub fn emit_product_identity() -> io::Result<()> {
         .parent()
         .and_then(Path::parent)
         .ok_or_else(|| io::Error::other("missing workspace root"))?;
-    let mut hash = IdentityEncoder::new("compiler-build-v2");
+    let mut inputs = InputInventory::default();
     for input in [
         "Cargo.toml",
         "Cargo.lock",
@@ -97,11 +99,13 @@ pub fn emit_product_identity() -> io::Result<()> {
         ".cargo",
         "third_party",
     ] {
-        visit(root, &root.join(input), &mut hash)?;
+        inputs.add(&root.join(input));
     }
     for package in workspace_packages(root)? {
-        visit_package(root, &package, &mut hash)?;
+        visit_package(root, &package, &mut inputs)?;
     }
+    let mut hash = IdentityEncoder::new("compiler-build-v3");
+    inputs.encode(root, &mut hash)?;
     // Pair canonical compiler sources across native-tool feature/profile selections.
     // This is source identity, not permission to execute a helper or package authentication.
     println!(

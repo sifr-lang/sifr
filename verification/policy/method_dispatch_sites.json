@@ -85129,7 +85129,7 @@
     },
     {
       "site": "crates/sifr_identity/tests/unit/build_tests.rs::run::literal-match::1",
-      "fingerprint": "8c3278cc5fca72eca801fc98c1aab29819737c824c9a032f5226859405301458",
+      "fingerprint": "feb0d447d36892f7c8c24047010165c6a5bf012f00b05875e02a5ba669fc3507",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "matches ! ( text . as_ref ( ) , \"CARGO_MANIFEST_DIR\" | \"CARGO_MANIFEST_PATH\" | \"OUT_DIR\" )",
@@ -85141,7 +85141,7 @@
     },
     {
       "site": "crates/sifr_identity/tests/unit/build_tests.rs::run::literal-comparison::1",
-      "fingerprint": "bb56ccdacf710992bc731e7e8065085f642042c456267cd8f214c095603443a3",
+      "fingerprint": "4ce593f89997218162ef356d02cc1c9bb054a192c28951d6464790575ed04e79",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( stdout . lines ( ) . any ( | line | line == \"input-verified\" )",
@@ -85644,24 +85644,24 @@
       "contract": "select compiler policy by the recorded lexical operation: verification/tools/corpus_oracle/src/main.rs::main enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_identity/src/input_tree.rs::hash_tree::literal-match::1",
-      "fingerprint": "8febbe6d34ee648d2c7ee3641cb21dae229a63d0b4669aeab187912f789e168d",
+      "site": "crates/sifr_identity/src/input_tree.rs::excluded::literal-match::1",
+      "fingerprint": "0c92d3e9bb5b0a3a672638ccfe24044ab58e0e5e5c66ef56f517a426f5df791f",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
-      "operation": "matches ! ( name , \".git\" | \"target\" | \"__pycache__\" )",
-      "inputs": "fn hash_tree ( root : & Path , path : & Path , hash : & mut IdentityEncoder )",
-      "outputs": "io :: Result < ( ) >",
+      "operation": "matches ! ( name . to_str ( ) , Some ( \".git\" | \"target\" | \"__pycache__\" ) )",
+      "inputs": "fn excluded ( name : & std :: ffi :: OsStr )",
+      "outputs": "bool",
       "role": "select compiler policy by the recorded lexical operation",
-      "caller_admission_relationship": "crates/sifr_identity/src/input_tree.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching",
-      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/input_tree.rs::hash_tree enclosing context owns this literal-match; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_identity/src/input_tree.rs::excluded enclosing context owns this literal-match; source method admission is not inferred from literal matching",
+      "contract": "select compiler policy by the recorded lexical operation: crates/sifr_identity/src/input_tree.rs::excluded enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_identity/src/production_inputs.rs::package_inputs::literal-comparison::1",
-      "fingerprint": "9753ac062a7b28449e3008d387904f29b8217ad4108fc207ed25bf6f06187fb1",
+      "fingerprint": "5050b4a80948fdde10878fe3e5dbfaeba45d04d1cbc22b32c00523446af5aff0",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "path == Path :: new ( \"Cargo.toml\" )",
-      "inputs": "fn package_inputs ( root : & Path , package : & Path , hash : & mut IdentityEncoder , active : & mut BTreeSet < PathBuf > , )",
+      "inputs": "fn package_inputs ( root : & Path , package : & Path , inventory : & mut InputInventory , active : & mut BTreeSet < PathBuf > , )",
       "outputs": "io :: Result < ( ) >",
       "role": "select compiler policy by the recorded lexical operation",
       "caller_admission_relationship": "crates/sifr_identity/src/production_inputs.rs::package_inputs enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",

@@ -1,6 +1,5 @@
 //! Manifest-owned production roots, independent of private test layout.
-use super::input_tree::visit;
-use crate::IdentityEncoder;
+use super::input_tree::InputInventory;
 use std::{
     collections::BTreeSet,
     fs, io,
@@ -28,15 +27,15 @@ fn relative(value: &str) -> io::Result<&Path> {
 pub(super) fn visit_package(
     root: &Path,
     package: &Path,
-    hash: &mut IdentityEncoder,
+    inputs: &mut InputInventory,
 ) -> io::Result<()> {
-    package_inputs(root, package, hash, &mut BTreeSet::new())
+    package_inputs(root, package, inputs, &mut BTreeSet::new())
 }
 
 fn package_inputs(
     root: &Path,
     package: &Path,
-    hash: &mut IdentityEncoder,
+    inventory: &mut InputInventory,
     active: &mut BTreeSet<PathBuf>,
 ) -> io::Result<()> {
     if !active.insert(package.to_path_buf()) {
@@ -89,9 +88,9 @@ fn package_inputs(
         ));
     }
     paths.sort();
-    visit(root, &manifest_path, hash)?;
+    inventory.add(&manifest_path);
     for path in paths {
-        visit(root, &package.join(path), hash)?;
+        inventory.add(&package.join(path));
     }
     if let Some(inputs) = ownership.get("production-workspace-inputs") {
         let inputs = inputs
@@ -111,9 +110,9 @@ fn package_inputs(
         }
         for path in paths {
             if path.starts_with("crates") && path.components().count() == 2 {
-                package_inputs(root, &root.join(path), hash, active)?;
+                package_inputs(root, &root.join(path), inventory, active)?;
             } else {
-                visit(root, &root.join(path), hash)?;
+                inventory.add(&root.join(path));
             }
         }
     }
