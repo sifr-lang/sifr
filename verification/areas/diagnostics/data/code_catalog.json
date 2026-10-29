@@ -873,7 +873,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -953,7 +953,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/expressions_tests.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/expressions_tests/mod.rs::test_fixed_width_literal_assignment_out_of_range_has_int_code",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -985,7 +985,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/expressions_tests.rs::test_large_integer_literal_over_budget_has_int_code",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/expressions_tests/mod.rs::test_large_integer_literal_over_budget_has_int_code",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2521,7 +2521,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_target_reports_pyimp_0001",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_tests.rs::invalid_python_target_reports_pyimp_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2569,7 +2569,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_declaration_shape_reports_pycall_0001",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_tests.rs::invalid_python_declaration_shape_reports_pycall_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2585,7 +2585,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs::callback_policy_validates_before_reservation",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2601,7 +2601,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_validation_tests.rs::unsupported_python_conversion_reports_pyconv_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2617,7 +2617,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_tests.rs::invalid_python_context_declaration_reports_pyctx_0001",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_tests.rs::invalid_python_context_declaration_reports_pyctx_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2633,7 +2633,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_interop_validation_tests.rs::bridge_opaque_target_is_terminally_unsupported",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_interop_validation_tests.rs::bridge_opaque_target_is_terminally_unsupported",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2681,7 +2681,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_trust_tests.rs::dynamic_python_import_requires_trust_decorator",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2713,7 +2713,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs::buffer_policy_and_return_contract_fail_with_pyzc_0001",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/python_buffer_contract_tests.rs::buffer_policy_and_return_contract_fail_with_pyzc_0001",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -2889,7 +2889,7 @@
       "machine_applicable": false,
       "owner": "compiler/package-management",
       "renderer_support": ["human", "json", "compact"],
-      "representative_fixture": "crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/rust_interop_structural_tests.rs::structural_method_slots_require_one_context",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"
@@ -3041,7 +3041,7 @@
         "json",
         "compact"
       ],
-      "representative_fixture": "crates/sifr_lowering/src/lower/statement_diagnostics_tests.rs",
+      "representative_fixture": "crates/sifr_lowering/tests/unit/lower/statement_diagnostics_tests.rs",
       "severity": "Error",
       "stability": "stable",
       "suggestion_applicability": "none"

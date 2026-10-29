@@ -10,13 +10,17 @@ pub mod cfg;
 pub mod flow_graph;
 mod hir_nodes;
 #[cfg(test)]
+#[path = "../tests/unit/hir_snapshot_expr_projection.rs"]
 mod hir_snapshot_expr_projection;
 #[cfg(test)]
+#[path = "../tests/unit/hir_snapshot_tests.rs"]
 mod hir_snapshot_tests;
 mod lower;
 #[cfg(test)]
+#[path = "../tests/unit/method_authority_tests.rs"]
 mod method_authority_tests;
 #[cfg(test)]
+#[path = "../tests/unit/name_resolution_snapshot_tests.rs"]
 mod name_resolution_snapshot_tests;
 mod scope;
 

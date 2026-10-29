@@ -42,5 +42,5 @@ pub(super) fn infer_unannotated_returns(stmts: &[Stmt], ctx: &mut LowerCtx) {
 }
 
 #[cfg(test)]
-#[path = "module_function_inference_tests.rs"]
+#[path = "../../tests/unit/lower/module_function_inference_tests.rs"]
 mod tests;

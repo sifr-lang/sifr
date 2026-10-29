@@ -82,4 +82,5 @@ pub(in crate::lower) fn invalid_pattern_form(ctx: &mut LowerCtx, reason: &str, r
 }
 
 #[cfg(test)]
+#[path = "../../tests/unit/lower/match_diagnostics/tests.rs"]
 mod tests;

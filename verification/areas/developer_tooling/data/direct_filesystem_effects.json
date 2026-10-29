@@ -18265,14 +18265,14 @@
       "classification": "output-effect"
     },
     {
-      "path": "crates/sifr_lowering/src/hir_snapshot_tests.rs",
+      "path": "crates/sifr_lowering/tests/unit/hir_snapshot_tests.rs",
       "symbol": "read_matrix",
       "operation": "read_to_string",
       "site": "serde_json::from_str(&fs::read_to_string(&path).expect(\"HIR snapshot matrix must be readable\"))",
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_lowering/src/name_resolution_snapshot_tests.rs",
+      "path": "crates/sifr_lowering/tests/unit/name_resolution_snapshot_tests.rs",
       "symbol": "read_matrix",
       "operation": "read_to_string",
       "site": "&fs::read_to_string(&path).expect(\"name-resolution snapshot matrix must be readable\"),",

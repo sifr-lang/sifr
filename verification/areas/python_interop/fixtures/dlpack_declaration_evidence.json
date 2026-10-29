@@ -6,7 +6,7 @@
     {
       "id": "compiler-contract",
       "owners": [
-        "crates/sifr_lowering/src/lower/python_dlpack_contract_tests.rs",
+        "crates/sifr_lowering/tests/unit/lower/python_dlpack_contract_tests.rs",
         "crates/sifr_codegen/tests/unit/python_dlpack_codegen_tests.rs",
         "crates/sifr_driver/src/build/python_interop.rs"
       ],
@@ -25,7 +25,7 @@
     {
       "id": "static-and-runtime-rejection",
       "owners": [
-        "crates/sifr_lowering/src/lower/python_dlpack_contract_tests.rs",
+        "crates/sifr_lowering/tests/unit/lower/python_dlpack_contract_tests.rs",
         "crates/sifr_runtime/src/python/dlpack_ops/declaration_tests.rs"
       ],
       "covers": ["invalid-policy", "ownership", "copy-flag", "no-retry", "device-stream-mismatch"]

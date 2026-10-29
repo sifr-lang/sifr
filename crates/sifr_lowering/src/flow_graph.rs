@@ -315,4 +315,5 @@ impl FlowGraphBuilder {
 }
 
 #[cfg(test)]
+#[path = "../tests/unit/flow_graph/tests.rs"]
 mod tests;

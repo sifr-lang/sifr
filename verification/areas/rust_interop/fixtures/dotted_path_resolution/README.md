@@ -14,5 +14,5 @@ This fixture family tracks Rust interop target parsing and root resolution.
 The structured `fixture.json` record is authoritative. These names repeat its
 exact executable Rust-test bindings for readers:
 
-- Positive `valid_structured_paths` runs `rust_interop_lowers_function_decorators_into_hir` in `crates/sifr_lowering/src/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
-- Negative `string_and_reserved_root_rejection` runs `rust_interop_rejects_string_target` in `crates/sifr_lowering/src/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
+- Positive `valid_structured_paths` runs `rust_interop_lowers_function_decorators_into_hir` in `crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
+- Negative `string_and_reserved_root_rejection` runs `rust_interop_rejects_string_target` in `crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.

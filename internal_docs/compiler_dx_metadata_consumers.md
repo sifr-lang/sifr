@@ -151,58 +151,14 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | Exact source symbol | Current access (conservative union within symbol) | DX.7 migration | Matching source lines |
 | --- | --- | --- | --- |
 | `crates/sifr_lowering/src/compiled_identity.rs:2` `compiled_input_tokens` | read, borrow/retain | layered view + demanded record handles | 17 |
-| `crates/sifr_lowering/src/hir_snapshot_tests.rs:53` `lower_source` | read, borrow/retain | test setup/parity | 58 |
 | `crates/sifr_lowering/src/lower/attached_api_declarations.rs:153` `finalize` | read, enumerate | layered view + demanded record handles | 162 |
 | `crates/sifr_lowering/src/lower/attached_api_surfaces.rs:130` `provisional_declarations` | read, enumerate | layered view + demanded record handles | 137 |
 | `crates/sifr_lowering/src/lower/attached_api_surfaces.rs:157` `declarations_for_set` | read, enumerate | layered view + demanded record handles | 169 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:10` `public_module` | read | test setup/parity | 12 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:53` `user_and_private_sysroot_declarations_are_rejected` | read, borrow/retain | test setup/parity | 59, 65 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:71` `malformed_unknown_synthesized_and_runtime_body_declarations_are_rejected` | read | test setup/parity | 91 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:97` `imported_alias_call_preserves_identity_and_source_ranges` | read, mutate overlay/producer | test setup/parity | 101, 102, 125, 134 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:158` `source_declared_intrinsic_is_not_a_first_class_value` | read, mutate overlay/producer | test setup/parity | 161, 162, 178, 186 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:191` `imported_former_intrinsic_name_without_metadata_remains_an_ordinary_call` | read, mutate overlay/producer | test setup/parity | 195, 196, 219 |
-| `crates/sifr_lowering/src/lower/compiler_intrinsics_tests.rs:231` `local_function_declaration_shadows_unaliased_imported_intrinsic_identity` | read, mutate overlay/producer | test setup/parity | 234, 251, 256, 265 |
 | `crates/sifr_lowering/src/lower/descriptor_declarations.rs:217` `import_bindings` | read, clone projection | layered view + demanded record handles | 226, 236, 245, 254, 263 |
 | `crates/sifr_lowering/src/lower/descriptor_declarations.rs:616` `resolve_declared_type` | read | layered view + demanded record handles | 624 |
 | `crates/sifr_lowering/src/lower/descriptor_declarations.rs:639` `external_provider` | read | layered view + demanded record handles | 643 |
 | `crates/sifr_lowering/src/lower/descriptor_declarations.rs:671` `finalize_markers_and_selections` | read, enumerate | layered view + demanded record handles | 680, 709 |
 | `crates/sifr_lowering/src/lower/expressions/method_calls.rs:22` `lower_method_call` | read, enumerate, clone projection | layered view + demanded record handles | 36 |
-| `crates/sifr_lowering/src/lower/expressions_tests/callable_and_builtin_diagnostics.rs:333` `test_defaultdict_accepts_counter_initial_mapping` | read | test setup/parity | 334 |
-| `crates/sifr_lowering/src/lower/expressions_tests/callable_and_builtin_diagnostics.rs:345` `test_defaultdict_subscript_read_is_non_optional_value_type` | read | test setup/parity | 346 |
-| `crates/sifr_lowering/src/lower/expressions_tests/callable_and_builtin_diagnostics.rs:356` `test_defaultdict_membership_checks_lower` | read | test setup/parity | 357 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_augassign_refinement.rs:6` `defaultdict_binding_types` | read, enumerate | layered view + demanded record handles | 7 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_augassign_refinement.rs:60` `defaultdict_int_conflicting_augassign_key_is_rejected` | read, enumerate | test setup/parity | 62 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_augassign_refinement.rs:72` `initialized_defaultdict_int_keeps_declared_key_type` | read, enumerate | test setup/parity | 74 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_augassign_refinement.rs:84` `nested_function_shadowing_keeps_independent_defaultdict_key_types` | read, enumerate | test setup/parity | 86 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_augassign_refinement.rs:141` `unhashable_defaultdict_int_augassign_key_reports_one_capability_error` | read, enumerate | test setup/parity | 144 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:5` `binding_and_constructor_types` | read, enumerate | layered view + demanded record handles | 6 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:29` `defaultdict_iterable_mutators_carry_checked_backing_storage_places` | read, enumerate | test setup/parity | 31 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:65` `defaultdict_set_pop_retains_checked_mutable_backing_storage` | read, enumerate | test setup/parity | 67 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:97` `set_pop_rejects_immutable_parameter_mutation` | read, enumerate | test setup/parity | 100 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:148` `conflicting_defaultdict_set_elements_report_container_conflict` | read | test setup/parity | 151 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:164` `conflicting_defaultdict_keys_report_container_conflict` | read | test setup/parity | 167 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:180` `sibling_defaultdict_bindings_keep_independent_declaration_types` | read, enumerate | test setup/parity | 182 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:228` `lowering_inexact_index_elements_do_not_force_declaration_hints` | read | test setup/parity | 230, 233, 236 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:275` `tuple_key_with_unresolved_member_is_not_adopted` | read | test setup/parity | 277 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:281` `incomplete_defaultdict_nested_return_reports_missing_annotation` | read | test setup/parity | 283 |
-| `crates/sifr_lowering/src/lower/expressions_tests/defaultdict_order_independent_inference.rs:297` `nested_defaultdict_shadow_does_not_merge_with_outer_hint` | read | test setup/parity | 299 |
-| `crates/sifr_lowering/src/lower/expressions_tests/dict_augassign_checked_error.rs:78` `annotated_defaultdict_keeps_factory_semantics_and_declared_shape` | read, enumerate | test setup/parity | 80 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:452` `test_list_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 452 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:547` `test_dict_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 547 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:602` `test_set_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 602 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:662` `test_str_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 662 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:702` `test_tuple_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 702 |
-| `crates/sifr_lowering/src/lower/expressions_tests/minmax_sorted_sum.rs:854` `test_generic_type_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 854 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:689` `test_defaultdict_list_call_resolves_with_explicit_import` | read | test setup/parity | 690 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:701` `test_defaultdict_alias_call_resolves_with_explicit_import` | read | test setup/parity | 702 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:713` `test_defaultdict_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 713, 715 |
-| `crates/sifr_lowering/src/lower/expressions_tests/ownership_and_async.rs:726` `test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 726, 728 |
-| `crates/sifr_lowering/src/lower/expressions_tests/support.rs:13` `lower_source_with_externals` | read, borrow/retain | layered view + demanded record handles | 15, 18 |
-| `crates/sifr_lowering/src/lower/expressions_tests/support.rs:21` `lower_source_with_stdlib_collections` | read, mutate overlay/producer | layered view + demanded record handles | 21, 25, 26, 30 |
-| `crates/sifr_lowering/src/lower/external_defs.rs:23` `attached_api_set_membership_checks_the_stored_canonical_identity` | read | test setup/parity | 24 |
-| `crates/sifr_lowering/src/lower/external_defs_context_tests.rs:4` `external_input` | read | test setup/parity | 4, 5 |
-| `crates/sifr_lowering/src/lower/external_defs_context_tests.rs:31` `lowering_external_defs_context_borrows_complete_input` | read, borrow/retain | test setup/parity | 34, 35, 36, 38, 42, 49, 51, 52 |
-| `crates/sifr_lowering/src/lower/external_defs_context_tests.rs:57` `lowering_external_defs_preserves_success_and_failure_inputs` | read | test setup/parity | 76, 89 |
 | `crates/sifr_lowering/src/lower/import_diagnostics.rs:59` `bare_stdlib` | read | layered view + demanded record handles | 59, 61, 68, 72, 82, 85 |
 | `crates/sifr_lowering/src/lower/import_diagnostics.rs:90` `bare_stdlib_help` | read | layered view + demanded record handles | 90, 91, 95, 99, 102, 107 |
 | `crates/sifr_lowering/src/lower/import_resolution.rs:9` `effective_import_module_name` | read, borrow/retain | layered view + demanded record handles | 13, 22 |
@@ -235,26 +191,6 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_lowering/src/lower/mod_context.rs:829` `lower_module_with_externals_and_name` | read, borrow/retain | layered view + demanded record handles | 832, 835 |
 | `crates/sifr_lowering/src/lower/mod_context.rs:838` `lower_module_with_externals_name_and_options` | read, borrow/retain | layered view + demanded record handles | 841, 847 |
 | `crates/sifr_lowering/src/lower/mod_impl.rs:15` `lower_module_impl` | read, enumerate, mutate overlay/producer, clone projection, borrow/retain | layered view + demanded record handles | 17, 20, 72, 74, 298, 353, 357, 359, 378, 379, 380, 381, 387, 391, 402, 407, 412, 413, 418, 428, 438, 447, 449, 459, 471, 479, 491, 497, 498, 503, 520, 530, 536, 546, 556, 568, 581, 585, 587, 605, 620, 626, 629, 630, 632, 634, 664, 671, 681, 693, 702, 707, 719, 729, 739, 756, 766, 784, 791, 792, 794 |
-| `crates/sifr_lowering/src/lower/module_constants_lowering.rs:314` `lower_private_declaration_constants` | read, borrow/retain | layered view + demanded record handles | 318 |
-| `crates/sifr_lowering/src/lower/module_constants_lowering.rs:366` `annotated_scalar_module_constant_type_mismatch_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 370 |
-| `crates/sifr_lowering/src/lower/module_constants_lowering.rs:383` `private_declaration_scalar_module_constant_alias_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 388 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:62` `missing_stdlib_member_has_name_code` | read, enumerate, mutate overlay/producer | test setup/parity | 62, 65, 66, 69 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:82` `deferred_stdlib_module_has_import_code` | read, enumerate | test setup/parity | 82 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:135` `public_sysroot_stdlib_source_can_import_private_declarations` | read, enumerate, mutate overlay/producer | test setup/parity | 135, 138, 139, 149 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:162` `public_sysroot_stdlib_source_resolves_compiled_private_constants` | read, enumerate, mutate overlay/producer | test setup/parity | 162, 165, 166, 171 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:184` `public_sysroot_stdlib_source_rejects_uncompiled_private_import_name` | read, enumerate, mutate overlay/producer | test setup/parity | 184, 187, 188, 193 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:207` `public_sysroot_stdlib_source_resolves_compiled_private_classes` | read, enumerate, mutate overlay/producer | test setup/parity | 207, 210, 211, 226 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:235` `attached_api_set_import_requires_the_stored_canonical_identity` | read, mutate overlay/producer | test setup/parity | 238, 239, 253, 267 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:272` `builtin_open_preserves_an_aliased_imported_text_handle_identity` | read, mutate overlay/producer | test setup/parity | 275, 276, 296 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:301` `builtin_open_preserves_an_aliased_imported_binary_handle_identity` | read, mutate overlay/producer | test setup/parity | 304, 305, 325 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:330` `builtin_binary_open_supplies_the_read_bytes_size_default` | read, mutate overlay/producer | test setup/parity | 333, 334, 360 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:416` `builtin_open_inferred_bindings_keep_canonical_handle_identities` | read, enumerate, mutate overlay/producer | test setup/parity | 435, 436, 463 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:501` `private_sysroot_declaration_source_cannot_import_private_declarations` | read, enumerate, borrow/retain | test setup/parity | 506 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:534` `bare_stdlib_import_from_has_targeted_import_code_and_args` | read, enumerate | test setup/parity | 534 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:550` `bare_stdlib_import_from_alias_preserves_imported_names_arg` | read, enumerate | test setup/parity | 550 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:564` `bare_stdlib_import_statement_has_targeted_import_code` | read, enumerate | test setup/parity | 564 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:580` `bare_stdlib_submodule_root_fallback_reports_unavailable_embedded_module` | read, enumerate | test setup/parity | 580 |
-| `crates/sifr_lowering/src/lower/name_import_diagnostics_tests.rs:610` `private_import_member_has_import_code` | read, enumerate, mutate overlay/producer | test setup/parity | 613, 614, 617 |
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:5` `resolve_compiled_private_imports` | read, borrow/retain | layered view + demanded record handles | 7, 13, 18, 19, 20 |
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:37` `resolve_function` | read, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 39, 44, 54 |
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:58` `import_function_metadata` | read, mutate overlay/producer, borrow/retain | layered view + demanded record handles | 60, 67, 72, 75, 78, 81, 84, 87, 95 |
@@ -263,25 +199,89 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:169` `register_constructor` | read, borrow/retain | layered view + demanded record handles | 171, 182, 185, 188 |
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:193` `import_class_bounds` | read, borrow/retain | layered view + demanded record handles | 195, 200 |
 | `crates/sifr_lowering/src/lower/private_stdlib_imports.rs:210` `resolve_constant` | read, borrow/retain | layered view + demanded record handles | 212, 217, 225 |
-| `crates/sifr_lowering/src/lower/python_arrow_contract_tests.rs:80` `bridge_arrow_producer_rewrites_to_package_runtime_identity` | read, borrow/retain | test setup/parity | 88 |
-| `crates/sifr_lowering/src/lower/python_async_tests.rs:29` `python_externals` | read, mutate overlay/producer | test setup/parity | 29, 71, 72, 75, 76, 79, 80 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:19` `bridge_target_is_a_hard_error_without_package_authority` | read, enumerate, borrow/retain | test setup/parity | 24 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:39` `bridge_target_rewrites_to_resolved_package_when_activated` | read, borrow/retain | test setup/parity | 44 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:67` `bridge_target_requires_an_inventoried_module` | read, enumerate, borrow/retain | test setup/parity | 72 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:96` `reserved_bridge_target_cannot_be_reinterpreted_as_an_external_distribution` | read, enumerate, borrow/retain | test setup/parity | 101, 124 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:142` `bridge_authority_is_scoped_to_the_declaring_module` | read, enumerate, borrow/retain | test setup/parity | 147 |
-| `crates/sifr_lowering/src/lower/python_bridge_tests.rs:170` `nested_inventoried_bridge_module_rewrites_to_the_resolved_package` | read, borrow/retain | test setup/parity | 176 |
-| `crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs:57` `bridge_buffer_producer_rewrites_to_package_runtime_identity` | read, borrow/retain | test setup/parity | 65 |
-| `crates/sifr_lowering/src/lower/python_interop_callback_tests.rs:100` `callback_declaration_keeps_same_basename_error_payloads_distinct` | read, mutate overlay/producer | test setup/parity | 126, 127, 132, 134 |
-| `crates/sifr_lowering/src/lower/python_trust_tests.rs:7` `python_externals` | read, mutate overlay/producer | test setup/parity | 7, 36, 37, 40, 41, 42 |
 | `crates/sifr_lowering/src/lower/return_lowering.rs:13` `lower_return` | read | layered view + demanded record handles | 83 |
-| `crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs:10` `structural_externals` | read, mutate overlay/producer | test setup/parity | 10, 11, 12, 72 |
-| `crates/sifr_lowering/src/lower/rust_interop_structural_tests.rs:639` `structural_bound_rejects_imported_enum_with_unrepresentable_metadata` | read, enumerate, mutate overlay/producer | test setup/parity | 640, 641, 652, 680 |
-| `crates/sifr_lowering/src/lower/template_string_tests.rs:6` `lower` | read, borrow/retain | test setup/parity | 11 |
 | `crates/sifr_lowering/src/lower/type_bounds.rs:318` `supports_static_program_type` | read, enumerate | layered view + demanded record handles | 333 |
 | `crates/sifr_lowering/src/lower/workload_annotations.rs:234` `offload_workload` | read | layered view + demanded record handles | 243 |
 | `crates/sifr_lowering/src/lower/workload_annotations.rs:253` `known_stdlib_offload_target` | read | layered view + demanded record handles | 253 |
-| `crates/sifr_lowering/src/method_authority_tests.rs:32` `typed_dispatch_classification` | read, enumerate, mutate overlay/producer | test setup/parity | 98, 99, 113 |
+| `crates/sifr_lowering/tests/unit/hir_snapshot_tests.rs:53` `lower_source` | read, borrow/retain | test setup/parity | 58 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:10` `public_module` | read | test setup/parity | 12 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:53` `user_and_private_sysroot_declarations_are_rejected` | read, borrow/retain | test setup/parity | 59, 65 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:71` `malformed_unknown_synthesized_and_runtime_body_declarations_are_rejected` | read | test setup/parity | 91 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:97` `imported_alias_call_preserves_identity_and_source_ranges` | read, mutate overlay/producer | test setup/parity | 101, 102, 125, 134 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:158` `source_declared_intrinsic_is_not_a_first_class_value` | read, mutate overlay/producer | test setup/parity | 161, 162, 178, 186 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:191` `imported_former_intrinsic_name_without_metadata_remains_an_ordinary_call` | read, mutate overlay/producer | test setup/parity | 195, 196, 219 |
+| `crates/sifr_lowering/tests/unit/lower/compiler_intrinsics_tests.rs:231` `local_function_declaration_shadows_unaliased_imported_intrinsic_identity` | read, mutate overlay/producer | test setup/parity | 234, 251, 256, 265 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/callable_and_builtin_diagnostics.rs:333` `test_defaultdict_accepts_counter_initial_mapping` | read | test setup/parity | 334 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/callable_and_builtin_diagnostics.rs:345` `test_defaultdict_subscript_read_is_non_optional_value_type` | read | test setup/parity | 346 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/callable_and_builtin_diagnostics.rs:356` `test_defaultdict_membership_checks_lower` | read | test setup/parity | 357 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_augassign_refinement.rs:6` `defaultdict_binding_types` | read, enumerate | test setup/parity | 7 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_augassign_refinement.rs:60` `defaultdict_int_conflicting_augassign_key_is_rejected` | read, enumerate | test setup/parity | 62 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_augassign_refinement.rs:72` `initialized_defaultdict_int_keeps_declared_key_type` | read, enumerate | test setup/parity | 74 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_augassign_refinement.rs:84` `nested_function_shadowing_keeps_independent_defaultdict_key_types` | read, enumerate | test setup/parity | 86 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_augassign_refinement.rs:141` `unhashable_defaultdict_int_augassign_key_reports_one_capability_error` | read, enumerate | test setup/parity | 144 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:5` `binding_and_constructor_types` | read, enumerate | test setup/parity | 6 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:29` `defaultdict_iterable_mutators_carry_checked_backing_storage_places` | read, enumerate | test setup/parity | 31 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:65` `defaultdict_set_pop_retains_checked_mutable_backing_storage` | read, enumerate | test setup/parity | 67 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:97` `set_pop_rejects_immutable_parameter_mutation` | read, enumerate | test setup/parity | 100 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:148` `conflicting_defaultdict_set_elements_report_container_conflict` | read | test setup/parity | 151 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:164` `conflicting_defaultdict_keys_report_container_conflict` | read | test setup/parity | 167 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:180` `sibling_defaultdict_bindings_keep_independent_declaration_types` | read, enumerate | test setup/parity | 182 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:228` `lowering_inexact_index_elements_do_not_force_declaration_hints` | read | test setup/parity | 230, 233, 236 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:275` `tuple_key_with_unresolved_member_is_not_adopted` | read | test setup/parity | 277 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:281` `incomplete_defaultdict_nested_return_reports_missing_annotation` | read | test setup/parity | 283 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/defaultdict_order_independent_inference.rs:297` `nested_defaultdict_shadow_does_not_merge_with_outer_hint` | read | test setup/parity | 299 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/dict_augassign_checked_error.rs:78` `annotated_defaultdict_keeps_factory_semantics_and_declared_shape` | read, enumerate | test setup/parity | 80 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:452` `test_list_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 452 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:547` `test_dict_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 547 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:602` `test_set_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 602 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:662` `test_str_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 662 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:702` `test_tuple_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 702 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/minmax_sorted_sum.rs:854` `test_generic_type_missing_method_has_stdlib_code` | read, enumerate | test setup/parity | 854 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/ownership_and_async.rs:689` `test_defaultdict_list_call_resolves_with_explicit_import` | read | test setup/parity | 690 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/ownership_and_async.rs:701` `test_defaultdict_alias_call_resolves_with_explicit_import` | read | test setup/parity | 702 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/ownership_and_async.rs:713` `test_defaultdict_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 713, 715 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/ownership_and_async.rs:726` `test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 726, 728 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/support.rs:13` `lower_source_with_externals` | read, borrow/retain | test setup/parity | 15, 18 |
+| `crates/sifr_lowering/tests/unit/lower/expressions_tests/support.rs:21` `lower_source_with_stdlib_collections` | read, mutate overlay/producer | test setup/parity | 21, 25, 26, 30 |
+| `crates/sifr_lowering/tests/unit/lower/external_defs/tests.rs:4` `attached_api_set_membership_checks_the_stored_canonical_identity` | read | test setup/parity | 5 |
+| `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:4` `external_input` | read | test setup/parity | 4, 5 |
+| `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:31` `lowering_external_defs_context_borrows_complete_input` | read, borrow/retain | test setup/parity | 34, 35, 36, 38, 42, 49, 51, 52 |
+| `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:57` `lowering_external_defs_preserves_success_and_failure_inputs` | read | test setup/parity | 76, 89 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:6` `lower_private_declaration_constants` | read, borrow/retain | test setup/parity | 10 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:58` `annotated_scalar_module_constant_type_mismatch_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 62 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:75` `private_declaration_scalar_module_constant_alias_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 79 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:62` `missing_stdlib_member_has_name_code` | read, enumerate, mutate overlay/producer | test setup/parity | 62, 65, 66, 69 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:82` `deferred_stdlib_module_has_import_code` | read, enumerate | test setup/parity | 82 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:135` `public_sysroot_stdlib_source_can_import_private_declarations` | read, enumerate, mutate overlay/producer | test setup/parity | 135, 138, 139, 149 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:162` `public_sysroot_stdlib_source_resolves_compiled_private_constants` | read, enumerate, mutate overlay/producer | test setup/parity | 162, 165, 166, 171 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:184` `public_sysroot_stdlib_source_rejects_uncompiled_private_import_name` | read, enumerate, mutate overlay/producer | test setup/parity | 184, 187, 188, 193 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:207` `public_sysroot_stdlib_source_resolves_compiled_private_classes` | read, enumerate, mutate overlay/producer | test setup/parity | 207, 210, 211, 226 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:235` `attached_api_set_import_requires_the_stored_canonical_identity` | read, mutate overlay/producer | test setup/parity | 238, 239, 253, 267 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:272` `builtin_open_preserves_an_aliased_imported_text_handle_identity` | read, mutate overlay/producer | test setup/parity | 275, 276, 296 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:301` `builtin_open_preserves_an_aliased_imported_binary_handle_identity` | read, mutate overlay/producer | test setup/parity | 304, 305, 325 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:330` `builtin_binary_open_supplies_the_read_bytes_size_default` | read, mutate overlay/producer | test setup/parity | 333, 334, 360 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:416` `builtin_open_inferred_bindings_keep_canonical_handle_identities` | read, enumerate, mutate overlay/producer | test setup/parity | 435, 436, 463 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:501` `private_sysroot_declaration_source_cannot_import_private_declarations` | read, enumerate, borrow/retain | test setup/parity | 506 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:534` `bare_stdlib_import_from_has_targeted_import_code_and_args` | read, enumerate | test setup/parity | 534 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:550` `bare_stdlib_import_from_alias_preserves_imported_names_arg` | read, enumerate | test setup/parity | 550 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:564` `bare_stdlib_import_statement_has_targeted_import_code` | read, enumerate | test setup/parity | 564 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:580` `bare_stdlib_submodule_root_fallback_reports_unavailable_embedded_module` | read, enumerate | test setup/parity | 580 |
+| `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:610` `private_import_member_has_import_code` | read, enumerate, mutate overlay/producer | test setup/parity | 613, 614, 617 |
+| `crates/sifr_lowering/tests/unit/lower/python_arrow_contract_tests.rs:80` `bridge_arrow_producer_rewrites_to_package_runtime_identity` | read, borrow/retain | test setup/parity | 88 |
+| `crates/sifr_lowering/tests/unit/lower/python_async_tests.rs:29` `python_externals` | read, mutate overlay/producer | test setup/parity | 29, 71, 72, 75, 76, 79, 80 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:19` `bridge_target_is_a_hard_error_without_package_authority` | read, enumerate, borrow/retain | test setup/parity | 24 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:39` `bridge_target_rewrites_to_resolved_package_when_activated` | read, borrow/retain | test setup/parity | 44 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:67` `bridge_target_requires_an_inventoried_module` | read, enumerate, borrow/retain | test setup/parity | 72 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:96` `reserved_bridge_target_cannot_be_reinterpreted_as_an_external_distribution` | read, enumerate, borrow/retain | test setup/parity | 101, 124 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:142` `bridge_authority_is_scoped_to_the_declaring_module` | read, enumerate, borrow/retain | test setup/parity | 147 |
+| `crates/sifr_lowering/tests/unit/lower/python_bridge_tests.rs:170` `nested_inventoried_bridge_module_rewrites_to_the_resolved_package` | read, borrow/retain | test setup/parity | 176 |
+| `crates/sifr_lowering/tests/unit/lower/python_buffer_contract_tests.rs:57` `bridge_buffer_producer_rewrites_to_package_runtime_identity` | read, borrow/retain | test setup/parity | 65 |
+| `crates/sifr_lowering/tests/unit/lower/python_interop_callback_tests.rs:100` `callback_declaration_keeps_same_basename_error_payloads_distinct` | read, mutate overlay/producer | test setup/parity | 126, 127, 132, 134 |
+| `crates/sifr_lowering/tests/unit/lower/python_trust_tests.rs:7` `python_externals` | read, mutate overlay/producer | test setup/parity | 7, 36, 37, 40, 41, 42 |
+| `crates/sifr_lowering/tests/unit/lower/rust_interop_structural_tests.rs:10` `structural_externals` | read, mutate overlay/producer | test setup/parity | 10, 11, 12, 72 |
+| `crates/sifr_lowering/tests/unit/lower/rust_interop_structural_tests.rs:639` `structural_bound_rejects_imported_enum_with_unrepresentable_metadata` | read, enumerate, mutate overlay/producer | test setup/parity | 640, 641, 652, 680 |
+| `crates/sifr_lowering/tests/unit/lower/template_string_tests.rs:6` `lower` | read, borrow/retain | test setup/parity | 11 |
+| `crates/sifr_lowering/tests/unit/method_authority_tests.rs:32` `typed_dispatch_classification` | read, enumerate, mutate overlay/producer | test setup/parity | 98, 99, 113 |
 | `crates/sifr_frontend/src/callable_exports.rs:49` `copy_imported` | read, borrow/retain | layered view + demanded record handles | 51, 56, 63 |
 | `crates/sifr_frontend/src/callable_exports.rs:76` `store` | read, mutate overlay/producer | layered view + demanded record handles | 76, 77 |
 | `crates/sifr_frontend/src/callable_identities.rs:11` `resolve` | read, enumerate, borrow/retain | layered view + demanded record handles | 14, 20 |

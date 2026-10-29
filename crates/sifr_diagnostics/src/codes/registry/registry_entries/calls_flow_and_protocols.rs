@@ -567,7 +567,7 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "RESULT",
         "Except arm type expression has an unsupported form.",
         Severity::Error,
-        "crates/sifr_lowering/src/lower/statement_diagnostics_tests.rs",
+        "crates/sifr_lowering/tests/unit/lower/statement_diagnostics_tests.rs",
         "invalid except error type: {reason}",
         "sifr_lowering::lower::statements",
         [arg!("reason")],

@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D22; final phase qualification open
-- Latest delivery: D22 frontend assertion ownership; D23 integrated cost discovery in progress
+- Status: in progress; intermediate deliveries through D23; final phase qualification open
+- Latest delivery: D23 complete cost discovery and dependency-inventory reconciliation; D24 lowering ownership investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3282,3 +3282,131 @@ maintained lock and inventoried dependency family confirms exactly these two
 additions and no removals. Add both records; preserve all assertions and version,
 checksum, pinned-graph and lock contents. Retain this failed candidate's evidence
 and rerun the complete affected crate before review.
+
+
+#### D23 complete discovery and dependency repair closure — 2026-10-29
+
+The frozen retry `0e36952fb786d3b357002616842d90750f85a96d` executes all 38
+selected top-level steps: 37 pass and the additive Rust configuration fails its
+13 dependency-inventory assertions. No category is blocked, capped or cancelled.
+Guarded elapsed is 4,705.113s; the profile reports 4,674.22s, excluding outer
+admission/reporting. This is a failed diagnostic, not full-gate acceptance.
+The guard ends session-empty without source drift or reserve stop. All 6,869
+archive payloads are hash/size verified; archive SHA-256:
+`db0123d81ae02e3b00046040425f3db7ce0dbb2a3dd0d1136f7323010926a9d9`.
+
+All 569 reported area variants pass, as do 80 generated-driver assertions
+(393.535s), six generated-CLI assertions (47.014s), ordinary driver tests
+(171.170s), and all 732 native corpus fixtures (99.109s command). Corpus nested
+stages are source compilation 40.142s, native build/freshness 45.361s and runtime
+11.982s. All 186 native groups are cache hits, with zero rebuilt groups; those
+hits do not eliminate Cargo freshness work. Lowering's 1,148 tests execute in
+0.46s; the combined CLI/lowering configuration takes 354.765s because of CLI
+integration execution, not lowering assertion time. Nested durations must not be
+added again to parent category walls. Python and quality areas overlap.
+
+Preparation is 1,140.540s after changed production inputs, including SQL graph
+360.734s, crate tests 248.289s, generated projects 185.376s (114.368s materialization),
+and release compiler 158.540s. It is not a steady-state retained baseline. SQL
+execution is 669.408s, including mandatory independent clean builds at 475.600s;
+sysroot is 394.558s; Python is 379.318s and generated quality 327.301s overlapping.
+These costs remain above the phase budgets. Do not infer matched speedups from
+D18, whose inputs, build state and completeness differ.
+
+[PR #4536](https://github.com/sifr-lang/sifr/pull/4536) merges as
+`a86bcea2e099bdc25a7635d9bb3dec86e2eeed6d`, tree-identical to reviewed candidate
+`27fd5f69b90cea0b06c6a86d698b054ddde3650a`. All 77 affected dependency-contract
+tests pass, including all 13 original failures and existing mutation controls.
+Size, diff and unchanged emitted-plan checks pass in an 11.195s guarded session.
+All 16 successful evidence payloads are verified; archive SHA-256
+`86f68b949ca31babfa479bf161204541281449ab32cd5fb2141c87ab55821456`.
+The first focused failure is separately preserved in 16 verified payloads,
+SHA-256 `95c47ce295981515970428b582dd9c115cece154ea967566a834b85b081eabc2`.
+Independent review is SATISFIED without blockers; response SHA-256
+`e3da65391eba8ba08148a7d98b65adabd4ee96303f2f4d89fb8dfd2091d2a19c`.
+
+Follow-up owner: verification infrastructure/fuzz. The existing fuzz lock omits
+the extracted generated-Rust crate; regenerate and qualify that owned graph in
+separate dependency work, then reconcile its exact edge records. Automatic
+inventory reconciliation after extraction remains a verification-infrastructure
+follow-up. Neither follow-up changes this record-only repair's acceptance.
+No complete passing full gate, invalidation matrix or 480s qualification is claimed.
+
+### D24 — lowering test ownership and actual rebuild propagation (prospective)
+
+Target unnecessary production reconstruction after semantic test edits. Static
+ownership identifies 68 test-owned files and 38 inline test modules inside the
+lowering production-input root. Actual production dep-info excludes all 68 files,
+while the test executable includes them. This establishes an ownership mismatch,
+not its elapsed cost. Lowering assertion execution is already comfortably below
+the semantic budget; optimizing those 0.46s is not the objective.
+
+Measure an unchanged and an assertion-only complete lowering-test/production-CLI
+cycle with retained targets and identical allocation before changing the boundary.
+Separate initial configuration preparation from recurring edit cost. If this
+confirms material propagation, move explicit test-owned sources outside production
+inputs. Keep private invariants in their logical unit modules. Consider a cohesive public
+contract target only if the measured unit-test edit cost warrants it; do not expose
+private APIs or duplicate frontend authority to enable tests.
+Preserve all discovered identities, fixture/snapshot literals, declaration order
+and relative include meanings. Update dependent source-evidence, policy and target
+inventories together, using D16/D17 and D23's omissions as explicit lessons.
+
+Qualify all 1,148 original tests across their new owners, unchanged and assertion/
+fixture/private-test edit cycles, real production invalidation, actual CLI artifact
+reuse, metadata identity behavior, selection/coverage and affected policy contracts.
+Record first-use cost separately and compare complete matched retained cycles.
+Stop this item when its ownership guarantee and material development-cycle gain
+are demonstrated; do not optimize already cheap assertion execution. Preserve
+profile semantics, sanitizer and independent-clean obligations. Require independent
+exact-candidate review; full final phase correctness, ordinary invalidation and
+repeated 480s timing qualification remain open.
+
+
+#### D24 measured decision — isolate inputs, retain the existing test target
+
+On `a4eccaa6bcd3a6a22d5bb3b5b8e346316d9b6dba`, the initial unchanged cycle
+passes all 1,148 tests. It takes 42.757s for tests (one production-library unit
+needed configuration preparation; the test binary was fresh), 0.637s for the CLI
+(all 457 units fresh), and 47.716s guarded. It is not an edit-cycle baseline.
+
+A single assertion failure-message prefix changes no predicate or source fixture.
+The subsequent test command takes 10.464s and rebuilds two lowering units; the CLI
+build takes 23.858s and rebuilds 11 production units, changing its bytes. Combined
+guard: 36.713s. The same owned assertion edit then forces the existing packaged
+release compiler to rebuild in 116.630s, changing its bytes too (119.273s guarded).
+Thus the measured three commands cost 150.953s after a test-only edit. All tests
+pass, canonical four compiler slots and retained targets are used, and no reserve
+or category cap is reached. Source is restored after the control; restored-source
+build artifacts are not claimed fresh until Cargo next checks them.
+
+This confirms material production propagation. The unit-test edit command itself
+is already reasonable at 10.464s. Defer adding a new public integration target;
+relocate explicit test-owned sources and inline modules while retaining the exact
+logical unit-module paths and every assertion. This simpler boundary directly
+addresses the two unnecessary production rebuilds. Measure the same complete
+post-edit commands, including release preparation, after the change. Do not claim
+that this alone meets the entire gate budget.
+
+All 53 pre-change evidence payloads are verified, archive SHA-256
+`d85afbf974393ca9931eb01dc1055382713060d5f1dcb084c6fc5a098405548f`.
+The initial 0.690s diagnostic launch fails its environment-marker admission before
+compilation; its evidence is retained. The corrected controller binds the actual
+pinned Python executable/environment. No failed launch is counted as a test pass.
+
+
+The candidate preserves token-equivalent production bodies in all 44 changed
+owners after removing only test-module declarations/bodies. All 68 relocated
+external files preserve tokens, and all 38 extracted inline modules preserve every
+literal byte and the formatter's canonical tokens. One relative include is rebased
+to the same existing Sifr fixture. Nested expression tests use a directory module
+so Rust keeps their original logical paths. This lexical audit supplements actual
+compiled discovery/execution; it is not their substitute.
+
+Dependent method-policy validation also exposes existing nested test helpers
+classified as typed lowering because their old filenames lacked a test suffix.
+Only sites in the proven cfg(test)-owned, production-excluded moved files may be
+reclassified to test assertions. Preserve fingerprints, operations, signatures,
+relationships, inventory membership and every production node. Do not weaken the
+classifier or create a production exemption. Record the exact affected set and
+require the actual guard and its negative controls after reconciliation.

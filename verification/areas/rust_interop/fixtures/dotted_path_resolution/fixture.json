@@ -12,7 +12,7 @@
         "profile": "create-pr",
         "step": "crate_tests",
         "suite_id": "sifr_lowering",
-        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_file": "crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs",
         "test_name": "rust_interop_rejects_string_target"
       }
     },
@@ -25,7 +25,7 @@
         "profile": "create-pr",
         "step": "crate_tests",
         "suite_id": "sifr_lowering",
-        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_file": "crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs",
         "test_name": "rust_interop_lowers_function_decorators_into_hir"
       }
     }

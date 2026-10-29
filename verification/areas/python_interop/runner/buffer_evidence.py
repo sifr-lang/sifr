@@ -24,7 +24,7 @@ BUFFER_MATRIX_SPECS = {
             "lowering-codegen",
             "python_buffer_contract_tests and python_buffer_codegen_tests",
             {
-                "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs",
+                "crates/sifr_lowering/tests/unit/lower/python_buffer_contract_tests.rs",
                 "crates/sifr_codegen/tests/unit/python_buffer_codegen_tests.rs",
             },
             {
@@ -74,7 +74,7 @@ BUFFER_MATRIX_SPECS = {
         "declaration-shape": (
             "lowering",
             "python_buffer_contract_tests",
-            {"crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs"},
+            {"crates/sifr_lowering/tests/unit/lower/python_buffer_contract_tests.rs"},
             {
                 "invalid target",
                 "invalid access/layout",
@@ -88,7 +88,7 @@ BUFFER_MATRIX_SPECS = {
             "lowering-e2e",
             "python_buffer_contract_tests and crates/sifr/tests/e2e/fail/python_buffer_*.sifr",
             {
-                "crates/sifr_lowering/src/lower/python_buffer_contract_tests.rs",
+                "crates/sifr_lowering/tests/unit/lower/python_buffer_contract_tests.rs",
                 "crates/sifr/tests/e2e/fail/python_buffer_affine_membership.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_identity_rejected.sifr",
                 "crates/sifr/tests/e2e/fail/python_buffer_lambda_capture_rejected.sifr",

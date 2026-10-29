@@ -727,5 +727,5 @@ impl Default for Scope {
 }
 
 #[cfg(test)]
-#[path = "scope_tests.rs"]
+#[path = "../tests/unit/scope_tests.rs"]
 mod tests;

@@ -71,7 +71,7 @@ fn integer_field_augassign_aliases_preserve_failure_contract() {
 #[test]
 fn integer_field_augassign_alias_nonzero_guard_preserves_invalidation() {
     lower_source(include_str!(
-        "../../../../sifr/tests/e2e/pass/integer_field_augassign.sifr"
+        "../../../../../sifr/tests/e2e/pass/integer_field_augassign.sifr"
     ))
     .expect("aliased guarded fields lower inside and outside try");
     for in_try in [false, true] {

@@ -37,4 +37,4 @@ The structured `fixture.json` record is authoritative. These names repeat its
 exact executable Rust-test bindings for readers:
 
 - Positive `stdlib_async_resource_lifecycle` runs `package_rust_interop_opaque_current_thread_clears_async_method_send_probe` in `crates/sifr_driver/src/build/rust_interop_async_contract_tests.rs` through the blocking `sifr_driver_lib` suite at the `create-pr` profile.
-- Negative `stdlib_async_hidden_blocking_rejected` runs `rust_interop_hidden_blocking_async_resource_evidence_is_rejected` in `crates/sifr_lowering/src/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.
+- Negative `stdlib_async_hidden_blocking_rejected` runs `rust_interop_hidden_blocking_async_resource_evidence_is_rejected` in `crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs` through the blocking `sifr_lowering` suite at the `create-pr` profile.

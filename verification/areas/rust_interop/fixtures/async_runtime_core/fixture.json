@@ -12,7 +12,7 @@
         "profile": "create-pr",
         "step": "crate_tests",
         "suite_id": "sifr_lowering",
-        "test_file": "crates/sifr_lowering/src/lower/rust_interop_tests.rs",
+        "test_file": "crates/sifr_lowering/tests/unit/lower/rust_interop_tests.rs",
         "test_name": "rust_interop_hidden_blocking_async_resource_evidence_is_rejected"
       }
     },
