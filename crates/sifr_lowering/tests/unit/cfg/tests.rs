@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn valid_cfg(stmts: &[HirStmt]) -> ControlFlowGraph {

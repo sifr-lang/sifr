@@ -1,4 +1,3 @@
-
 use super::{AsyncSuspensionSummary, collect_async_suspension_summaries};
 use sifr_python_parser::parse_module;
 

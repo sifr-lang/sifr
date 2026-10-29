@@ -1,4 +1,3 @@
-
 use crate::{HirDiagnostic, HirModule, LoweringResult, lower_module};
 use sifr_diagnostics::DiagnosticCode;
 use sifr_ir::{HirExpr, HirStmt};

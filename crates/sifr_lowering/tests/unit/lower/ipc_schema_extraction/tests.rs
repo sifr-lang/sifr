@@ -1,4 +1,3 @@
-
 use super::extract_ipc_schema_type;
 use sifr_ipc::{IpcSchemaDescriptor, IpcSchemaType, IpcWireSchema, canonical_schema_descriptor};
 use sifr_type_system::{FunctionType, StructuralRecordType, Type};

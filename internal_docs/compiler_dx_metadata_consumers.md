@@ -243,13 +243,13 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr_lowering/tests/unit/lower/expressions_tests/ownership_and_async.rs:726` `test_defaultdict_unpacked_keyword_constructor_unsupported_has_stdlib_code` | read, enumerate | test setup/parity | 726, 728 |
 | `crates/sifr_lowering/tests/unit/lower/expressions_tests/support.rs:13` `lower_source_with_externals` | read, borrow/retain | test setup/parity | 15, 18 |
 | `crates/sifr_lowering/tests/unit/lower/expressions_tests/support.rs:21` `lower_source_with_stdlib_collections` | read, mutate overlay/producer | test setup/parity | 21, 25, 26, 30 |
-| `crates/sifr_lowering/tests/unit/lower/external_defs/tests.rs:5` `attached_api_set_membership_checks_the_stored_canonical_identity` | read | test setup/parity | 6 |
+| `crates/sifr_lowering/tests/unit/lower/external_defs/tests.rs:4` `attached_api_set_membership_checks_the_stored_canonical_identity` | read | test setup/parity | 5 |
 | `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:4` `external_input` | read | test setup/parity | 4, 5 |
 | `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:31` `lowering_external_defs_context_borrows_complete_input` | read, borrow/retain | test setup/parity | 34, 35, 36, 38, 42, 49, 51, 52 |
 | `crates/sifr_lowering/tests/unit/lower/external_defs_context_tests.rs:57` `lowering_external_defs_preserves_success_and_failure_inputs` | read | test setup/parity | 76, 89 |
-| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:7` `lower_private_declaration_constants` | read, borrow/retain | test setup/parity | 11 |
-| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:59` `annotated_scalar_module_constant_type_mismatch_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 63 |
-| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:76` `private_declaration_scalar_module_constant_alias_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 80 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:6` `lower_private_declaration_constants` | read, borrow/retain | test setup/parity | 10 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:58` `annotated_scalar_module_constant_type_mismatch_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 62 |
+| `crates/sifr_lowering/tests/unit/lower/module_constants_lowering/tests.rs:75` `private_declaration_scalar_module_constant_alias_is_diagnostic` | read, enumerate, borrow/retain | test setup/parity | 79 |
 | `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:62` `missing_stdlib_member_has_name_code` | read, enumerate, mutate overlay/producer | test setup/parity | 62, 65, 66, 69 |
 | `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:82` `deferred_stdlib_module_has_import_code` | read, enumerate | test setup/parity | 82 |
 | `crates/sifr_lowering/tests/unit/lower/name_import_diagnostics_tests.rs:135` `public_sysroot_stdlib_source_can_import_private_declarations` | read, enumerate, mutate overlay/producer | test setup/parity | 135, 138, 139, 149 |

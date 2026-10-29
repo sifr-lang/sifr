@@ -1,4 +1,3 @@
-
 use crate::{HirDiagnostic, lower_module};
 use ruff_text_size::{TextRange, TextSize};
 use sifr_diagnostics::DiagnosticCode;

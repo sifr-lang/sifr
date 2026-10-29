@@ -1,4 +1,3 @@
-
 use super::collect_type_vars;
 use sifr_type_system::Type;
 

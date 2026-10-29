@@ -1,4 +1,3 @@
-
 use super::{LowerCtx, collect_rust_opaque_close_methods};
 use sifr_python_parser::parse_module;
 

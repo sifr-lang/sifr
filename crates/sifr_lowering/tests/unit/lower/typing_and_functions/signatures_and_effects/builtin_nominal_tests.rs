@@ -1,4 +1,3 @@
-
 use super::*;
 #[test]
 fn registered_error_classes_and_constructors_share_canonical_identity() {

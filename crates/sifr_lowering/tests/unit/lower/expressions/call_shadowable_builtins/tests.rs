@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn text_handle(methods: Vec<(String, FunctionType)>) -> Type {

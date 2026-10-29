@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn place(root: u32, fields: &[&str]) -> Place {

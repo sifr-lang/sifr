@@ -1,4 +1,3 @@
-
 use super::special_base;
 
 #[test]

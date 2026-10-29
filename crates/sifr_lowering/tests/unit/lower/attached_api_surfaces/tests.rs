@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn class(identity: Option<&str>) -> Type {

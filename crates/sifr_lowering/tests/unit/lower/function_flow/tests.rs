@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn imported_class(local_name: &str, identity: &str) -> Type {

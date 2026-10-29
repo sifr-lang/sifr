@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::{ExternalDefs, lower_module_sysroot_private_declaration_with_externals};
 use sifr_diagnostics::DiagnosticCode;

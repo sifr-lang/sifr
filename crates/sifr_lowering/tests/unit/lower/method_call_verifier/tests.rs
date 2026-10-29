@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::hir_nodes::{HirStmt, MethodCallSource, MethodKind, MutableReceiverTarget};
 use ruff_text_size::{TextRange, TextSize};

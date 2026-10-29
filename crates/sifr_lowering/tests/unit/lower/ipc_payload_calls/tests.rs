@@ -1,4 +1,3 @@
-
 use super::non_ipc_serializable_reason;
 use sifr_type_system::{FunctionType, Type};
 

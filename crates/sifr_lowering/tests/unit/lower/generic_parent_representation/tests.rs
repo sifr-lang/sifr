@@ -1,4 +1,3 @@
-
 use super::{class_candidate, preserves_union_structure};
 use sifr_type_system::Type;
 use std::collections::HashMap;

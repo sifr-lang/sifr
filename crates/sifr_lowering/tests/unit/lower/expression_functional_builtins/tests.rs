@@ -1,4 +1,3 @@
-
 fn lower_errors(source: &str) -> Vec<crate::HirDiagnostic> {
     let parsed = sifr_python_parser::parse_module(source).expect("source should parse");
     match crate::lower_module(parsed.suite()) {

@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::lower::LowerCtx;
 use crate::lower::nested_function_inference::infer_nested_function_types;

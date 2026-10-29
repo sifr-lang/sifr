@@ -1,4 +1,3 @@
-
 use super::infer_type_var_bindings;
 use sifr_type_system::Type;
 use std::collections::HashMap;

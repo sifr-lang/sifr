@@ -1,4 +1,3 @@
-
 use crate::{HirDiagnostic, HirExpr, HirModule, HirStmt, lower_module};
 use sifr_python_parser::parse_module;
 use sifr_type_system::Type;
