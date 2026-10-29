@@ -23,7 +23,7 @@ use std::collections::BTreeSet;
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
 
-mod materialized_project_command;
+pub(crate) mod materialized_project_command;
 
 use materialized_project_command::cmd_materialize_rust_project;
 

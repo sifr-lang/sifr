@@ -1,6 +1,6 @@
 use super::render_diagnostics;
 use crate::check_and_package_commands::{
-    materialize_entrypoint_report, materialize_package_entrypoint_report,
+    MaterializationFailure, materialize_entrypoint_report, materialize_package_entrypoint_report,
 };
 use crate::cli_model_and_entrypoint::{
     DiagnosticFormat, EXIT_SUCCESS, EXIT_USAGE_OR_CONFIG, package_diagnostic,
@@ -19,10 +19,29 @@ pub(super) fn cmd_materialize_rust_project(
     quiet: bool,
     diagnostic_format: DiagnosticFormat,
 ) -> i32 {
+    materialize_with_context(
+        &crate::compiler_context(),
+        file,
+        output,
+        lock_mode,
+        quiet,
+        diagnostic_format,
+    )
+}
+
+pub(crate) fn materialize_with_context(
+    compiler: &sifr_driver::CompilerContext,
+    file: &Path,
+    output: &Path,
+    lock_mode: sifr_package::CargoLockMode,
+    quiet: bool,
+    diagnostic_format: DiagnosticFormat,
+) -> i32 {
     let mut provider = DiskSourceProvider::new();
     match package_session_for_cwd(lock_mode, &mut provider) {
         Ok(session) if !session.manifest_less_mode => {
             match materialize_package_entrypoint_report(
+                compiler,
                 file,
                 output,
                 &session,
@@ -55,14 +74,20 @@ pub(super) fn cmd_materialize_rust_project(
 
     let result = match run_with_panic_boundary(
         "internal compiler panic during Rust project materialization",
-        || materialize_entrypoint_report(file, output, &mut provider),
+        || materialize_entrypoint_report(compiler, file, output, &mut provider),
     ) {
         Ok(result) => result,
         Err(internal) => return render_diagnostics(&[*internal], diagnostic_format),
     };
     match result {
         Ok(report) => emit_materialized_project_result(&report, quiet, diagnostic_format),
-        Err(errors) => render_diagnostics(&errors, diagnostic_format),
+        Err(MaterializationFailure::Diagnostics(errors)) => {
+            render_diagnostics(&errors, diagnostic_format)
+        }
+        Err(MaterializationFailure::SourceRead(error)) => {
+            let _ = writeln!(io::stderr(), "{error}");
+            EXIT_USAGE_OR_CONFIG
+        }
     }
 }
 

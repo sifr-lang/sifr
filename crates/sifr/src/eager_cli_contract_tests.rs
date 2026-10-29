@@ -68,6 +68,14 @@ enum Commands {
         #[arg(long)]
         output_dir: PathBuf,
     },
+    /// Finite invocation-owned materialization protocol for verification.
+    #[command(name = "__materialize-batch", hide = true)]
+    MaterializeBatch {
+        #[arg(long)]
+        manifest: PathBuf,
+        #[arg(long)]
+        output_dir: PathBuf,
+    },
     /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
     #[command(name = "__sql-compiler-worker", hide = true)]
     SqlCompilerWorker {

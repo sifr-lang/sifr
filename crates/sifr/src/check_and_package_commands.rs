@@ -481,23 +481,36 @@ pub(super) fn compile_package_entrypoint_report(
     }
 }
 
+pub(super) enum MaterializationFailure {
+    Diagnostics(Vec<RenderedDiagnostic>),
+    SourceRead(String),
+}
+
 pub(super) fn materialize_entrypoint_report(
+    compiler: &sifr_driver::CompilerContext,
     file: &Path,
     output: &Path,
     provider: &mut dyn SourceProvider,
-) -> Result<MaterializedRustProjectReport, Vec<RenderedDiagnostic>> {
-    match resolve_compilation_mode(file, provider)? {
-        CompilationMode::Project => {
-            materialize_project(&crate::compiler_context(), file, output, provider)
-        }
+) -> Result<MaterializedRustProjectReport, MaterializationFailure> {
+    let mode =
+        resolve_compilation_mode(file, provider).map_err(MaterializationFailure::Diagnostics)?;
+    match mode {
+        CompilationMode::Project => materialize_project(compiler, file, output, provider),
         CompilationMode::SingleFile => {
-            let source = read_source(file, provider);
-            materialize_single_file(&crate::compiler_context(), &source, file, output)
+            let source = provider.read_file(file).map_err(|error| {
+                MaterializationFailure::SourceRead(format!(
+                    "error: could not read file '{}': {error}",
+                    file.display()
+                ))
+            })?;
+            materialize_single_file(compiler, source.as_str(), file, output)
         }
     }
+    .map_err(MaterializationFailure::Diagnostics)
 }
 
 pub(super) fn materialize_package_entrypoint_report(
+    compiler: &sifr_driver::CompilerContext,
     file: &Path,
     output: &Path,
     session: &sifr_package::PackageSession,
@@ -512,7 +525,7 @@ pub(super) fn materialize_package_entrypoint_report(
     };
     match run_with_panic_boundary(
         "internal compiler panic during Rust project materialization",
-        || materialize_package_project(&crate::compiler_context(), &entrypoint, output, provider),
+        || materialize_package_project(compiler, &entrypoint, output, provider),
     ) {
         Ok(Ok(report)) => Ok(Some(report)),
         Ok(Err(errors)) => Err(render_diagnostics(&errors, diagnostic_format)),

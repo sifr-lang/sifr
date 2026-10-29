@@ -305,6 +305,7 @@ pub(crate) fn command_name(
     use crate::cli_model_and_entrypoint::Commands;
     match command {
         Some(Commands::EmitBatch { .. }) => "emit-batch",
+        Some(Commands::MaterializeBatch { .. }) => "materialize-batch",
         Some(Commands::SqlCompilerWorker { .. }) => "sql-compiler-worker",
         Some(Commands::Sysroot(_)) => "sysroot",
         Some(Commands::Cache(_)) => "cache",

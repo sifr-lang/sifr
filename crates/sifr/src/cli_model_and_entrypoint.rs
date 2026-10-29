@@ -85,6 +85,14 @@ pub(crate) enum Commands {
         #[arg(long)]
         output_dir: PathBuf,
     },
+    /// Finite invocation-owned materialization protocol for verification.
+    #[command(name = "__materialize-batch", hide = true)]
+    MaterializeBatch {
+        #[arg(long)]
+        manifest: PathBuf,
+        #[arg(long)]
+        output_dir: PathBuf,
+    },
     /// Invocation-owned compiler protocol; selected by the SQL tool launcher.
     #[command(name = "__sql-compiler-worker", hide = true)]
     SqlCompilerWorker {
@@ -281,6 +289,10 @@ fn run_cli(cli: Cli) -> i32 {
             manifest,
             output_dir,
         } => crate::emit_batch::run(&manifest, &output_dir),
+        Commands::MaterializeBatch {
+            manifest,
+            output_dir,
+        } => crate::materialize_batch::run(&manifest, &output_dir),
         Commands::SqlCompilerWorker {
             workspace,
             admission,

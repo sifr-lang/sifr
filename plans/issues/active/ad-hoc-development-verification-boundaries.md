@@ -2252,3 +2252,35 @@ source replacement, changed-input invalidation and cleanup protection. Verify
 actual reused units and fresh runtime assertions, not fingerprint equality alone.
 Prioritize the largest current cost; do not turn this lead into an implementation
 before the baseline demonstrates value. All final phase obligations remain open.
+
+
+### D15 prospective experiment — finite materialization ownership
+
+The canonical retained baseline now passes all 93 materializations and locked
+fetches in 168.280s including prerequisite proofs; materialization alone is
+129.499s. The preceding pass takes 341.389s overall / 307.914s materialization
+and remains priming evidence, not the recurring baseline. Both use the canonical
+one-layer uv environment and end with empty owned sessions. Preparation exceeds
+its 90-second design budget. A representative CPU profile identifies hashing and
+frontend work but does not establish a caller-specific causal breakdown.
+
+Prototype finite invocation-owned materialization using the same public command
+implementation with an explicitly supplied compiler context. Each request must
+still discover its package context, read fresh sources, materialize its own output
+and execute all diagnostic checks. Reuse only the compiler's immutable setup and
+metadata owner, as the existing finite emission protocol does. Retain a single
+completion-report protocol, indexed outcomes, failure continuation and fresh
+output ownership. No daemon, source-result cache, result skipping or fallback.
+
+Keep production generated preparation unchanged during the experiment. Compare
+all 93 scalar and batched requests on the same candidate/environment, including
+generated Rust, manifests, locks and the existing portable-graph checks. Account
+explicitly for output/source-path differences; do not normalize semantic content.
+Measure complete preparation, not only a few favorable fixtures. Exercise source
+edits, same-named independent projects, malformed requests, missing/invalid inputs,
+partial output, errors followed by valid requests and package/lock-mode behavior.
+Keep public CLI boundary coverage and all generated graph/fetch obligations.
+Adopt runner batching only after parity and a material improvement are demonstrated;
+90 seconds remains the preparation budget, not an unmeasured promise. Focused
+candidate controls and independent review are required before intermediate merge.
+All final integrated coverage, invalidation and timing obligations remain open.
