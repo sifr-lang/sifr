@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D23; final phase qualification open
-- Latest delivery: D23 complete cost discovery and dependency-inventory reconciliation; D24 lowering ownership investigation
+- Status: in progress; intermediate deliveries through D24; final phase qualification open
+- Latest delivery: D24 lowering test ownership; D25 retained generated-driver cost diagnosis
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3410,3 +3410,102 @@ reclassified to test assertions. Preserve fingerprints, operations, signatures,
 relationships, inventory membership and every production node. Do not weaken the
 classifier or create a production exemption. Record the exact affected set and
 require the actual guard and its negative controls after reconciliation.
+
+
+#### D24 closure — 2026-10-30
+
+[PR #4537](https://github.com/sifr-lang/sifr/pull/4537) merges as
+`29ae1dad8f8d3eebed0b8c5f623f07e4be7e47d9`, with a tree identical to reviewed
+candidate `94294a8294c9a8b0f9f1170a1497cbc532aa0131`. Runtime qualification uses
+`999a5c31443f608d3dc586f823ddc0a78d905ca4`; the final commit changes only 13
+`docs/errors/*.mdx` source references. The canonical generator checks those pages,
+and final dev/release admission confirms unchanged compiler bytes and zero rebuilt
+CLI units. This explicit input binding avoids repeating runtime tests for prose.
+
+All 1,148 original tests pass with byte-identical compiled discovery, zero ignored
+or filtered cases, and complete doctest invocation. All eight edit controls pass:
+unchanged, assertion message, source fixture, private test, added source, removed
+source, actual production edit and restoration. The addition executes 1,149 tests;
+removal returns to 1,148. Test-only controls rebuild zero production CLI units and
+preserve both compiler hashes. The production control rebuilds 11 CLI units and
+changes both binaries; restoration returns their original bytes. Actual dep-info
+contains all 106 relocated sources in the test target and none in the production
+library. No test target, profile, dependency, lockfile or runner selection changes.
+
+The original post-change matrix uses canonical capacity-based admission: available
+memory moves some invocations from four compiler jobs to three. Its elapsed values
+are not treated as a matched before/after comparison. A subsequent comparison
+fixes three compiler jobs on both sides and repeats the identical assertion-message
+prefix, full test command, actual dev CLI build and packaged release preparation:
+
+| Complete assertion-edit cycle | Before | After |
+|---|---:|---:|
+| Three command durations | 156.640s | 8.187s |
+| Including diagnostic guards | 161.603s | 13.046s |
+| Production CLI units rebuilt | 11 | 0 |
+| Original tests executed | 1,148 | 1,148 |
+
+The observed command total is 94.77% lower. Initial layout reconstruction is separate:
+303.139s before and 310.737s after. Source-add/remove controls cost about 32s in the
+original matrix; real production change/restoration cost 186.815s/204.572s. These
+are measured local edit controls, not a universal latency promise or a full-gate gain.
+
+All 25 final affected checks pass in a 120.250s guarded invocation: formatting,
+size, diff, identity controls, method/unsafe/filesystem guards and negatives,
+metadata inventory and negatives, diagnostic coverage/catalog/baselines/generated
+docs and negatives, Rust fixture evidence and negatives, Python interop self-tests,
+dependency direction, prepared compiler controls, profiles and emitted plan. The
+merge-correctness plan remains byte-identical to the corrected D23 candidate.
+
+All 535 payloads in `dev-verify-d24-qualified.tar.gz` are independently hash/size
+verified, archive SHA-256
+`c1779b81699990716e5c8c8c80036d908a401e47b295f98001c9086f2cd5e055`.
+Exact-candidate review is SATISFIED with no blockers; response SHA-256
+`e9b82dc8ebe6678c3a31741f568ccb8ae370d6a4c97b08a0ba2d3c5c52fd7844`.
+Preserve the initial environment-admission failure, initial policy-role mismatch,
+13 stale generated-reference audit hits and dep-info selector failure. The last
+was a diagnostic cardinality error that selected a build-script artifact alongside
+the library; filtering the actual library target fixes the read-only audit. None
+of these failed attempts is reclassified as a passing run.
+
+Follow-ups: verification infrastructure owns filename-based test classification
+in other crates; historical plans retain their point-in-time source paths and may
+need a note if reactivated. Complete phase correctness, ordinary invalidation,
+final gates, SQL independent-clean obligations and repeated 480s qualification
+remain open.
+
+### D25 — retained generated-driver cost and preparation boundaries (prospective)
+
+D23's complete generated-driver category executes all 80 native assertions in
+393.535s with two admitted workers. Their individual command durations sum to
+785.199s and overlap; that sum is not category wall time. Largest recorded cases:
+trusted native build-script evidence 106.324s, Arrow/tensor roundtrips 88.806s and
+backend/SQLx integration 64.862s. These are first complete diagnostic observations,
+not proof of current retained costs or avoidable compilation. Case-level CPU is
+not yet reconciled; missing CPU observations must not be represented as zero.
+
+First prepare the exact selected native-driver configuration and its declared
+metadata/advanced-data helpers on one frozen candidate. Keep preparation separate
+from execution and retain its products. Execute those three existing cases with
+the canonical native allocation, exact original test identities and assertions,
+locked/offline Cargo and the 1,750s diagnostic cap. Then inspect their actual
+preparation, Cargo activity, generated Rust compilation/linking, execution and
+waiting. Use ordinary runs for elapsed time; instrument only a remaining slow
+representative when needed to explain cost. Reuse completed unaffected coverage.
+
+The advanced-data fixture already has retained source ownership and an explicit
+preparation helper. Diagnose why a prepared case remains expensive before adding
+another cache or owner. Native Cargo families already separate storage from
+request authorization and do not simply key all dependencies on compiler identity.
+Do not repeat those delivered designs as new proposals. The trusted native case
+explicitly compares evidence from two fresh locked targets; preserve that guarantee,
+all trust-rejection sentinels, actual native runtime assertions, source isolation
+and process/lease lifetime. Do not relabel required fresh work as a cache defect.
+
+Choose a coherent root-cause repair only from these measurements. Avoid optimizing
+already cheap runtime assertions or increasing concurrency without measured memory
+and CPU admission. Any adopted change requires focused negative/invalidation and
+ownership controls, the complete 80-case category with unchanged selection, a
+material complete-category improvement and independent exact-candidate review.
+The 120s integration budget and full 480s gate remain acceptance goals, not permission
+to omit cases or move independent-clean qualification out of the ordinary gate.
