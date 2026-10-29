@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = ROOT / "internal_docs/compiler_dx_metadata_consumers.md"
 BEGIN = "<!-- dx5-sites:start -->"
 END = "<!-- dx5-sites:end -->"
-OWNERS = ("sifr_lowering", "sifr_frontend", "sifr_compiler_services", "sifr_semantic_services", "sifr_driver", "sifr_codegen", "sifr_analysis", "sifr_lsp", "sifr")
+OWNERS = ("sifr_lowering", "sifr_frontend", "sifr_compiler_services", "sifr_semantic_services", "sifr_driver", "sifr_codegen", "sifr_generated_rust", "sifr_analysis", "sifr_lsp", "sifr")
 # Shared test consumers may live outside production crate roots.
 SHARED_TEST_SOURCES = ("verification/tools/corpus_oracle/src/lib.rs",)
 TERMS = re.compile(r"\b(?:ExternalDefs|StdlibCode|StdlibEmissionCode|StdlibEmissionView|external_defs|externals|stdlib_defs|stdlib_code|hir_modules|module_rust_code|module_constants|func_signatures|transitive_deps|generator_functions|generic_classes|generic_class_params|generic_class_templates|module_class_fields|module_class_templates)\b|\b\w*stdlib\w*\b")
@@ -38,9 +38,9 @@ def functions(text: str):
 
 def consumer_sources():
     for owner in OWNERS:
-        for directory in ("src", "tests/unit"):
+        for directory in ("src", "tests"):
             for path in sorted((ROOT / "crates" / owner / directory).rglob("*.rs")):
-                yield owner, path, directory == "tests/unit"
+                yield owner, path, directory == "tests"
     for relative in SHARED_TEST_SOURCES:
         path = ROOT / relative
         if not path.is_file():

@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D16; final phase qualification open
-- Latest delivery: D16 codegen test ownership; D17 compiler boundary investigation
+- Status: in progress; intermediate deliveries through D17; final phase qualification open
+- Latest delivery: D17 generated Rust ownership; D18 integrated normal-allocation discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2637,3 +2637,95 @@ its affected gate; do not silently repair that separate inventory here. The
 reviewer's task-local parser suggestion needs no change: malformed syntax remains
 covered by the relocated private invariant tests. Final phase timing and complete
 coverage qualification remain open.
+
+
+D17 merges in [PR #4529](https://github.com/sifr-lang/sifr/pull/4529) as
+`caae77bc604bf90c576f34cfc315ba7824de7740`. Independent re-review of final candidate
+`0bf712d31d0df4c0a2a2baed763932f44fadf0f8` returns SATISFIED with no blockers;
+response SHA-256 `bf9caf429228785121dacb95ddaaaa79a0cf21458d58eebb8f52cd06fb675575`.
+Both qualification archives and every payload hash are verified locally. This
+closure record requires documentation checks only, not repeated implementation
+review or compiler qualification.
+
+### D18 — integrated discovery under normal allocation (prospective)
+
+Refresh the complete `merge --correctness-only --no-fail-fast` selection after
+D12–D17. The older D11 diagnostic explicitly forced `RUST_TEST_THREADS=1`, so its
+83-minute aggregate cannot stand for current normal development latency. Remove
+that diagnostic override for this run; let the existing canonical allocator choose
+bounded ordinary test workers and nested build work. Keep the canonical single uv
+entry, exact Node/npm and compiler tooling, owned retained targets, environment
+identity, resource reserves and complete selection. No production scheduling or
+profile change is proposed by this diagnostic.
+
+Inspect the emitted plan and capacity before launch. Use the existing 1,750s
+per-category diagnostic cap, failure continuation and dependency blocking. If the
+aggregate preparation deadline leaves independent nodes unexecuted, recover those
+nodes individually with the same cap and account for every consumer explicitly.
+Do not repeat a failed preparation unchanged or classify missing execution as a
+pass. Preserve the complete previous reports before any subsequent invocation.
+
+Record preparation separately from execution, source/configuration identities,
+actual outer and inner concurrency, coverage, cache state and the three largest
+complete-category costs. Initial reconstruction after a new configuration is not
+a warm optimization baseline. Use the current category budgets (90s preparation,
+60s semantic/unit, 90s native corpus, 120s integrations, 60s installed product,
+30s policy and 30s reporting) to pick the next macro repair. Keep already adequate
+categories out of the optimization loop. This checkpoint is discovery; it does not
+waive final gates, ordinary invalidation scenarios, independent clean-build or
+sanitizer obligations, repeated timing qualification, or the complete 480s target.
+
+
+#### D18 admission reconciliation — omitted consumer locations after D16/D17
+
+The first normal-allocation discovery at
+`07c113c25b1eb98f256e034aadcda0441d7da04a` stops at admission in 25.697s outer /
+22.254s facade elapsed. Five early guards pass; DX metadata inventory fails.
+Preparation and every consumer are blocked, not passed. The complete 17-payload
+failure archive is `dev-verify-d18-admission-failure.tar.gz`, SHA-256
+`1ed2c6d0f285287f38d42cf6665c4882a485c2c6855b7fe0d5a6e6316214bd1f`.
+Preflight verifies all exact tool versions, eight effective CPUs, approximately
+10.2GiB available memory and more than the required disk/memory reserves. Diagnostic
+thread/job overrides are removed; the existing allocator selects the work budget.
+
+Read-only historical reconstruction resolves the earlier D17 ownership uncertainty:
+the inventory matches all 1,154 rows before D16 (`fa02de4d84`) but no longer matches
+after D16 (`a7cae3e12a`), when discovery falls to 1,118 rows. The 36-row reduction
+is a net count, not a complete enumeration of omitted symbols. This is this phase's
+test-boundary integration omission, so reconcile it as a bounded admission repair;
+do not delegate it indefinitely as an unrelated external failure.
+
+The scanner must include each maintained owner's entire `tests` tree, covering
+both private units and public contracts exactly once, and include the extracted
+syntax owner. Preserve production/test classification and every payload-field/live
+authority check. A new regression covers production, private-unit and public-contract
+consumers in both codegen and generated-Rust owners without mocking the owner list.
+
+The refreshed inventory contains 1,171 rows. Comparing symbol/operation/classification
+multisets accounts for all three changed old keys: the already test-only
+`stdlib_error` helper now has its correct test classification; the two canonical
+stdlib-name operations delegate enumeration to `nominal_replacements`, with explicit
+codegen and syntax-owner read boundaries. Fourteen newly discovered external-test
+consumers are added, all classified as test setup/parity. Remaining changes are
+relocated source anchors or unchanged classifications. No payload field or runtime
+implementation changes. Validate inventory and its full self-tests, source size,
+unchanged emitted selection, and independent review, then resume complete discovery
+with all failed/blocked evidence preserved.
+
+
+Admission candidate `211f508d19729d29ce85d624614936a6e13c0bb4` passes the actual
+inventory, all 15 self-tests, file-size guard and profile validation in a 9.692s
+session. Its emitted merge-correctness plan is exactly identical to the failed
+sweep's selection. The new regression rejects the former discovery boundaries.
+A one-to-one relocation reconciliation maps all 1,154 original rows to distinct
+current rows, including split test helpers; the three classification changes above
+are the only operation/classification changes. No Rust or Cargo inputs change.
+
+Both the failed-admission archive and the 31-payload focused qualification archive
+are SHA-256 verified locally. Focused archive:
+`dev-verify-d18-admission-qualified.tar.gz`,
+`99ad073aa62ae1140f82aeddc8b17548f9e374143010911a84e627d451f986d3`.
+The final qualification-record edit changes only this phase document. Independent
+review of the admission repair remains required before merging and resuming the
+complete normal-allocation sweep. No main-test execution or full-gate timing is
+claimed from admission-only checks.
