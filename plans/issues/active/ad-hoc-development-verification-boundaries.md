@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D16; final phase qualification open
-- Latest delivery: D16 codegen test ownership; D17 compiler boundary investigation
+- Status: in progress; intermediate deliveries through D17; final phase qualification open
+- Latest delivery: D17 generated Rust ownership; D18 integrated normal-allocation discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -2637,3 +2637,40 @@ its affected gate; do not silently repair that separate inventory here. The
 reviewer's task-local parser suggestion needs no change: malformed syntax remains
 covered by the relocated private invariant tests. Final phase timing and complete
 coverage qualification remain open.
+
+
+D17 merges in [PR #4529](https://github.com/sifr-lang/sifr/pull/4529) as
+`caae77bc604bf90c576f34cfc315ba7824de7740`. Independent re-review of final candidate
+`0bf712d31d0df4c0a2a2baed763932f44fadf0f8` returns SATISFIED with no blockers;
+response SHA-256 `bf9caf429228785121dacb95ddaaaa79a0cf21458d58eebb8f52cd06fb675575`.
+Both qualification archives and every payload hash are verified locally. This
+closure record requires documentation checks only, not repeated implementation
+review or compiler qualification.
+
+### D18 — integrated discovery under normal allocation (prospective)
+
+Refresh the complete `merge --correctness-only --no-fail-fast` selection after
+D12–D17. The older D11 diagnostic explicitly forced `RUST_TEST_THREADS=1`, so its
+83-minute aggregate cannot stand for current normal development latency. Remove
+that diagnostic override for this run; let the existing canonical allocator choose
+bounded ordinary test workers and nested build work. Keep the canonical single uv
+entry, exact Node/npm and compiler tooling, owned retained targets, environment
+identity, resource reserves and complete selection. No production scheduling or
+profile change is proposed by this diagnostic.
+
+Inspect the emitted plan and capacity before launch. Use the existing 1,750s
+per-category diagnostic cap, failure continuation and dependency blocking. If the
+aggregate preparation deadline leaves independent nodes unexecuted, recover those
+nodes individually with the same cap and account for every consumer explicitly.
+Do not repeat a failed preparation unchanged or classify missing execution as a
+pass. Preserve the complete previous reports before any subsequent invocation.
+
+Record preparation separately from execution, source/configuration identities,
+actual outer and inner concurrency, coverage, cache state and the three largest
+complete-category costs. Initial reconstruction after a new configuration is not
+a warm optimization baseline. Use the current category budgets (90s preparation,
+60s semantic/unit, 90s native corpus, 120s integrations, 60s installed product,
+30s policy and 30s reporting) to pick the next macro repair. Keep already adequate
+categories out of the optimization loop. This checkpoint is discovery; it does not
+waive final gates, ordinary invalidation scenarios, independent clean-build or
+sanitizer obligations, repeated timing qualification, or the complete 480s target.
