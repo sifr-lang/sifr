@@ -2515,3 +2515,95 @@ before adoption; use the 90s preparation budget to decide whether more work is
 needed, and stop optimizing categories already within budget. Run applicable
 policy/identity regressions and independent exact-candidate review. Full phase
 coverage, ordinary invalidation scenarios and the 480s gate remain open.
+
+
+#### D17 implementation — generated Rust syntax owner
+
+The candidate extracts normalization, generated-support filtering, visibility and
+macro-syntax invariants into `sifr_generated_rust`. Its production dependencies are
+only Rust syntax libraries. Language nominal identities and builtin-error catalogs
+remain in codegen/type-system ownership and are passed explicitly. The codegen
+facade retains its public normalization contract. Both crates retain opt-level 2;
+this is an ownership change, not a weaker compilation profile.
+
+Private invariants move with their implementation; frontend-to-native integration
+contracts remain in codegen. The expected original discovery union is unchanged:
+1,220 codegen unit tests, 268 generated-Rust unit tests, and 297 public emission
+contracts, plus the existing 18 native ABI checks. No test-only public fields or
+syntax APIs were introduced. All 31 split support-filter test functions retain
+identical assertion tokens and literals; four language-identity tests remain in
+codegen and 27 syntax tests move. A task-local integration helper independently
+checks the emitted declaration instead of accessing the syntax owner's private
+parser fields.
+
+All four delivery profiles retain their previous selections and enroll the new
+crate alongside codegen. The additive compiler preparation/execution group,
+coverage inventory, dependency-direction checks, semantic/native dependency graph,
+method-authority scanner and generated unsafe-ABI scanner include the new owner.
+Production input ownership recurses into the new package's declared `src` inputs;
+its test-only files remain outside production identity.
+
+#### D17 qualification — retained edit cycles and unchanged generated output
+
+Rust implementation candidate `ca428c254534d1928f234224602a1bd681227bac`
+passes the complete affected test selection, typechecking and production CLI build
+in 260.846s. That candidate-preparation run is not a recurring speedup claim.
+Every subsequent control executes all 1,785 original test identities and 18 native
+ABI tests, with no ignored tests and an empty owned process session afterward.
+
+| Retained scenario | D16 complete cycle | D17 complete cycle | D17 tests / CLI commands |
+|---|---:|---:|---:|
+| Unchanged | 25.205s | 25.196s | 20.605s / 0.568s |
+| Private assertion edit | 149.777s | 29.208s | 24.393s / 0.659s |
+| Normalization implementation edit | 453.473s | 226.822s | 207.261s / 15.603s |
+| Emitter implementation edit | Not measured | 119.768s | 89.377s / 26.371s |
+
+These are separate scenarios, not additive gate components. The private assertion
+cycle improves 80.5%; normalization implementation improves 50.0%. The emitter
+control has no matched before measurement. Cargo reports 186s test preparation for
+the normalization edit and 69s for the emitter edit, before their respective CLI
+builds. The 90s preparation budget remains unmet; the already short private-test
+category needs no further optimization. Actual Cargo artifact evidence confirms
+that the extracted production library is shared between tests and the CLI rather
+than duplicated for their different codegen configurations.
+
+All diagnostic source edits are restored. The private-test control retains the
+original CLI bytes; both implementation controls rebuild and change the CLI.
+Restoration reproduces its original SHA-256
+`7cce985d797fc42d51681d26fa490b17a413ea2a330ac2a70494d19ec77c557d`.
+Source comparison records 133 relocated files with identical tokens and ten
+explicit boundary edits. All 31 split support-filter test functions retain their
+tokens and literals. Six added test-helper method-policy sites remove none of the
+previous 6,458; all 235 authority-node meanings remain.
+
+The full policy sweep passes 14 checks, including formatting, size, method authority
+and its 19 self-tests, dependency boundaries and negative controls, 14 execution
+configuration tests, 11 build-identity tests, filesystem policy, emitted inventory,
+coverage readiness and profile checks. Its unsafe inventory check correctly fails
+on 16 code-proof paths for two moved tests. Data-only correction
+`7dad324982ad3764708a1c39e699b697060716e5` fixes those paths without changing proof
+text, fingerprints or Rust implementation. The original failed run remains failed;
+the corrected inventory is checked separately. The six emitted plans (four delivery
+profiles and create-PR/merge correctness scopes) preserve all previous selections;
+only the new mandatory crate membership is added.
+
+All 93 selected generated projects materialize successfully in 179.183s and compare
+byte-for-byte against retained baseline `368ac774c1c2eaba6b910d388ac3d4e004086721`,
+allowing only exact candidate revision substitution in Cargo.toml/Cargo.lock.
+The first locked fetch fails because the candidate revision is not yet published.
+After publishing the branch, recovery reuses the recorded trees and unchanged CLI;
+it does not repeat materialization or reinterpret the failed fetch as a pass.
+Recovery passes all 93 locked fetches in a 43.214s guard. The corrected unsafe
+inventory passes remotely in a 28.209s guard, retaining all 410 sites and three
+partitions. A structural comparison proves that the only difference from the Rust
+qualified candidate is those 16 proof paths; the CLI still has the qualified hash.
+All validation sessions end empty, with no reserve cancellation or unexpected
+source mutation.
+
+The complete 814-payload archive, including failed attempts and the 93 generated
+trees, is verified locally: `dev-verify-d17-qualification.tar.gz`, SHA-256
+`43508c09fbd70ee44d38295f9227d217fa8b46cad44d41b952431f9029df5de6`.
+The remaining qualification-record update is documentation only; source and policy
+inputs match their recorded candidates. Independent exact-candidate review remains
+required before merge. Complete phase coverage, ordinary invalidation qualification
+and the 480s gate remain open.
