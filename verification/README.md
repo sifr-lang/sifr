@@ -207,7 +207,7 @@ capacity and resolved allocations. Standalone E2E commands retain their explicit
 worker controls; use the profile runner for capacity-bounded admission.
 
 Ordinary driver and CLI libtests share this budget with their nested Cargo and Rayon
-work. The runner samples capacity again before each selected configuration, bounds
+work, including lowering tests grouped in the full CLI configuration. The runner samples capacity again before each selected configuration, bounds
 `RUST_TEST_THREADS` by available slots, and divides nested jobs among the selected
 workers. An explicit smaller thread request is preserved. A libtest
 `--test-threads` flag exceeding admission fails instead of bypassing the budget.
