@@ -26194,6 +26194,20 @@
       "operation": "open-write",
       "site": ".open(path)",
       "classification": "output-effect"
+    },
+    {
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
+      "symbol": "input_union_is_order_independent_and_retains_explicit_excluded_descendants",
+      "operation": "read",
+      "site": "&fs::read(tree.0.join(path)).unwrap(),",
+      "classification": "tooling-input"
+    },
+    {
+      "path": "crates/sifr_identity/tests/unit/build_tests.rs",
+      "symbol": "diamond_package_ownership_hashes_shared_inputs_once",
+      "operation": "read",
+      "site": "&fs::read(tree.0.join(path)).unwrap(),",
+      "classification": "tooling-input"
     }
   ]
 }
