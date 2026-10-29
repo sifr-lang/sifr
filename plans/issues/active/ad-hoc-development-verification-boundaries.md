@@ -2039,3 +2039,108 @@ Prior profile experiments remain authoritative: blanket opt0 caused 6.697x slowe
 metadata validation, and selective semantic opt0 caused 2.133x slower source checks.
 They are not repeated as a shortcut. CLI allocation, Python fixture identities,
 native artifact validation and the independent SQL build cost remain separate leads.
+
+#### D13 closure — 2026-10-29
+
+[PR #4524](https://github.com/sifr-lang/sifr/pull/4524) merged candidate
+`f90486060e7a3a2f1d1e865de9fc27f9e60897a0` as
+`147910bae7f9a96bd6dc3b542e9714682c0a1e6e`. Independent review is **SATISFIED**,
+with no blockers. Actual Cargo discovery and execution agree on all 25 selected
+assertions: 12 frontend, 11 analysis and two LSP tests. The focused Cargo case
+passes in 2.913s versus the prior broad command's 116.518s; the entire focused
+area, including its qualification contract, passes in 3.069s. This is one ordinary
+comparison with retained products and an explicit single test thread.
+
+All 17 focused execution/ownership controls and all 18 preparation controls pass
+remotely. SQL qualification and its four metadata/six source mutations pass.
+All six supported full/correctness-scoped emitted plans remain equivalent; all
+four delivery profiles retain complete unfiltered crates in both modes. No Rust,
+feature graph, complete crate command, integration target or doctest changed.
+The guarded diagnostic ends empty after 13.390s, without drift or reserve failure.
+
+The initial broader local preparation attempt has two platform-related failures:
+canonical `/private/var` versus `/var` temporary-path comparison and process-group
+SIGKILL permission. These belong to preparation/process controls and stay recorded;
+the remote suite passes without changing their implementation. The first external
+plan-comparison helper also incorrectly requested unsupported correctness scope for
+nightly/release; its corrected helper checks only supported combinations. Neither
+failed attempt is relabelled as passing.
+
+Archive `dev-verify-d13-evidence.tar.gz` verifies all 84 payloads; SHA-256
+`e8852bf92f241f6a4c6fb369caf063c2b04a5e0c6dafc42494737fe7881961bd`.
+Review: `dev-verify-d13-review-wnz6yufy/response.md`, outside Git and bound to the
+candidate. Optional follow-ups are streaming focused stdout through cancellation
+and detecting newly added editor tests whose names miss the focused filters;
+complete crate execution already retains those tests. Full-profile CI again stops
+before preparation for the missing performance reference. Final phase acceptance
+is still open. This subgroup is now small enough; move to larger costs.
+
+### D14 — bounded CLI integration execution (prospective)
+
+D11 spends 555.103s in the complete CLI/lowering configuration, with the external
+diagnostic explicitly forcing one libtest thread. This is not default-policy
+latency: the ordinary CLI configuration currently inherits libtest's worker count,
+while nested Cargo/Rayon already have their own budgets. D5 bounds only ordinary
+driver tests. CLI cwd-changing tests already execute in isolated child processes;
+standalone native publication deliberately retains its mutex and artifact lease.
+
+First measure the unchanged complete CLI/lowering selection with three admitted
+outer workers and one nested Cargo/Rayon worker, using the existing allocator in
+an external diagnostic. Keep every assertion, ignored/generated owner and corpus
+exclusion unchanged. If this passes, compare a same-candidate one-worker run with
+three nested workers, retaining inputs, environment and artifact identities. Check
+all target outcomes and exact ordinary test identities, not only Cargo's exit code.
+Each diagnostic retains the 1750-second cap and capacity/process-cleanup controls.
+
+Only adopt bounded CLI allocation after the complete comparison passes and shows a
+material elapsed benefit versus serial diagnostics (at least 15%). Do not claim a
+speedup over the formerly unset libtest default from that comparison. Any production
+change must use one shared allocation policy, preserve smaller explicit user limits,
+reject explicit overcommit, and retain cancellation/reserve behavior. Keep native
+specialized execution separate. Use focused allocation/selection controls and
+independent review; full phase gates and repeated 480-second acceptance remain open.
+A faster CLI category alone does not satisfy the 120-second integration design budget.
+
+The initial external probe stopped before preparation because it assumed four slots
+were always admissible. Available memory is close to the four-slot boundary; that
+is a diagnostic precondition error, not a test failure. Record it and compare fixed
+three-slot allocations (3/1/1 and 1/3/3) below the existing profile ceiling, retaining
+the reserve and refusing execution if three slots are unavailable. Do not change
+production resource policy to force admission.
+
+The first admitted CLI diagnostic fails because the external helper omitted the
+canonical explicit source sysroot and revision-specific portable dependency fetch.
+Its 130.382s failed execution is not a speedup. Preserve all failed targets and
+prepare the canonical workspace, fixture, Python and generated dependency nodes,
+then publish the compiler through its owned session. Prove both the portable
+relocation and source-sysroot CLI cases before another complete comparison.
+
+The shared allocator prototype also bounds `SIFR_E2E_CARGO_BUILD_JOBS`: two ordinary
+CLI assertions invoke standalone native builds through an explicit harness job
+setting, which otherwise could exceed the outer-times-inner budget despite bounded
+`CARGO_BUILD_JOBS`. Keep their publication mutex/lease and all assertions unchanged.
+The full corpus keeps its separate specialized allocation.
+
+A follow-up development-interface gap is now concrete: invoking a crate category
+outside the profile does not automatically acquire its canonical sysroot and
+portable-revision prerequisites. This caused the failed external diagnostic. A
+future focused-category entry point should select the same authoritative commands
+and prerequisite graph, without reconstructing that setup in ad hoc helpers. Keep
+that interface work separate from the current allocation candidate.
+
+Canonical prerequisite preparation passes in 358.469s, including both focused
+setup proofs. Its 93 generated materializations and locked fetches account for
+348.086s. A subsequent direct-Python measurement is cancelled after 183.031s when
+launcher inspection confirms it bypasses the canonical `uv run` entry. Native
+identity includes PATH, so it is not accepted as ordinary timing evidence. The
+owned session is empty after cancellation; no serial comparison ran. The corrected
+external helper asserts the verification virtual environment and leading PATH
+entry before launching any tests. Preserve the cancelled evidence and require the
+canonical one-layer uv entry for both paired runs.
+
+The first canonical three-worker pass is rebuilding retained native dependency
+families (observed optimized `encoding_rs` and debug dependencies), while an
+unrelated-Cargo-manifest test deliberately owns a private cold cache. Treat the
+first canonical pass as functional priming, not warm timing acceptance. Preserve
+its results, run the serial baseline, and require a retained three-worker repeat
+for the comparison. Intentional per-test cold-cache work remains included in both.

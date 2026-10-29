@@ -17,12 +17,12 @@ from .profile_commands import CommandFailed
 from .profile_runner import ProfileRunner
 from .profiles import load_profile
 from .build_allocation import allocate
-from .driver_test_allocation import allocate_driver_tests
+from .libtest_allocation import allocate_libtest
 
 
 class CrateExecutionTests(unittest.TestCase):
     def setUp(self):
-        capacity = patch("sifr_verify.driver_test_allocation.discover_capacity", return_value=ROOM)
+        capacity = patch("sifr_verify.libtest_allocation.discover_capacity", return_value=ROOM)
         capacity.start()
         self.addCleanup(capacity.stop)
 
@@ -118,8 +118,9 @@ class CrateExecutionTests(unittest.TestCase):
                         if collect:
                             expected.insert(2, "--no-fail-fast")
                         self.assertEqual(call.args[0], expected)
-                        if group.ids == ("sifr_driver_lib",):
-                            _, environment = allocate_driver_tests(runner.build_allocation, runner.env, expected)
+                        if group.ids in (("sifr_driver_lib",), ("sifr_cli_bin",),
+                                         ("sifr_lowering", "sifr_cli_full")):
+                            _, environment = allocate_libtest(runner.build_allocation, runner.env, expected)
                             self.assertEqual(call.kwargs["env"], environment)
                             self.assertTrue(callable(call.kwargs["monitor"]))
                         else:
@@ -130,6 +131,19 @@ class CrateExecutionTests(unittest.TestCase):
                         self.assertEqual(call.args, (group,))
                         self.assertEqual(call.kwargs, {"env": runner.env, "no_fail_fast": collect, "preparation_complete": False,
                                                       "corpus_owner_selected": corpus_owner_selected(runner.profile)})
+
+    def test_cli_capacity_failure_stops_before_launch_even_with_failure_continuation(self):
+        runner = self.runner(True)
+        groups = [g for g in configuration_plan(runner.profile, "full")
+                  if "sifr_cli_full" in g.ids]
+        with patch("sifr_verify.profile_runner.configuration_plan", return_value=groups), \
+             patch("sifr_verify.profile_runner.allocate_libtest",
+                   side_effect=CommandFailed(2, "libtest_capacity")), \
+             patch("sifr_verify.profile_runner.run_command") as run, \
+             contextlib.redirect_stdout(io.StringIO()), self.assertRaises(CommandFailed) as caught:
+            runner.run_crate_tests("full")
+        self.assertEqual(caught.exception.cause, "libtest_capacity")
+        run.assert_not_called()
 
     def test_only_the_exact_selected_corpus_suite_can_own_the_assertion(self):
         from .profiles import build_profile_plan, compare_plans
@@ -186,7 +200,7 @@ class CrateExecutionTests(unittest.TestCase):
     def test_terminal_failure_takes_precedence_and_stops_collection(self):
         for terminal in (CommandFailed(-15), CommandFailed(124, "deadline"),
                          CommandFailed(130, "cancelled"), CommandFailed(2, "spawn-error"),
-                         CommandFailed(2, "driver_test_capacity")):
+                         CommandFailed(2, "libtest_capacity")):
             runner = self.runner(True)
             with self.subTest(terminal=terminal), \
                  patch("sifr_verify.profile_runner.configuration_plan", return_value=self.groups()), \
