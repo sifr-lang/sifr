@@ -27,6 +27,7 @@ ALL_SIFR_CRATES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_diagnostics",
     "sifr_driver",
     "sifr_format",
@@ -55,6 +56,7 @@ IR_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_ipc",
@@ -72,6 +74,7 @@ STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_lint",
@@ -87,6 +90,7 @@ GENERATED_STDLIB_FORBIDDEN_DEPENDENCIES = {
     "sifr",
     "sifr_analysis",
     "sifr_codegen",
+    "sifr_generated_rust",
     "sifr_driver",
     "sifr_frontend",
     "sifr_ir",
@@ -150,6 +154,12 @@ class CrateRule:
 
 
 RULES = (
+    CrateRule(
+        crate="sifr_generated_rust",
+        allowed_normal_dependencies=frozenset({"syn", "quote", "proc_macro2", "prettyplease", "unicode_ident"}),
+        forbidden_source_references=frozenset(ALL_SIFR_CRATES - {"sifr_generated_rust"}),
+        skip_test_sources=True,
+    ),
     CrateRule(
         crate="sifr_metadata",
         forbidden_all_dependencies=frozenset(

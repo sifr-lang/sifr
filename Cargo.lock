@@ -7619,6 +7619,7 @@ dependencies = [
  "sifr_type_system",
  "syn 3.0.5",
  "tempfile",
+ "unicode-ident",
 ]
 
 [[package]]
