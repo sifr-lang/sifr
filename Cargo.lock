@@ -7434,7 +7434,6 @@ dependencies = [
  "static_assertions",
  "syn 3.0.5",
  "tempfile",
- "unicode-ident",
 ]
 
 [[package]]
