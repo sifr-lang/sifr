@@ -215,7 +215,8 @@ def validate_create_pr_locks(contract: dict[str, Any], payload: dict[str, Any], 
         repo_root
         / "crates"
         / "sifr_codegen"
-        / "src"
+        / "tests"
+        / "contracts"
         / "lib_codegen_tests"
         / "async_runtime_codegen_tests.rs"
     ).read_text(encoding="utf-8")
@@ -267,6 +268,19 @@ def run_self_test() -> None:
         input_path.write_text("{}\n", encoding="utf-8")
         record_path.write_text(json.dumps({"manifest_sha256": "0" * 64}), encoding="utf-8")
         expect_rejection("stale recorded hash", lambda: validate_recorded_hash(input_path, record_path))
+
+        for fixture in REQUIRED_CREATE_PR_FIXTURES:
+            path = temp_root / "crates/sifr/tests/e2e/pass" / f"{fixture}.sifr"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("pass\n")
+        proof = temp_root / "crates/sifr_codegen/tests/contracts/lib_codegen_tests/async_runtime_codegen_tests.rs"
+        proof.parent.mkdir(parents=True)
+        proof.write_text("fn test_try_finally_runs_cleanup_before_timeout_propagates() {}\n")
+        payload = {"fixture_names": sorted(REQUIRED_CREATE_PR_FIXTURES)}
+        validate_create_pr_locks(contract, payload, temp_root)
+        proof.write_text("fn unrelated_test() {}\n")
+        expect_rejection("removed relocated return-capture proof",
+                         lambda: validate_create_pr_locks(contract, payload, temp_root))
 
     stale_ecosystem = copy.deepcopy(load_json(ECOSYSTEM_MANIFEST))
     stale_ecosystem["entries"][0]["source_checksum_sha256"] = "0" * 64

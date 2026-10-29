@@ -744,31 +744,30 @@ pub(super) fn lower_islower(object: &RustExpr, args: &[RustExpr]) -> Option<Rust
 }
 
 pub(super) fn lower_center(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_checked_padding(object, args, "checked_center")
+    lower_checked_padding(object, args, &["sifr_runtime", "checked_center"])
 }
 
 pub(super) fn lower_ljust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_checked_padding(object, args, "checked_ljust")
+    lower_checked_padding(object, args, &["sifr_runtime", "checked_ljust"])
 }
 
 pub(super) fn lower_rjust(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_checked_padding(object, args, "checked_rjust")
+    lower_checked_padding(object, args, &["sifr_runtime", "checked_rjust"])
 }
 
 pub(super) fn lower_zfill(object: &RustExpr, args: &[RustExpr]) -> Option<RustExpr> {
-    lower_checked_padding(object, args, "checked_zfill")
+    lower_checked_padding(object, args, &["sifr_runtime", "checked_zfill"])
 }
 
-fn lower_checked_padding(object: &RustExpr, args: &[RustExpr], helper: &str) -> Option<RustExpr> {
+fn lower_checked_padding(object: &RustExpr, args: &[RustExpr], path: &[&str]) -> Option<RustExpr> {
     if args.len() != 1 {
         return None;
     }
     Some(RustExpr::MethodCall {
         receiver: Box::new(RustExpr::FnCall {
-            func: Box::new(RustExpr::Path(vec![
-                "sifr_runtime".to_string(),
-                helper.to_string(),
-            ])),
+            func: Box::new(RustExpr::Path(
+                path.iter().map(|part| (*part).to_string()).collect(),
+            )),
             args: vec![
                 render_borrowed_arg_expr(object),
                 render_borrowed_arg_expr(&args[0]),

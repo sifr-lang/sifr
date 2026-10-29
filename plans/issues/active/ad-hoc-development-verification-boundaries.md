@@ -1,7 +1,7 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D17; final phase qualification open
+- Status: in progress; intermediate deliveries through D18 admission; final phase qualification open
 - Latest delivery: D17 generated Rust ownership; D18 integrated normal-allocation discovery
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
@@ -2729,3 +2729,199 @@ The final qualification-record edit changes only this phase document. Independen
 review of the admission repair remains required before merging and resuming the
 complete normal-allocation sweep. No main-test execution or full-gate timing is
 claimed from admission-only checks.
+
+
+D18 admission repair merges in [PR #4530](https://github.com/sifr-lang/sifr/pull/4530)
+as `ac8b720c1d8b65519ef7e052f097bf1e8c4fe3ba`. Independent review of final candidate
+`53f2706f7d4685c0efc0abafac384f0d474a81da` returns SATISFIED without blockers;
+response SHA-256 `91d7dcb139874a52b8f169422dc3bf62daea3070e1617c33f63cffd3bd5ec9e0`.
+The reviewer independently reconciles every old consumer symbol and runs all 15
+inventory self-tests. Existing path-name classification and regex-operation
+heuristics remain deferred metadata-inventory follow-ups, with no current missing
+consumer demonstrated. This closure is a record-only update.
+
+The complete normal-allocation discovery resumes at the published merge revision,
+with unchanged compiler inputs and the same retained targets. All six admission
+guards pass. The owned remote source remains frozen throughout the diagnostic;
+its category results and final coverage status will be recorded after completion.
+The retained failed-admission run remains failed and does not become a full-gate
+pass through this repair.
+
+
+D18 discovery r2 ends at the aggregate preparation deadline: 1,750.273s preparation,
+1,794.393s outer elapsed, exit 124, no reserve stop, tracked mutation or surviving
+owned process. Six admission steps pass, preparation fails by safety deadline,
+and all remaining 31 selected steps are blocked. Main tests did not execute.
+The 210-payload archive `dev-verify-d18-discovery-r2-guard-evidence.tar.gz` is verified
+locally, SHA-256 `a50ee352c0b4092a401b4b6e5ee0ddc5cdf5b995136cfb859d63cabba19104ef`.
+
+Completed preparation: workspace 0.686s, fixtures 0.072s, Python environment 0.088s,
+generated projects 146.347s. Crate preparation is incomplete at 1,603.067s;
+its shared compiler configuration completes in 204.885s, compiler services in
+103.547s and driver library in 73.466s. The advanced-data native helper is capped
+at 989.303s after the earlier commands consumed part of the aggregate allowance.
+These nested child durations must not be added to the preparation total.
+
+Read-only observations capture a native Cargo dependency check and a newly created
+native family. Comparing the selected process environment with D8 finds PATH is
+the only changed recorded environment field after tool restoration; native identity
+explicitly includes PATH. This is initial configuration reconstruction, not a
+retained-category regression measurement. Do not weaken native identity or reuse
+old correctness evidence to conceal this difference. A scheduling lead is also
+recorded: one sequential preparation helper receives the two-worker/two-job native
+execution allocation despite the profile's four slots. Its possible benefit is
+unmeasured and must not be assumed to explain the full delay.
+
+Recover the failed crate-preparation node and each blocked independent node with
+its actual canonical prerequisites and a separate 1,750s deadline, then resume the
+full diagnostic selection. Retain the original incomplete run. The source remains
+frozen at the published D18 merge; this record-only work does not alter it.
+
+
+A subsequent read-only CLI identity probe confirms that changing only PATH changes
+native identity and restores the historical `b233a905` identity with the old PATH.
+However, its reconstructed current context produces `1998381f`, not the observed
+fixture's `c421f889`: the exact active-context reproduction assertion fails. Preserve
+that partial diagnostic and do not attribute the entire fixture identity difference
+to PATH alone. This probe neither builds nor changes cached products.
+
+
+D18 independent preparation recovery completes all 13 previously failed/blocked
+nodes at the unchanged merge revision. Every guard ends with an empty owned
+session, no reserve cancellation and unchanged source. Outer guarded durations
+include prerequisite checks and must not be added to a normal gate total:
+
+| Preparation recovery | Outer seconds |
+|---|---:|
+| Crate tests | 801.168 |
+| Release compiler | 203.836 |
+| Authoring | 30.205 |
+| Tooling | 19.195 |
+| Frontend syntax guardrails (`performance` preparation node; no benchmarks) | 14.192 |
+| Oracle | 1.689 |
+| Sysroot source | 2.181 |
+| Sysroot package | 22.698 |
+| Runtime/platform area graph | 231.940 |
+| Fuzz/property area graph | 33.205 |
+| SQL/platform area graph | 413.598 |
+| Maintained demos | 9.189 |
+| Compiler identity | 12.192 |
+
+SQL preparation itself takes 403.680s; crate preparation itself takes 797.543s.
+These successful setup recoveries do not establish that consumer assertions pass.
+The complete 113-payload archive is verified locally:
+`dev-verify-d18-preparation-recovery-evidence.tar.gz`, SHA-256
+`ab23091e8afd4ccfb54227ae6fe724d9ba496f2e16c79ee087119a4d7d2b151e`.
+
+With the failed discovery and all recoveries preserved, full discovery r3 starts
+at the same frozen `ac8b720c1d8b65519ef7e052f097bf1e8c4fe3ba`, using retained
+products and normal allocation. Its purpose is to execute the previously blocked
+consumer categories and establish current costs. It is not final timing acceptance.
+
+
+D18 r3 passes all 17 preparation nodes in 218.453s. Major retained setup costs
+are generated projects 139.200s, crate tests 33.397s, sysroot package 16.137s and
+SQL area graph 15.262s. Release compiler preparation takes 1.171s. These are
+current retained observations, not an ordinary-edit or complete-gate qualification.
+
+The continuing sweep exposes another integration omission in
+`check_stdlib_native_intrinsic_allowlist.py`: `error_refs.rs` was counted through
+an inline test's `CompilerIntrinsicId` reference before D16; after test relocation
+it is stale as a production intrinsic owner. Seven runtime roots also disappear
+from the scanner. Several remain genuinely emitted as structured `RustExpr::Path`
+segments (including byte count, encoding and checked string padding); deleting
+their allowlist records would conceal production behavior. D17's syntax owner
+contains additional textual runtime references that the old single-root scan
+omits. The repair must distinguish actual production references from test strings,
+cover both applicable owners, and retain missing/stale/duplicate rejection with
+negative controls. Do not broaden scans to tests merely to make old counts match.
+Read-only triage is retained as `dev-verify-d18-intrinsic-discovery-analysis.json`.
+Source remains frozen for the ongoing full sweep; no scanner repair is applied yet.
+
+
+Further r3 discovery passes the complete generated-quality category (332.918s),
+Python interoperability (582.296s), diagnostics (145.838s), runtime/platform with
+sanitizer smoke (121.366s), algorithmic compatibility (7.420s), distribution
+publication (139.312s) and installed/sysroot checks (398.855s). Python and generated
+quality overlap under the existing 1+3-slot allocation; do not sum their durations
+as elapsed time. The run is still incomplete at this checkpoint.
+
+Generated-quality attribution: freshness 127.762s, corpus 61.836s, determinism
+55.212s, demos 39.234s, inventory 21.498s, clippy 12.250s and native 11.539s.
+These are the category's recorded variants, not extra cost outside its total.
+Installed/sysroot attribution: metadata corpus 225.174s, boundary equivalence
+125.382s, installed smoke 27.517s and structural metadata 20.596s. All four pass.
+Python's largest suites are callbacks 158.505s and binding authoring 104.082s.
+Within callbacks, the first CFFI case takes 82.678s and asyncio 38.910s; later
+individual cases range from 5.194s to 12.481s. Do not call the whole Python category
+fully warm: first-use native families were observed after environment restoration.
+
+Two additional guards fail on the same test-relocation boundary: the pre-v1
+regression guard references the former source-tree async-runtime test path, while
+`check_split_brain_guardrail.py` treats relocated contract/support tests as
+production parser/lowering consumers. The latter must recognize actual Cargo test
+entrypoints and their owned module/include closure while still rejecting files
+also reached by production. A blanket `/tests/` exemption is not an acceptable
+repair. Batch these with the intrinsic inventory reconciliation after current
+failure discovery. Keep production-source protection, historical regression
+assertions, and executable negative controls. These failures do not justify
+stopping independent categories or calling the full gate passed.
+
+
+### D19 — restore guard ownership after compiler/test extraction (prospective)
+
+Repair the three D18 integration failures as one bounded source-ownership item.
+Keep D18's remote discovery frozen at `ac8b720c`; prepare this candidate in the
+separate owned checkout. No in-progress diagnostic report is overwritten.
+
+Recognize Cargo test targets and their module/include closure in the frontend
+ownership guard, retaining production ownership whenever a file is also consumed
+by a production target. Honor disabled automatic tests and explicit target paths;
+prove that production includes, test-looking filenames and shared files do not
+escape. Rebind the pre-v1 return-capture proof to its relocated test without
+changing the required assertion. Reconcile the intrinsic inventory against both
+production owners and structured runtime paths, retaining all real runtime roots
+and missing/stale/duplicate rejection. Cover the extracted syntax owner in the
+structured-Rust source guard too. Do not restore tests as production evidence.
+
+Validate the affected guards and mutation/self-tests, unchanged profile selection,
+file-size and formatting policies; qualify any production emitter edit against
+all affected codegen/syntax tests and exact generated-output parity. Require one
+independent exact-candidate review before the intermediate merge. All D18 failures
+remain historical failures; final integrated coverage, ordinary invalidation and
+90s/480s timing acceptance remain open.
+
+D19 local policy qualification passes all 13 focused commands: each repaired guard
+and its self-tests, method-authority inventory and mutations, file-size policy,
+pinned Rust formatting, and diff checks. The exact emitted merge-correctness plan
+matches D18. Cargo entrypoint tests include conventional and explicit targets,
+custom crate-root sibling modules, disabled discovery, production overlap and
+orphan-source negative controls. The padding emitter now supplies its complete
+structured runtime path explicitly; it retains all four helpers and the existing
+error conversion. Compiler tests and generated-output parity remain pending.
+The method inventory update changes only affected source/context fingerprints and
+bindings; site, node and relationship memberships and classifications are unchanged.
+Local evidence is `dev-verify-d19-local-focused/result.json`, bound to file hashes.
+The first expected method-inventory failure is not counted as a pass.
+
+D18 r3 SQL discovery completes 72 variants: 68 pass and four provenance checks
+fail. The independent clean-build protocol passes in 474.854s; the category totals
+669.925s. PostgreSQL parser matrix takes 94.668s and native command tests 44.532s.
+Read-only reconciliation shows all three maintained SQL component manifests differ
+from current source inputs only in root `Cargo.toml` and `Cargo.lock`; component
+source inputs are otherwise equal. The PostgreSQL baseline/submodule check passes
+on the diagnostic checkout. These artifact-provenance failures belong to SQL
+component qualification and need a separate bounded repair/requalification after
+D19; do not rewrite hashes to bless stale products. The continuing main-test sweep
+and final integrated acceptance remain incomplete at this checkpoint.
+
+An independent D19 control using pinned Cargo metadata catches the Rust 2015
+explicit-target auto-discovery rule before review. The guard now resolves inherited
+editions and follows per-target-kind legacy defaults while honoring explicit
+`auto*` overrides. Eight real temporary-package configurations exactly match
+Cargo's test and production target paths without compiling. The affected guard,
+self-tests, file-size and diff checks pass after this correction; prior unrelated
+checks remain applicable because their implementation inputs are unchanged.
+Control evidence: `dev-verify-d19-cargo-role-control.json`. Its first harness attempt
+stopped on macOS temporary-path canonicalization before producing a verdict; that
+incomplete attempt is retained and does not count as a pass.

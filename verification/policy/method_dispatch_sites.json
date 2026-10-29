@@ -744,7 +744,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "<module>",
-          "context_fingerprint": "5ba776817c47db5d6fe918c02926b71b1daaec20691a6c0028a98a555922cbdd"
+          "context_fingerprint": "39ad762396226b41a4103cc98e18a0941f06919b1c0fcad68cac2085f016b420"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -2106,7 +2106,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_checked_padding",
-          "context_fingerprint": "d44ddcebbe2de4ce363d10d4e87acbd4782976349cfac218d3534312b0838997"
+          "context_fingerprint": "9792f8dbfeb01479eadf3925fc58f04afe62f280597fa4be9beea7f53ea73677"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -2518,7 +2518,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_checked_padding",
-          "context_fingerprint": "d44ddcebbe2de4ce363d10d4e87acbd4782976349cfac218d3534312b0838997"
+          "context_fingerprint": "9792f8dbfeb01479eadf3925fc58f04afe62f280597fa4be9beea7f53ea73677"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -3035,7 +3035,7 @@
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_checked_padding",
-          "context_fingerprint": "d44ddcebbe2de4ce363d10d4e87acbd4782976349cfac218d3534312b0838997"
+          "context_fingerprint": "9792f8dbfeb01479eadf3925fc58f04afe62f280597fa4be9beea7f53ea73677"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
@@ -3616,7 +3616,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_center ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "a58f23a410a2f2aba49eba263781d838b1f9822894a69d7fec17bc499ad7469f",
+      "context_fingerprint": "0e3256486d12af72893ba2e97e5e613825981970275b59a83d0de52063cfd00d",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -3632,7 +3632,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_ljust ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "9196e2dd4a863209d39677feec1c6f44ca2654841afcb829f1245cf2083dc18d",
+      "context_fingerprint": "9e35663cb4ef289a12b84f305d12285642d4f274042ff95e40872fc49dbfe504",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -3648,7 +3648,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_rjust ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "e27b84905443b557b5689e2328fb6e613b1458c01960ee74896a5d0f0d0050ff",
+      "context_fingerprint": "2c7da8fed8f2f346a0fb7a6f8badb9c7401eec87b935cbdf23cbe3e7bd7ff0eb",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -3664,7 +3664,7 @@
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
       "inputs": "fn lower_zfill ( object : & RustExpr , args : & [ RustExpr ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "47daa217d088ef1432f8e5df2ec6f18d0211deb060cf560c839579849be41d34",
+      "context_fingerprint": "029ea0a619929b2d3795c894ab39c8590f4bb2a7ff08afb3fc50b52af7079928",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/mod.rs",
@@ -3678,29 +3678,29 @@
       "scope": "lower_checked_padding",
       "role": "language-emission-constituent",
       "relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
-      "inputs": "fn lower_checked_padding ( object : & RustExpr , args : & [ RustExpr ] , helper : & str )",
+      "inputs": "fn lower_checked_padding ( object : & RustExpr , args : & [ RustExpr ] , path : & [ & str ] )",
       "outputs": "Option < RustExpr >",
-      "context_fingerprint": "d44ddcebbe2de4ce363d10d4e87acbd4782976349cfac218d3534312b0838997",
+      "context_fingerprint": "9792f8dbfeb01479eadf3925fc58f04afe62f280597fa4be9beea7f53ea73677",
       "references": [
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_center",
-          "context_fingerprint": "a58f23a410a2f2aba49eba263781d838b1f9822894a69d7fec17bc499ad7469f"
+          "context_fingerprint": "0e3256486d12af72893ba2e97e5e613825981970275b59a83d0de52063cfd00d"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_ljust",
-          "context_fingerprint": "9196e2dd4a863209d39677feec1c6f44ca2654841afcb829f1245cf2083dc18d"
+          "context_fingerprint": "9e35663cb4ef289a12b84f305d12285642d4f274042ff95e40872fc49dbfe504"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_rjust",
-          "context_fingerprint": "e27b84905443b557b5689e2328fb6e613b1458c01960ee74896a5d0f0d0050ff"
+          "context_fingerprint": "2c7da8fed8f2f346a0fb7a6f8badb9c7401eec87b935cbdf23cbe3e7bd7ff0eb"
         },
         {
           "path": "crates/sifr_codegen/src/methods/string.rs",
           "scope": "lower_zfill",
-          "context_fingerprint": "47daa217d088ef1432f8e5df2ec6f18d0211deb060cf560c839579849be41d34"
+          "context_fingerprint": "029ea0a619929b2d3795c894ab39c8590f4bb2a7ff08afb3fc50b52af7079928"
         }
       ]
     },
@@ -42018,11 +42018,11 @@
     },
     {
       "site": "crates/sifr_codegen/src/methods/string.rs::lower_checked_padding::method-call-carrier::1",
-      "fingerprint": "754c06dd5b406fa67054f9959946e0041f4ae400a50b013231194588ce7ba482",
+      "fingerprint": "82837eba2cc99d3dd824ada87fe44c6cd2ea05aebb867a7e2ff062b595366838",
       "classification": "language-emission-constituent",
       "owner": "sifr_codegen::methods",
-      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: FnCall { func : Box :: new ( RustExpr :: Path ( vec ! [ \"sifr_runtime\" . to_string ( ) , helper . to_string ( ) , ] ) ) , args : vec ! [ render_borrowed_arg_expr ( object ) , render_borrowed_arg_expr ( & args [ 0 ] ) , ] , } ) , method : \"map_err\" . to_string ( ) , args : vec ! [ RustExpr :: Closure { params : vec ! [ RustParam :: Named { name : \"__padding_error\" . to_string ( ) , ty : RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( RustExpr :: FnCall { func : Box :: new ( RustExpr :: Path ( vec ! [ \"OverflowError\" . to_string ( ) , \"new\" . to_string ( ) , ] ) ) , args : vec ! [ RustExpr :: Ident ( \"__padding_error\" . to_string ( ) ) ] , } ) , is_move : false , } ] , }",
-      "inputs": "fn lower_checked_padding ( object : & RustExpr , args : & [ RustExpr ] , helper : & str )",
+      "operation": "RustExpr :: MethodCall { receiver : Box :: new ( RustExpr :: FnCall { func : Box :: new ( RustExpr :: Path ( path . iter ( ) . map ( | part | ( * part ) . to_string ( ) ) . collect ( ) , ) ) , args : vec ! [ render_borrowed_arg_expr ( object ) , render_borrowed_arg_expr ( & args [ 0 ] ) , ] , } ) , method : \"map_err\" . to_string ( ) , args : vec ! [ RustExpr :: Closure { params : vec ! [ RustParam :: Named { name : \"__padding_error\" . to_string ( ) , ty : RustType :: Named ( \"_\" . to_string ( ) ) , } ] , body : Box :: new ( RustExpr :: FnCall { func : Box :: new ( RustExpr :: Path ( vec ! [ \"OverflowError\" . to_string ( ) , \"new\" . to_string ( ) , ] ) ) , args : vec ! [ RustExpr :: Ident ( \"__padding_error\" . to_string ( ) ) ] , } ) , is_move : false , } ] , }",
+      "inputs": "fn lower_checked_padding ( object : & RustExpr , args : & [ RustExpr ] , path : & [ & str ] )",
       "outputs": "Option < RustExpr >",
       "role": "implement the canonical builtin method registry",
       "caller_admission_relationship": "methods canonical registry implementation; lexical callers bind registry wrappers, helper delegation and synthesized Rust operations",
