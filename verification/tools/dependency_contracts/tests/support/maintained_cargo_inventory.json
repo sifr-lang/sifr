@@ -250,14 +250,6 @@
     },
     {
       "lock": "Cargo.lock",
-      "owner": "sifr_dependency_contracts",
-      "package": "itertools",
-      "manifests": [
-        "verification/tools/dependency_contracts/Cargo.toml"
-      ]
-    },
-    {
-      "lock": "Cargo.lock",
       "owner": "sifr_driver",
       "package": "num-bigint",
       "manifests": [
@@ -382,6 +374,14 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_stdlib/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_dependency_contracts",
+      "package": "itertools",
+      "manifests": [
+        "verification/tools/dependency_contracts/Cargo.toml"
       ]
     },
     {
