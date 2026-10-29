@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -217,7 +218,7 @@ COMMANDS = {
     ],
     "sql-incremental-editor-tests": [
         "cargo", "test", "--locked", "-p", "sifr_frontend", "-p", "sifr_analysis",
-        "-p", "sifr_lsp",
+        "-p", "sifr_lsp", "--lib", "--", "sql_", "embedded_", "template_",
     ],
     "sql-compiler-native-command-tests": [
         sys.executable, str(AREA_ROOT / "tools" / "check_compiler_execution.py"),
@@ -336,15 +337,37 @@ def select_suites(manifest: dict[str, Any], requested: set[str]) -> list[dict[st
     return selected
 
 
+def editor_execution_complete(stdout: str) -> bool:
+    """All three selected library harnesses must execute real assertions."""
+    summaries = re.findall(
+        r"^test result: (\w+)\. (\d+) passed; (\d+) failed; (\d+) ignored; "
+        r"(\d+) measured; (\d+) filtered out; finished in [^\n]+$",
+        stdout, re.MULTILINE,
+    )
+    return len(summaries) == 3 and all(
+        status == "ok" and int(passed) > 0 and failed == ignored == measured == "0"
+        for status, passed, failed, ignored, measured, _ in summaries
+    )
+
+
 def run_case(case: dict[str, Any]) -> dict[str, Any]:
     name = str(case["command"])
     command = COMMANDS.get(name)
     if command is None:
         raise SystemExit(f"unsupported SQL platform command: {name}")
     started = time.perf_counter()
-    result = subprocess.run(command, cwd=REPO_ROOT, check=False)
+    focused_editor = name == "sql-incremental-editor-tests"
+    if focused_editor:
+        result = subprocess.run(command, cwd=REPO_ROOT, check=False, text=True,
+                                stdout=subprocess.PIPE)
+        print(result.stdout, end="", flush=True)
+    else:
+        result = subprocess.run(command, cwd=REPO_ROOT, check=False)
     elapsed_ms = (time.perf_counter() - started) * 1000.0
-    status = "pass" if result.returncode == case["expect_exit_code"] else "fail"
+    mismatches = [] if result.returncode == case["expect_exit_code"] else ["unexpected-exit"]
+    if focused_editor and not editor_execution_complete(result.stdout):
+        mismatches.append("incomplete-editor-execution")
+    status = "fail" if mismatches else "pass"
     print(
         f"[sifr-case-timing] bucket=sql_platform case={case['id']} "
         f"elapsed_ms={int(elapsed_ms)} status={status}",
@@ -359,7 +382,7 @@ def run_case(case: dict[str, Any]) -> dict[str, Any]:
                 "label": name,
                 "argv": command,
                 "status": status,
-                "mismatches": [] if status == "pass" else ["unexpected-exit"],
+                "mismatches": mismatches,
                 "expected_exit_code": case["expect_exit_code"],
                 "actual_exit_code": result.returncode,
                 "duration_ms": round(elapsed_ms, 3),
