@@ -1645,3 +1645,96 @@ and leaves detailed SQL lowering as the same authority. Before adoption the actu
 production function must pass the same independent comparison, all relevant tests
 and component/native qualification. Component receipts have not yet been rebuilt;
 they must not be treated as current on this work-in-progress candidate.
+
+
+#### D10 actual producer and consumer qualification — 2026-10-29
+
+Source candidate `4be4dc11bac7f523f1adf4e848e683456e9f570c` removes the generator
+and 11 now-unreachable lock packages without changing any retained package version.
+The actual production function passes the original generated parser comparison:
+378,505 token streams, 87,381 representative state sequences, 20,000 deterministic
+longer streams and 28 actual lexer/SQL-mode cases. Complete tokens, spans and error
+payloads match; guarded elapsed is 3.238s including diagnostic compilation. The
+production function SHA-256 is
+`839dd02d7aaae07035629882ce6b5f602e2b9b5807251983dadc541ed1689ce0`.
+Both rejected ordering prototypes remain preserved.
+
+All 17 initial MySQL unit/compiler/property tests pass in 46.956s including
+compilation. Eight dependency, SQL ownership and provenance-input commands pass
+in 8.355s. Formatting, file-size guardrails and method-authority, filesystem-effect,
+unsafe-ABI and DX metadata policies pass without weakening or changing inventories.
+Those initial component smoke assertions used the previous checked-in artifact;
+the rebuilt-component checks below supersede that limitation.
+
+All affected SQL components were actually regenerated with the canonical producers:
+MySQL (all three series) 114.387s, PostgreSQL (all six majors) 244.446s, SQLite
+33.305s. Shared virtualizer preparation after prior target cleanup took 93.751s
+and is reported separately. PostgreSQL's first attempt failed before compilation
+in 2.332s because the retained SDK extraction lacked its binaries. The preflight
+had checked directory/archive presence, not extracted content; it did not establish
+SDK readiness. A fresh owned extraction from the SHA-256-authenticated official
+archive passed complete file/link validation in 15.966s; the successful retry uses
+that extraction. Preserve the incomplete installation and failed attempt. This is
+preparation recovery, not a product change or steady-state performance measurement.
+
+The words fixture's current source and producer provenance still validates, so no
+unaffected artifact was rebuilt. All four manifests validate after production.
+All 13 changed SQL outputs were hash-verified during transfer, committed in
+`b28227e0cfdf4de9739bf5c7e8949e27ea4bacbb`, and synchronized byte-for-byte before
+consumer validation. Producers ran serially with two Cargo jobs, 20GiB disk and
+2GiB memory reserves; source inputs and other families remained stable. There was
+no timeout, reserve violation or surviving owned process in the successful runs.
+
+The final component consumer check passes in 121.753s including compilation:
+17 MySQL framing/compiler/property tests, two PostgreSQL tests that execute all six
+component variants, and 14 SQLite compiler tests. Every selected test ran; none
+was ignored or filtered out. All eight component/provider contract commands pass,
+including 63 component qualification mutation controls. Per-command elapsed is
+17.902s MySQL, 58.255s PostgreSQL and 38.172s SQLite; reported test execution is
+0.11s, 1.32s and 0.06s respectively. These are distinct measurements, not added
+savings. Native-tool integration and the complete clean-build protocol remain
+pending at this checkpoint; neither full-phase acceptance nor an eight-minute
+runtime is established.
+
+
+Native compiler/tool integration also passes on `b28227e0`: all seven named
+compiler-sandbox tests execute in 52.40s, with native-tool preparation 42.71s and
+test preparation 45.29s. Complete guarded elapsed is 142.040s; the separate 22
+non-sandbox tests in that target were intentionally outside this focused command,
+not claimed as executed. The final phase retains their coverage obligation.
+No source mutation, reserve stop or surviving process occurred. The complete
+clean/reused/independent-clean native SQL protocol is now running on the same
+candidate with the baseline's four-job allocation and remapping contract.
+
+
+The complete native SQL protocol passes on `b28227e0`: clean A 232.027s,
+unchanged reuse 1.557s (298/298 artifacts fresh), independent clean B 236.454s.
+All three linked executable hashes match across all builds; A is removed before B.
+Total guarded elapsed is 472.055s, versus D9's 520.937s: 48.882s / 9.38% lower
+in this diagnostic comparison. Artifact emission decreases from 339 to 298 with
+the removed generator dependency graph. These counts do not represent dropped
+tests or native tools. The same three tool binaries, dev profile, two-root remaps,
+locked/offline dependencies and four-job allocation remain in the protocol.
+Peak sampled aggregate RSS is 1.407GB, minimum available memory 9.977GB; no reserve
+stop, source mutation or surviving owned process. Targets and raw Cargo timing
+reports are retained. A single cold-build protocol comparison is not repeated
+host-performance qualification, and its saving must not be added to other timings.
+
+The simpler provider implementation, equivalent framing behavior and actual full
+protocol reduction support this bounded adoption. The remaining 7m52s SQL protocol
+alone nearly consumes the proposed eight-minute gate budget. Full phase acceptance
+remains open. After independent review and merge, run a fresh integrated correctness
+sweep with failure continuation and per-category caps to select the next substantial
+repair from current costs; do not extrapolate a complete gate from these focused
+results or silently move required qualification out of the ordinary gate.
+
+
+D10 evidence archive: `dev-verify-d10-evidence.tar.gz`, SHA-256
+`09e8c4764e4789a1d194998f8cec1f8ef65d1d7b3edacd2212fea93c46e3df21`;
+all 248 payloads verified after transfer. This includes failed prototypes, the
+failed SDK attempt and authenticated recovery, actual component outputs, input
+bindings, consumer results, full SQL timings, policy checks and diagnostic helpers.
+Build targets and the extracted SDK remain retained separately. The evidence binds
+the implementation at `b28227e0`; subsequent phase-record-only updates do not alter
+those implementation or validation inputs. Independent review is the remaining
+bounded-item adoption prerequisite.
