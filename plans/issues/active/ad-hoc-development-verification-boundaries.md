@@ -1476,3 +1476,35 @@ delivered isolation is not proposed again. Full phase480s acceptance stays open.
 
 D8 evidence archive: `dev-verify-d8-evidence.tar.gz`, SHA-256
 `7609504413f23e7b132b09f67e215215a016e7f415b1b691eab12fdd9b51d6e2`; all121 payloads independently verified after transfer.
+
+
+#### D9 measured input-aggregation repair (prospective)
+
+Clean SQL A passes in257.513s (339 artifacts, none fresh). Cargo reports391
+units; longest overlapping unit durations include AWS-LC native generation80.210s,
+LALRPOP55.610s, PostgreSQL native parser41.310s, and two syn builds35.480/35.040s.
+These unit durations are not summed wall time. Native SQL providers are genuinely
+used by catalog and migration operations; do not remove them on an unused-dependency
+assumption. Independent B remains running.
+
+A read-only reproduction of the current product input traversal identifies174,350
+file visits over18,758 distinct logical paths,1,610,816,360 repeated bytes versus
+336,312,284 unique bytes. The inherited Ruff root is traversed15 times. The small
+SQL-tool build scripts include full product identity and each takes approximately
+12–13s in clean A. The census is a structural explanation, not a measured speedup.
+
+Consolidate declared roots into one deterministic input inventory per identity
+calculation. Preserve all current logical input paths and explicit ownership
+validation, optional-root behavior, source archives, symlink observations and
+Cargo add/remove/change tracking. A broad root must not swallow an explicitly
+declared descendant beneath an otherwise excluded target/.git/__pycache__ path.
+Do not cache correctness results or file bytes across invocations. Bump identity
+framing for the changed deterministic representation; use no compatibility fallback.
+
+Before adoption, prove inventory equivalence against the previous implementation
+on the current full source tree, shared/overlapping declaration and exclusion
+controls, real Cargo invalidation and private-test isolation, and complete SQL
+qualification. Measure the actual identity producer before/after with the same
+source tree/environment and retain preparation separately. Then qualify affected
+compiler/host-tool consumer pairing and obtain independent review under the
+approved intermediate policy. The full phase gates and480s acceptance remain open.

@@ -1,7 +1,47 @@
 //! Deterministic byte inventory and Cargo watches for declared input roots.
 #![allow(clippy::print_stdout)]
 use crate::IdentityEncoder;
-use std::{fs, io, path::Path};
+use std::{
+    collections::BTreeSet,
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+fn excluded(name: &std::ffi::OsStr) -> bool {
+    matches!(name.to_str(), Some(".git" | "target" | "__pycache__"))
+}
+
+/// A calculation owns one union of declared roots. Shared package inputs are
+/// read once, while each invocation still observes their current bytes.
+#[derive(Default)]
+pub(super) struct InputInventory {
+    roots: BTreeSet<PathBuf>,
+}
+
+impl InputInventory {
+    pub(super) fn add(&mut self, path: &Path) {
+        if self.roots.iter().any(|root| covers(root, path)) {
+            return;
+        }
+        self.roots.retain(|root| !covers(path, root));
+        self.roots.insert(path.to_path_buf());
+    }
+
+    pub(super) fn encode(&self, root: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
+        for path in &self.roots {
+            visit(root, path, hash)?;
+        }
+        Ok(())
+    }
+}
+
+fn covers(root: &Path, path: &Path) -> bool {
+    path.strip_prefix(root).is_ok_and(|relative| {
+        // Explicit declarations can include paths omitted by an ancestor's
+        // recursive scan. Keep those roots rather than silently dropping input.
+        !relative.components().any(|part| excluded(part.as_os_str()))
+    })
+}
 
 pub(super) fn visit(root: &Path, path: &Path, hash: &mut IdentityEncoder) -> io::Result<()> {
     // Cargo recursively watches directory roots, including additions/removals and symlinks.
@@ -17,8 +57,7 @@ pub(super) fn hash_tree(root: &Path, path: &Path, hash: &mut IdentityEncoder) ->
             .collect::<io::Result<Vec<_>>>()?;
         children.sort();
         for child in children {
-            let name = child.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if matches!(name, ".git" | "target" | "__pycache__") {
+            if child.file_name().is_some_and(excluded) {
                 continue;
             }
             hash_tree(root, &child, hash)?;
