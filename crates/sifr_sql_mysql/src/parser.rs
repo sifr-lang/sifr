@@ -1,21 +1,9 @@
 use crate::ast::{MysqlStatement, SqlSpan};
-use crate::lexer::{Keyword, LexError, Lexer, Token};
+use crate::lexer::{Keyword, Lexer, Token};
 use crate::syntax_lowering::lower_statement;
 use crate::types::{MysqlServerSeries, SUPPORTED_MYSQL_SERIES};
-use lalrpop_util::{ParseError, lalrpop_mod};
 use std::collections::BTreeSet;
 use std::fmt;
-
-lalrpop_mod!(
-    #[allow(
-        clippy::all,
-        clippy::pedantic,
-        clippy::nursery,
-        clippy::restriction,
-        unreachable_pub
-    )]
-    mysql
-);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct RawStatement {
@@ -123,12 +111,10 @@ impl MysqlParser {
         if source.len() > u32::MAX as usize {
             return Err(parse_error(0, "MySQL source exceeds the component limit"));
         }
-        let raw = mysql::StatementsParser::new()
-            .parse(Lexer::with_ansi_quotes(
-                source,
-                self.sql_modes.contains("ANSI_QUOTES"),
-            ))
-            .map_err(map_parse_error)?;
+        let raw = crate::statement_framing::statements(Lexer::with_ansi_quotes(
+            source,
+            self.sql_modes.contains("ANSI_QUOTES"),
+        ))?;
         if raw.is_empty() {
             return Err(parse_error(0, "MySQL source contains no statement"));
         }
@@ -146,32 +132,6 @@ impl MysqlParser {
             .map(|(_, token, _)| token)
             .collect::<Vec<_>>();
         Ok(normalize_tokens(&tokens))
-    }
-}
-
-fn map_parse_error(error: ParseError<usize, Token, LexError>) -> MysqlParseError {
-    match error {
-        ParseError::InvalidToken { location } => parse_error(location, "invalid MySQL token"),
-        ParseError::UnrecognizedEof { location, expected } => parse_error(
-            location,
-            format!(
-                "incomplete MySQL statement; expected {}",
-                expected.join(", ")
-            ),
-        ),
-        ParseError::UnrecognizedToken { token, expected } => parse_error(
-            token.0,
-            format!(
-                "unexpected MySQL token '{}'; expected {}",
-                token.1.normalized(),
-                expected.join(", ")
-            ),
-        ),
-        ParseError::ExtraToken { token } => parse_error(
-            token.0,
-            format!("extra MySQL token '{}'", token.1.normalized()),
-        ),
-        ParseError::User { error } => parse_error(error.offset, error.message),
     }
 }
 

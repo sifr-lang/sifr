@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; D1, D2, D4 and inventory reconciliation delivered; D3 integrated discovery
-- Latest delivery: D6 production-input ownership; D7/D8 investigated; D9 input aggregation in qualification
+- Latest delivery: D9 production-input aggregation; D10 SQL parser boundary investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -1518,45 +1518,45 @@ profile change, or compatibility path is introduced. Both local-package and
 product identity framing advance explicitly to v3. This invalidates the old
 representation; unchanged identities across that migration are not expected.
 
-All11 focused identity tests pass (10.390s command including preparation,8.28s
+All 11 focused identity tests pass (10.390s command including preparation, 8.28s
 libtest), including real Cargo source-archive add/remove/rename/symlink/configuration
 invalidation, shared ownership, exclusion boundaries, and private-test isolation.
 The first attempt failed to compile because an assertion message referenced a
 shadowed inventory variable; the corrected attempt and original failure are kept.
 
 Three alternating old/new actual producer runs on the same source tree give
-median9.655s before and1.833s after,81.02% lower. The old producer visits174,350
-logical file entries; the new producer visits18,758, exactly the same unique
+median 9.655s before and 1.833s after, 81.02% lower. The old producer visits 174,350
+logical file entries; the new producer visits 18,758, exactly the same unique
 inventory with each file read once. Complete input paths/content hashes and both
 producer binaries are retained. Preparation and inventory verification are outside
-those per-producer timers; the complete diagnostic command is42.332s. This is a
+those per-producer timers; the complete diagnostic command is 42.332s. This is a
 local producer comparison, not full-gate acceptance.
 
 Actual generated Rust consumer controls pass unchanged reuse, declared producer
 asset edits, and restoration. An independent source-archive control passes with
-Rust1.98.1 and installed1.99.0-nightly: source identity remains toolchain-independent,
+Rust 1.98.1 and installed 1.99.0-nightly: source identity remains toolchain-independent,
 configured identity changes, repeated builds are fresh, and an actual production
-code edit rebuilds and changes the executed result. The initial1.98.0 attempt
+code edit rebuilds and changes the executed result. The initial 1.98.0 attempt
 correctly failed the declared minimum Rust version; preserve that diagnostic.
 
-The complete SQL native protocol passes, retaining all339 selected artifacts,
+The complete SQL native protocol passes, retaining all 339 selected artifacts,
 all three linked executables, constant two-root remaps and the original dev
-profile. Clean A255.488s, reused A1.083s (339/339 fresh), independent clean B262.834s;
+profile. Clean A 255.488s, reused A 1.083s (339/339 fresh), independent clean B 262.834s;
 A was removed before B. All three executable hashes match across all three builds.
-Outer elapsed520.937s versus baseline528.929s. This small observed difference is
-not repeated host-performance qualification. Peak sampled aggregate RSS1.68GB,
-minimum available9.75GB; no reserve stop, surviving process or source mutation.
+Outer elapsed 520.937s versus baseline 528.929s. This small observed difference is
+not repeated host-performance qualification. Peak sampled aggregate RSS 1.68GB,
+minimum available 9.75GB; no reserve stop, surviving process or source mutation.
 The baseline's B run overlapped a read-only input census; retain that limitation.
 The large producer improvement does not solve independent clean-build latency.
 
-Seven real compiler/native-tool sandbox tests pass in52.59s, including direct and
+Seven real compiler/native-tool sandbox tests pass in 52.59s, including direct and
 confined MySQL/PostgreSQL/SQLite schema execution, admission/lock drift, missing
-grants and incorrect compiler selection. Native tool preparation reports1m24s;
-test preparation51.16s; complete guarded command189.594s. These preparation costs
-are not steady-state runtime assertions. All10 protocol controls also pass (six compiler-session and four native-controller
+grants and incorrect compiler selection. Native tool preparation reports 1m24s;
+test preparation 51.16s; complete guarded command 189.594s. These preparation costs
+are not steady-state runtime assertions. All 10 protocol controls also pass (six compiler-session and four native-controller
 cases): identity mismatch, worker death, timeout, diagnostics, shutdown and lazy
-selection. Complete guarded command130.775s includes2m04s compilation; execution
-remains separate in the logs. Independent review remains pending at this record.
+selection. Complete guarded command 130.775s includes 2m04s compilation; execution
+remains separate in the logs. Independent review is recorded below.
 
 Method-authority and filesystem-effect guards initially identified the extracted
 exclusion predicate, changed lexical contexts and two new fixture reads. Explicit
@@ -1565,10 +1565,189 @@ unsafe-ABI and DX metadata inventories pass; formatting/file-size checks pass.
 These policy-record changes follow the runtime candidate and leave its Rust,
 manifest, lock, toolchain and consumer inputs unchanged. The reviewed final
 candidate must retain that binding. Full phase gates, outstanding SQL component
-provenance repair and repeated480s qualification remain open.
+provenance repair and repeated 480s qualification remain open.
 
 D9 evidence archive: `dev-verify-d9-evidence.tar.gz`, SHA-256
 `09bae68ef6b1df5d4e16bfe3429661631373f9414eaf2d3be7dbdd496d61e3b4`;
-all200 payloads verified after transfer. It includes failed attempts, source/input
+all 200 payloads verified after transfer. It includes failed attempts, source/input
 bindings, actual producer executables, complete SQL timings/artifact selection,
 consumer controls and policy results. Build targets remain retained separately.
+
+
+D9 delivered through [PR #4519](https://github.com/sifr-lang/sifr/pull/4519),
+reviewed candidate `30b988a26a876dccd7365dd36111973ba0687b52`, merged as
+`1988fe8f6ce21cb4de809dfa3ee7dcf28dfda9a7`. Claude Opus verdict SATISFIED,
+no blocking findings. Review and candidate binding are retained outside the tree
+in `dev-verify-d9-review-s7v8xmey/response.md` and `binding.json` alongside the
+local evidence archive. Follow-up suggestion: explicitly assert emitted watch
+lines for excluded-name descendants in a future identity-test item. Logical
+symlink aliases intentionally remain distinct inputs; no deduplication by inode
+or canonical path is proposed. Record-only spacing/status corrections do not
+change the reviewed implementation.
+
+CI `local-first-create-pr` job 123196711202 failed before setup because the full
+profile had no `SIFR_PERFORMANCE_REFERENCE`. The saved log identifies performance
+reference admission as the owner; all downstream steps were blocked. That is not
+a correctness execution or passing full-profile result. The intermediate local
+policy and independent review cover this bounded merge; final phase gates stay open.
+
+### D10 — MySQL statement parser build boundary (prospective)
+
+D9's clean SQL timings still contain approximately 57s compiling LALRPOP before
+the provider can compile. Inspecting the 145-line provider grammar shows that it
+frames semicolon-separated statements, admits nine starting keywords, and retains
+the remaining tokens. Detailed SQL syntax belongs to the existing handwritten
+lowering code. Establish that boundary precisely before adopting a generated-file
+pipeline or replacing the generated framing parser.
+
+First compare a small explicit statement framer against the existing generated
+parser in owned diagnostics. Preserve token values, statement spans, empty and
+trailing-separator behavior, invalid starting tokens, lexer error precedence,
+SQL modes, diagnostics and actual downstream AST/semantic behavior. Exercise all
+token classes and state transitions, bounded exhaustive and deterministic property
+cases, existing provider/compiler/property tests and retained corpus cases. Keep
+the current generator as the independent comparison authority during investigation;
+do not add a production fallback or two runtime parser authorities.
+
+Adopt the smaller production implementation only if this evidence demonstrates
+behavioral equivalence and the dependency graph actually removes the general
+parser generator from normal native and component builds. Otherwise use a separately
+owned pinned generator with byte-for-byte freshness verification; do not add an
+unchecked generated artifact or conceal generated code from policy ownership.
+Retain every existing SQL test and supported series. Keep generated/provider
+provenance honest: rebuild affected component artifacts and qualify their current
+inputs; never relabel old receipts. Dependency/lock changes must be intentional,
+and architecture/verification ownership records must describe the final design.
+
+Acceptance includes focused negative/positive regression tests, relevant policy
+and SQL area contracts, native compiler/tool integration, actual component behavior,
+and the full independent clean/reused/clean SQL build protocol. Compare the complete
+cost, not only generator compilation. Keep the existing preparation accounting,
+capacity reserves and 30-minute diagnostic cap. Use one independent review for the
+bounded implementation. No ordinary/expanded qualification split or full-phase
+480-second acceptance is implied by this item.
+
+
+D10 diagnostic at `466bb00c6172f0ef9b7dae858c443cd2aad60f9f`: the explicit
+framer matches the retained original generated parser on all 378,505 streams of
+72 token classes through length three, 87,381 representative state sequences
+through length eight (including lexer errors), 20,000 seeded longer cases and
+28 actual lexer/SQL-mode cases. It compares complete results, spans, tokens and
+error payloads. The successful guarded command takes 2.786s including compilation.
+Two rejected prototypes are preserved: alphabetical expected-token ordering was
+wrong; a state-dependent correction was also wrong. The complete comparison proves
+that expected tokens retain grammar declaration order in every tested state.
+No production change was made during those diagnostics.
+
+The implementation now removes the general generator from the production and
+qualification dependency graphs, keeps the former grammar as historical evidence,
+and leaves detailed SQL lowering as the same authority. Before adoption the actual
+production function must pass the same independent comparison, all relevant tests
+and component/native qualification. Component receipts have not yet been rebuilt;
+they must not be treated as current on this work-in-progress candidate.
+
+
+#### D10 actual producer and consumer qualification — 2026-10-29
+
+Source candidate `4be4dc11bac7f523f1adf4e848e683456e9f570c` removes the generator
+and 11 now-unreachable lock packages without changing any retained package version.
+The actual production function passes the original generated parser comparison:
+378,505 token streams, 87,381 representative state sequences, 20,000 deterministic
+longer streams and 28 actual lexer/SQL-mode cases. Complete tokens, spans and error
+payloads match; guarded elapsed is 3.238s including diagnostic compilation. The
+production function SHA-256 is
+`839dd02d7aaae07035629882ce6b5f602e2b9b5807251983dadc541ed1689ce0`.
+Both rejected ordering prototypes remain preserved.
+
+All 17 initial MySQL unit/compiler/property tests pass in 46.956s including
+compilation. Eight dependency, SQL ownership and provenance-input commands pass
+in 8.355s. Formatting, file-size guardrails and method-authority, filesystem-effect,
+unsafe-ABI and DX metadata policies pass without weakening or changing inventories.
+Those initial component smoke assertions used the previous checked-in artifact;
+the rebuilt-component checks below supersede that limitation.
+
+All affected SQL components were actually regenerated with the canonical producers:
+MySQL (all three series) 114.387s, PostgreSQL (all six majors) 244.446s, SQLite
+33.305s. Shared virtualizer preparation after prior target cleanup took 93.751s
+and is reported separately. PostgreSQL's first attempt failed before compilation
+in 2.332s because the retained SDK extraction lacked its binaries. The preflight
+had checked directory/archive presence, not extracted content; it did not establish
+SDK readiness. A fresh owned extraction from the SHA-256-authenticated official
+archive passed complete file/link validation in 15.966s; the successful retry uses
+that extraction. Preserve the incomplete installation and failed attempt. This is
+preparation recovery, not a product change or steady-state performance measurement.
+
+The words fixture's current source and producer provenance still validates, so no
+unaffected artifact was rebuilt. All four manifests validate after production.
+All 13 changed SQL outputs were hash-verified during transfer, committed in
+`b28227e0cfdf4de9739bf5c7e8949e27ea4bacbb`, and synchronized byte-for-byte before
+consumer validation. Producers ran serially with two Cargo jobs, 20GiB disk and
+2GiB memory reserves; source inputs and other families remained stable. There was
+no timeout, reserve violation or surviving owned process in the successful runs.
+
+The final component consumer check passes in 121.753s including compilation:
+17 MySQL framing/compiler/property tests, two PostgreSQL tests that execute all six
+component variants, and 14 SQLite compiler tests. Every selected test ran; none
+was ignored or filtered out. All eight component/provider contract commands pass,
+including 63 component qualification mutation controls. Per-command elapsed is
+17.902s MySQL, 58.255s PostgreSQL and 38.172s SQLite; reported test execution is
+0.11s, 1.32s and 0.06s respectively. These are distinct measurements, not added
+savings. Native-tool integration and the complete clean-build protocol remain
+pending at this checkpoint; neither full-phase acceptance nor an eight-minute
+runtime is established.
+
+
+Native compiler/tool integration also passes on `b28227e0`: all seven named
+compiler-sandbox tests execute in 52.40s, with native-tool preparation 42.71s and
+test preparation 45.29s. Complete guarded elapsed is 142.040s; the separate 22
+non-sandbox tests in that target were intentionally outside this focused command,
+not claimed as executed. The final phase retains their coverage obligation.
+No source mutation, reserve stop or surviving process occurred. The complete
+clean/reused/independent-clean native SQL protocol is now running on the same
+candidate with the baseline's four-job allocation and remapping contract.
+
+
+The complete native SQL protocol passes on `b28227e0`: clean A 232.027s,
+unchanged reuse 1.557s (298/298 artifacts fresh), independent clean B 236.454s.
+All three linked executable hashes match across all builds; A is removed before B.
+Total guarded elapsed is 472.055s, versus D9's 520.937s: 48.882s / 9.38% lower
+in this diagnostic comparison. Artifact emission decreases from 339 to 298 with
+the removed generator dependency graph. These counts do not represent dropped
+tests or native tools. The same three tool binaries, dev profile, two-root remaps,
+locked/offline dependencies and four-job allocation remain in the protocol.
+Peak sampled aggregate RSS is 1.407GB, minimum available memory 9.977GB; no reserve
+stop, source mutation or surviving owned process. Targets and raw Cargo timing
+reports are retained. A single cold-build protocol comparison is not repeated
+host-performance qualification, and its saving must not be added to other timings.
+
+The simpler provider implementation, equivalent framing behavior and actual full
+protocol reduction support this bounded adoption. The remaining 7m52s SQL protocol
+alone nearly consumes the proposed eight-minute gate budget. Full phase acceptance
+remains open. After independent review and merge, run a fresh integrated correctness
+sweep with failure continuation and per-category caps to select the next substantial
+repair from current costs; do not extrapolate a complete gate from these focused
+results or silently move required qualification out of the ordinary gate.
+
+
+D10 evidence archive: `dev-verify-d10-evidence.tar.gz`, SHA-256
+`09e8c4764e4789a1d194998f8cec1f8ef65d1d7b3edacd2212fea93c46e3df21`;
+all 248 payloads verified after transfer. This includes failed prototypes, the
+failed SDK attempt and authenticated recovery, actual component outputs, input
+bindings, consumer results, full SQL timings, policy checks and diagnostic helpers.
+Build targets and the extracted SDK remain retained separately. The evidence binds
+the implementation at `b28227e0`; subsequent phase-record-only updates do not alter
+those implementation or validation inputs. Independent review is the remaining
+bounded-item adoption prerequisite.
+
+
+Initial independent review confirms the actual production equivalence harness,
+component hashes/provenance, dependency removal and current qualification evidence.
+It reports NOT SATISFIED for three stale current-design descriptions: the MySQL
+architecture paragraph, the private-tool list and the capability-matrix grammar
+behavior entry. All three now describe the provider-owned parser boundary; the
+historical grammar and producer records remain unchanged. The affected SQL
+contracts and all 13 contract mutation controls pass. All four component manifests
+still validate, confirming that no producer input or output changed. This metadata
+fixture correction requires a scoped remediation review; no compiler rebuild or
+broad test repetition is warranted. Initial review evidence remains outside the
+Git tree in `dev-verify-d10-review-6fo5osl_/response.md`.

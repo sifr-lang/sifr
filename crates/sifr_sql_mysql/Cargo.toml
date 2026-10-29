@@ -5,19 +5,17 @@ publish = false
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
-build = "build.rs"
 
 [lib]
 crate-type = ["rlib"]
 
 [package.metadata.sifr_sql]
 artifact-role = "mysql-compiler-component"
-grammar = "src/mysql.lalrpop"
+statement-framing = "src/statement_framing.rs"
 artifact-manifest = "component-artifacts.json"
 supported-servers = ["8.4", "9.7", "26.7"]
 
 [dependencies]
-lalrpop-util = { workspace = true, features = ["std", "unicode"] }
 semver = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -27,9 +25,6 @@ sifr_sql_contract = { workspace = true }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wit-bindgen = { workspace = true }
-
-[build-dependencies]
-lalrpop = { workspace = true, features = ["lexer", "unicode"] }
 
 [dev-dependencies]
 sifr_compiler_component = { workspace = true, features = ["host"] }
@@ -41,4 +36,4 @@ tokio = { workspace = true, features = ["macros", "net", "rt", "time"] }
 workspace = true
 
 [package.metadata.sifr-build]
-production-inputs = ["src", "build.rs", "component-artifacts.json", "components"]
+production-inputs = ["src", "component-artifacts.json", "components"]

@@ -43,8 +43,8 @@ def validate(inputs: dict[str, Any]) -> list[str]:
         ):
             errors.append(f"{owner} must select exactly the minimal MySQL TLS features")
     lock_owner = inputs["sifr_sql_dependency_lock"]
-    if set(lock_owner["features"]["mysql"]) != {"dep:lalrpop", "dep:lalrpop-util", "dep:mysql_async"}:
-        errors.append("MySQL qualification feature must not retain a common/derive anchor")
+    if set(lock_owner["features"]["mysql"]) != {"dep:mysql_async"}:
+        errors.append("MySQL qualification feature must own only the current driver dependency")
     packages = inputs["lock"]["package"]
     drivers = [row for row in packages if row["name"] == "mysql_async"]
     commons = [row for row in packages if row["name"] == "mysql_common"]

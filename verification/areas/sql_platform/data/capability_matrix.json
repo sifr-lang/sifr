@@ -69,7 +69,7 @@
       "domain": "grammar",
       "platform_part": "mysql_provider",
       "acceptance": "provider-owned MySQL grammar and exact coercion",
-      "behaviors": ["Sifr-owned LALRPOP lexer, grammar, AST, and recovery", "supported server-version gates", "queries, writes, CTEs, windows, generated columns, and conflict forms", "SQL modes, collations, unsigned types, and coercions", "server differential authority"],
+      "behaviors": ["Sifr-owned lexer, statement framing, SQL lowering, AST, and recovery", "supported server-version gates", "queries, writes, CTEs, windows, generated columns, and conflict forms", "SQL modes, collations, unsigned types, and coercions", "server differential authority"],
       "required_evidence": ["fuzz", "integration", "negative", "positive"],
       "status": "complete"
     },
