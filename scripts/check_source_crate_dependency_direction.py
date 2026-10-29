@@ -145,7 +145,7 @@ RULES = (
     ),
     *(CrateRule(crate=crate, forbidden_all_dependencies=frozenset({"sifr_metadata"}),
                 forbidden_source_references=frozenset({"sifr_metadata"}), scan_manifest_targets=True)
-      for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_frontend")),
+      for crate in ("sifr_sysroot", "sifr_stdlib_manifest", "sifr_lowering", "sifr_codegen", "sifr_generated_rust", "sifr_frontend")),
     # Keep identity stateless; its optional manifest parser belongs to build helpers.
     CrateRule(
         crate="sifr_identity",

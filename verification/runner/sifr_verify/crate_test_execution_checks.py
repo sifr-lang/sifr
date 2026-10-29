@@ -99,6 +99,16 @@ class CrateExecutionTests(unittest.TestCase):
                     self.assertIn("sifr_dependency_contracts", owner[0].ids)
                     self.assertEqual(sum("sifr_dependency_contracts" in g.ids for g in groups), 1)
 
+    def test_generated_rust_invariants_follow_codegen_in_every_delivery_mode(self):
+        for profile in ("create-pr", "merge", "nightly", "release"):
+            for mode in ("smoke", "full"):
+                with self.subTest(profile=profile, mode=mode):
+                    groups = configuration_plan(load_profile(profile), mode)
+                    codegen = [group for group in groups if "sifr_codegen" in group.ids]
+                    syntax = [group for group in groups if "sifr_generated_rust" in group.ids]
+                    self.assertEqual(codegen, syntax)
+                    self.assertEqual(len(syntax), int(mode == "full"))
+
     def test_every_canonical_plan_preserves_selection_and_native_dispatch(self):
         for profile in ("create-pr", "merge", "nightly", "release"):
             for mode in ("smoke", "full"):

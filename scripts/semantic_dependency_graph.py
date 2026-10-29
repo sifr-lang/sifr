@@ -34,8 +34,8 @@ COMPILER_CRATES = {
 }
 
 SQL = ('sifr_sql_sqlite_tools', 'sifr_sql_mysql_tools', 'sifr_sql_postgresql_tools')
-LOWER = ('sifr_sysroot', 'sifr_stdlib_manifest', 'sifr_lowering', 'sifr_codegen', 'sifr_frontend')
-NATIVE = frozenset({'sifr', 'sifr_driver', 'sifr_compiler_services', 'sifr_codegen', 'sifr_stdlib_artifact'})
+LOWER = ('sifr_sysroot', 'sifr_stdlib_manifest', 'sifr_lowering', 'sifr_codegen', 'sifr_generated_rust', 'sifr_frontend')
+NATIVE = frozenset({'sifr', 'sifr_driver', 'sifr_compiler_services', 'sifr_codegen', 'sifr_generated_rust', 'sifr_stdlib_artifact'})
 
 
 def semantic_rule(rule):
@@ -109,7 +109,7 @@ def validate_resolved(root):
 def self_test():
     # Synthetic resolved nodes retain aliases, target predicates and edge kinds.
     names = list(SQL) + ['sifr_semantic_services', 'sifr_frontend', 'sifr_lowering',
-                         'sifr_codegen', 'sifr_metadata', 'helper']
+                         'sifr_codegen', 'sifr_generated_rust', 'sifr_metadata', 'helper']
     ids = {name: f'path+file:///fixture/{name}#0.0.0' for name in names}
     data = {'packages': [{'id': ids[n], 'name': n} for n in names],
             'resolve': {'nodes': [{'id': ids[n], 'deps': []} for n in names]}}
@@ -124,6 +124,9 @@ def self_test():
     assert not resolved_failures(data)
     edge('sifr_semantic_services', 'helper')
     edge('helper', 'sifr_codegen', 'build', 'cfg(windows)')
+    assert len(resolved_failures(data)) == 4
+    nodes['helper']['deps'].clear()
+    edge('helper', 'sifr_generated_rust', 'build', 'cfg(windows)')
     assert len(resolved_failures(data)) == 4
     nodes['helper']['deps'].clear()
     edge('sifr_lowering', 'helper', 'dev')

@@ -1,5 +1,7 @@
 //! Generated Rust syntax, ownership, visibility and support dependency transformations.
 //! Language-level type identities and catalogs are supplied by codegen.
+// Preserve the existing codegen lint scope for relocated transformation helpers.
+#![allow(dead_code)]
 #![cfg_attr(test, allow(clippy::expect_used, clippy::unwrap_used))]
 mod generated_rust_canonicalizer;
 pub use generated_rust_canonicalizer::*;
