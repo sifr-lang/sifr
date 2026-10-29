@@ -3219,3 +3219,66 @@ remain the already-qualified D20/D22 inputs; no duplicate runtime qualification 
 needed if an exact changed-path audit proves that binding on the final candidate.
 For subsequent source-fixture edits, run these dependent inventories with focused
 validation before review; do not rely only on frontend ownership classification.
+
+
+#### D23 inventory reconciliation delivery — 2026-10-29
+
+[PR #4535](https://github.com/sifr-lang/sifr/pull/4535) merges as
+`2459704782a776d6e1302d830622c1f0cfe08c3b`; reviewed candidate
+`0a507c18592e2952800c75221c4294ec1b606e60`. The merged tree equals the reviewed
+candidate. All six affected guard/self-test commands pass, and independent review
+is SATISFIED without blockers. Response SHA-256:
+`b66192067f85a647b0b7cce2eb5cbbe511497a6fe9d4ff823bbda512f69f0cc6`.
+The reviewer independently reruns all three actual inventory checks. Runtime,
+compiler, tests, runner, profiles and locks remain unchanged from D22 qualification.
+
+Follow-up owned by verification infrastructure: automate dependent inventory checks
+for fixture-source changes so location/fingerprint reconciliation is not missed by
+focused validation. The failed first discovery remains failed. Next run is
+`dev-verify-d23-discovery-r2`, the full canonical correctness selection with failure
+continuation and the same category/resource limits. This delivery closes only the
+inventory repair; integrated discovery and final phase qualification remain open.
+
+#### D23 dependency-inventory reconciliation (prospective)
+
+The retry remains frozen remotely at `0e36952fb786d3b357002616842d90750f85a96d`.
+All 36 completed top-level categories pass before crate execution. SQL completes
+all 72 variants in 669.408s, including the mandatory clean/reused/independent-clean
+protocol at 475.600s. These observations do not establish full-gate acceptance.
+
+The additive Rust configuration subsequently fails 13 dependency-contract tests
+at the same inventory admission: `crates/sifr_generated_rust/Cargo.toml` is absent
+from the maintained Cargo inventory. This is an omitted dependent record from
+D17's crate extraction, owned by this phase. Independent reconstruction from the
+Git index and every maintained TOML manifest finds exactly one additional
+manifest, four additional direct declarations, and no removed declarations.
+The required totals are 161 manifests and 217 direct declarations. The new
+prettyplease, proc-macro2, quote and tempfile owners use already-audited versions;
+no dependency version, checksum, lockfile, pinned graph or audit policy changes.
+
+Prepare the two JSON record corrections locally while the remote candidate and
+its inputs stay unchanged. Continue independent test groups, preserve the failed
+sweep, and archive its evidence before changing the remote source or overwriting
+reports. Then run the entire `sifr_dependency_contracts` crate, including its
+existing missing/extra/duplicate/input/checksum mutation controls, plus the
+affected policy checks and file-size guard. Require exact-candidate independent
+review under the approved intermediate policy. Reuse unrelated runtime evidence
+only after proving that the final changed paths contain these two records and
+phase prose exclusively; retain the original observed candidate identity.
+
+The reconciliation does not eliminate any measured runtime cost or close the
+480s goal. Do not rerun the full sweep solely for these record updates. Finish
+coverage reconciliation, then choose the next macro improvement from the current
+preparation and execution measurements. Complete final phase gates, invalidation
+and repeated timing qualification remain required.
+
+
+The first focused repair candidate `069c90c734d227991da70506bf377d48352865c4`
+runs the complete dependency-contract crate in 14.021s: 76 assertions pass and one
+fails. Inventory admission is repaired, exposing two further D17 omissions in the
+exact lock-edge inventory: `sifr_generated_rust` owns current `syn` and
+`prettyplease` edges in the root lock. Independent reconstruction across every
+maintained lock and inventoried dependency family confirms exactly these two
+additions and no removals. Add both records; preserve all assertions and version,
+checksum, pinned-graph and lock contents. Retain this failed candidate's evidence
+and rerun the complete affected crate before review.

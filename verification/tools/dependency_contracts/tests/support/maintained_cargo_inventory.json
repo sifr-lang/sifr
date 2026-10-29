@@ -13,6 +13,7 @@
     "crates/sifr_driver/Cargo.toml",
     "crates/sifr_format/Cargo.toml",
     "crates/sifr_frontend/Cargo.toml",
+    "crates/sifr_generated_rust/Cargo.toml",
     "crates/sifr_identity/Cargo.toml",
     "crates/sifr_ipc/Cargo.toml",
     "crates/sifr_ir/Cargo.toml",
@@ -269,6 +270,22 @@
       "package": "num-bigint",
       "manifests": [
         "crates/sifr_frontend/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_generated_rust",
+      "package": "prettyplease",
+      "manifests": [
+        "crates/sifr_generated_rust/Cargo.toml"
+      ]
+    },
+    {
+      "lock": "Cargo.lock",
+      "owner": "sifr_generated_rust",
+      "package": "syn",
+      "manifests": [
+        "crates/sifr_generated_rust/Cargo.toml"
       ]
     },
     {
