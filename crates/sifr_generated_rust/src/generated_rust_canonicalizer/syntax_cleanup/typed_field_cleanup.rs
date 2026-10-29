@@ -1,5 +1,5 @@
-include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_value_ownership.rs");
-include!("../../../../sifr_codegen/src/generated_rust_canonicalizer/syntax_cleanup/typed_standard_contracts.rs");
+include!("typed_value_ownership.rs");
+include!("typed_standard_contracts.rs");
 
 impl Rewriter<'_> {
     fn clone_is_unambiguous(&self) -> bool {
