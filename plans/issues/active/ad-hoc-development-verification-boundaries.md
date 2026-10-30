@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25–D29 diagnostics recorded; D30 SQL build-tool configuration qualification
+- Status: in progress; D30/D31 delivered; final phase qualification open
+- Latest delivery: D30 SQL build-tool configuration; D32 installed-product investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -4114,3 +4114,88 @@ independent-build protocol, with no displaced preparation/integration regression
 Report priming, preparation and complete measured category separately; do not
 claim these retained observations qualify final invalidation scenarios or the
 480s whole gate. Independent candidate review remains required before adoption.
+
+
+#### D30 delivered — 2026-10-30
+
+[PR #4542](https://github.com/sifr-lang/sifr/pull/4542) merged as
+`b2c8c0a965aa85fa1fd07c3a1e976f6ced4bedf9`, tree-identical to reviewed candidate
+`1e2abd773c98c419cce37c7471b038ce09eaad4e`. Independent review is **SATISFIED**,
+with no blockers. The repaired baseline is `47ea5a68d07ad21ff26fb3424f9cce8133ab1eef`.
+Both complete SQL selections execute all **72 cases and seven sandbox/IPC tests**
+successfully, with identical selections, toolchain, lock and four-job admission.
+
+| Matched retained observation | Baseline | Candidate |
+|---|---:|---:|
+| Fresh preparation | 25.022s | 24.350s |
+| Complete SQL area | 575.199s | 441.174s |
+| Preparation plus SQL | 600.220s | 465.524s |
+| Included independent-build protocol | 465.811s | 333.759s |
+
+The protocol saves **132.053s / 28.35%**, meeting both prospective thresholds.
+All three clean/reused/independent executable comparisons pass. The largest
+non-protocol case increase is 0.054s; no displaced preparation/integration
+regression is observed. Cross-configuration byte equivalence is not claimed.
+This is one ordinary observation per configuration, not repeated final timing
+qualification or an eight-minute whole-gate result.
+
+The candidate's initial attempt completed 36 preparation and 71 priming commands,
+then stopped at the next allocation assertion before measurement. Its incomplete
+status and 234-payload archive remain preserved. A fresh process recorded valid
+four-job admission, verified exact candidate/selection/priming environment and
+completed guard state, then executed fresh preparation and all 72 cases. No
+correctness results were reused. First-use preparation/priming are separately
+reported: baseline 652.792s/364.247s, candidate 194.948s/122.999s. Different preceding
+build states prevent using these as a comparable first-use speedup.
+
+Verified archives: baseline 311 payloads (`23e3daad4541ef6a137a5809b8124c22cb78d2036b1af7f83842e901346cb099`),
+measured candidate 99 (`0ad1eb59fd78fed8573871e3ce43dfaa30bc6d53445b643d16d569fa126d649d`),
+focused checks 39 (`fde98712b53db40f49898406cf84d85b76c619c883013f1d0c5c264d1312d745`).
+Focused validation passes in 14.190s, including seven original artifact controls,
+21 profile controls, preparation and native/integrated contracts, size/diff and
+all seven unchanged emitted plans. Guards report no reserve stop, source mutation
+or surviving workers.
+
+[Complete comparison](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d30-comparison-repaired-evidence/dev-verify-d30-comparison-repaired.json) ·
+[Independent review](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d30-review-9ofk_sgo/response.md).
+
+Follow-up owner: SQL verification. Consider direct profile evidence for actual
+preparation, document the explicit optimized host-SHA256 manifest coupling, and
+account for additional retained optimization variants in capacity planning. The
+existing native qualifier and sandbox use different debug/target layouts; this
+item qualifies their shared host policy without claiming their executable bytes
+are identical. Full-phase invalidation, complete gates and 90s/480s timing remain open.
+
+### D32 — installed-product execution and preparation boundaries (prospective)
+
+Move to the next measured multi-minute category without polishing SQL subsecond
+cases. D23's complete installed/sysroot area took 394.558s: boundary equivalence
+128.480s, metadata/corpus 215.326s, installed smoke 31.022s and metadata structural
+19.552s. Its 732 public CLI emissions already used four bounded processes and took
+46.918s. Independent development/release corpus executions overlapped at
+62.459s/65.493s. These are historical attribution, not a current retained baseline.
+
+First execute all currently selected installed-product cases and their declared
+preparation on the integrated source, retaining owned targets and the 1750s
+per-category diagnostic cap. Separate reconstruction from ordinary retained
+preparation. Record each selected case and preserve all incomplete attempts. Use
+ordinary execution for complete elapsed measurements; targeted observation may
+attribute a representative slow command afterward. Check capacity before building.
+
+Audit ownership before proposing reuse: immutable compiler/runtime/dependency
+products may be shared only where identities and profiles match; installation
+paths, mutable projects, source removal, corruption, relocation, live generations,
+LSP sessions and attached-API edit invalidation retain their real boundaries.
+Preserve every current source-versus-installed dependency and emitted-byte
+comparison, every corpus fixture, native runtime assertion, integrity and rejection
+control. Do not substitute snapshots for native execution, combine process state,
+reuse old correctness results, or weaken an explicitly cold-build obligation.
+
+The installed-product design budget remains 60s within the whole 480s gate. If the
+current retained category already meets it, move on. Otherwise require a measured
+root cause and prospective implementation-specific criteria before editing. A
+macro candidate should save at least 25% and 60s of the complete affected category
+without shifting cost into preparation or other consumers. These are adoption
+thresholds, not permission to stop short of final phase budgets. Preserve existing
+input/invalidation guarantees and require focused regressions, complete affected
+selection and independent review before intermediate adoption.
