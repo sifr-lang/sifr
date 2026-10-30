@@ -9,7 +9,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "META",
         "Package const specialization reported a fatal issue.",
         Severity::Error,
-        "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_fatal/src/main.sifr",
         "package {package} specialization failed: {reason_code}",
         "sifr_frontend::const_specialization",
         [arg!("package"), arg!("reason_code")],
@@ -20,7 +19,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "META",
         "Package const specialization reported a hard warning.",
         Severity::Warning,
-        "verification/areas/diagnostics/fixtures/diagnostics/meta_specialization_warning/src/main.sifr",
         "package {package} specialization warning: {reason_code}",
         "sifr_frontend::const_specialization",
         [arg!("package"), arg!("reason_code")],
@@ -31,7 +29,6 @@ pub(super) const ENTRIES: &[DiagnosticRegistryEntry] = &[
         "META",
         "Package const-specialization issue declaration is malformed.",
         Severity::Error,
-        "verification/areas/diagnostics/fixtures/diagnostics/meta_malformed_declaration/main.sifr",
         "package {package} declared malformed specialization issue {reason_code}: {declaration_problem}",
         "sifr_frontend::const_specialization",
         [

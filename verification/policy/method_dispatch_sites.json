@@ -53113,7 +53113,7 @@
     },
     {
       "site": "crates/sifr_diagnostics/src/bin/gen-error-docs.rs::main::literal-comparison::1",
-      "fingerprint": "a7edf666f3acce6f8f1929a9d5f0697437a3f53b33b3bc4c778f26eff6e47b97",
+      "fingerprint": "9dd9d99b43b8fdef24370eb2a298d447f59a9339f5e8863e050d4a55b43d8afe",
       "classification": "compiler-policy",
       "owner": "compiler-owner",
       "operation": "let check = env :: args ( ) . skip ( 1 ) . any ( | arg | arg == \"--check\" )",
@@ -53172,19 +53172,19 @@
       "contract": "select compiler policy by the recorded lexical operation: crates/sifr_diagnostics/src/bin/gen_error_docs/family_docs.rs::family_docs enclosing context owns this literal-match; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_diagnostics/src/codes/registry_tests.rs::registry_skeleton_is_internally_consistent::literal-comparison::1",
-      "fingerprint": "dc39f0f811dd49619d143f9d1f19906900c1b8c5561cddef940a124c3c19afc3",
+      "site": "crates/sifr_diagnostics/tests/unit/registry_tests.rs::registry_skeleton_is_internally_consistent::literal-comparison::1",
+      "fingerprint": "a72e7414f47be40f0f56a481d1c2c9233bb003a02b323574dd70a8e53bd2016f",
       "classification": "test-assertion",
       "owner": "test-owner",
       "operation": "assert ! ( entry . docs_path == format ! ( \"docs/errors/{}.mdx\"",
       "inputs": "fn registry_skeleton_is_internally_consistent ( )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_diagnostics/src/codes/registry_tests.rs::registry_skeleton_is_internally_consistent enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_diagnostics/src/codes/registry_tests.rs::registry_skeleton_is_internally_consistent enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_diagnostics/tests/unit/registry_tests.rs::registry_skeleton_is_internally_consistent enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_diagnostics/tests/unit/registry_tests.rs::registry_skeleton_is_internally_consistent enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
-      "site": "crates/sifr_diagnostics/src/codes/registry_tests.rs::assert_family_name::literal-comparison::1",
+      "site": "crates/sifr_diagnostics/tests/unit/registry_tests.rs::assert_family_name::literal-comparison::1",
       "fingerprint": "3c8f7f2070666437c1e52e09b01d8ec9d3eccbc14b1ed14872ff67ec6af19f97",
       "classification": "test-assertion",
       "owner": "test-owner",
@@ -53192,8 +53192,8 @@
       "inputs": "fn assert_family_name ( name : & str )",
       "outputs": "implicit unit / macro expansion",
       "role": "test fixture construction, execution or assertion",
-      "caller_admission_relationship": "crates/sifr_diagnostics/src/codes/registry_tests.rs::assert_family_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
-      "contract": "test fixture construction, execution or assertion: crates/sifr_diagnostics/src/codes/registry_tests.rs::assert_family_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
+      "caller_admission_relationship": "crates/sifr_diagnostics/tests/unit/registry_tests.rs::assert_family_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching",
+      "contract": "test fixture construction, execution or assertion: crates/sifr_diagnostics/tests/unit/registry_tests.rs::assert_family_name enclosing context owns this literal-comparison; source method admission is not inferred from literal matching"
     },
     {
       "site": "crates/sifr_driver/src/bin/diagnostic_rendering_harness.rs::run::literal-match::1",

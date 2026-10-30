@@ -4,6 +4,8 @@
 )]
 
 use super::*;
+#[path = "../../../../verification/areas/diagnostics/support/fixture_catalog.rs"]
+mod diagnostic_fixtures;
 #[test]
 pub(crate) fn test_e2e_pass() {
     let config = runner_config();
@@ -340,6 +342,11 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
         .parent()
         .and_then(Path::parent)
         .expect("sifr crate should live under the workspace crates directory");
+    let fixtures = diagnostic_fixtures::FixtureCatalog::load(
+        repo_root,
+        sifr_diagnostics::codes::active_registry_entries().map(|entry| entry.id),
+    )
+    .expect("diagnostic verification fixture catalog");
     // Deliberately receiver/place-scoped: generalizing this to every active source fixture
     // exposes many pre-existing argument gaps across unrelated families. The
     // diagnostics owner must complete that separate migration before broadening it.
@@ -360,8 +367,8 @@ fn test_receiver_place_representative_diagnostics_populate_declared_args() {
             "{} should remain active",
             code.code()
         );
-        let fixture = entry
-            .representative_fixture_path
+        let fixture = fixtures
+            .get(entry.id)
             .expect("active receiver-place diagnostic should declare a representative fixture");
         let source = std::fs::read_to_string(repo_root.join(fixture))
             .unwrap_or_else(|error| panic!("failed to read {fixture}: {error}"));

@@ -50,6 +50,15 @@ lanes.
 
 ## Development iterations
 
+Diagnostic identities, severity, messages and arguments belong to the production
+registry. Representative test references belong to
+[`diagnostics/data/code_catalog.json`](areas/diagnostics/data/code_catalog.json).
+Documentation generation and diagnostic tests read that catalog at execution time;
+renaming a fixture does not require changing the production registry. The coverage
+checks require exactly the active codes and validate fixture paths and Rust symbols.
+Run the diagnostic coverage checks and `gen-error-docs --check` after fixture changes;
+regenerate affected documentation when a reference changes.
+
 Profile preparation selects the development compiler through Cargo and publishes
 one immutable copy for that run. Area processes consume it through
 `SIFR_VERIFY_PREPARED_COMPILER`, validate the content-bound manifest and published file identity, and hold a shared lifetime

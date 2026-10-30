@@ -41,7 +41,7 @@ def sha256_file(path: pathlib.Path) -> str:
 
 
 def active_registry() -> dict[str, dict[str, str]]:
-    _, active_code_to_constant, active_fixtures = code_coverage.parse_registry()
+    _, active_code_to_constant, _ = code_coverage.parse_registry()
     source = code_coverage.read_rust_with_local_sources(code_coverage.CODES_RS)
     severities = {
         code: severity
@@ -55,7 +55,6 @@ def active_registry() -> dict[str, dict[str, str]]:
     return {
         code: {
             "constant": constant,
-            "fixture": active_fixtures.get(code, ""),
             "severity": severities.get(code, ""),
         }
         for code, constant in active_code_to_constant.items()
@@ -189,8 +188,9 @@ def validate_catalog(errors: list[str], active: dict[str, dict[str, str]]) -> di
         registry = active[code]
         if entry.get("constant") != registry["constant"]:
             errors.append(f"{code}: catalog constant does not match registry")
-        if entry.get("representative_fixture") != registry["fixture"]:
-            errors.append(f"{code}: catalog representative fixture does not match registry")
+        fixture = entry.get("representative_fixture")
+        if not isinstance(fixture, str) or not code_coverage.fixture_file_exists(fixture):
+            errors.append(f"{code}: catalog representative fixture is missing or invalid")
         if entry.get("severity") != registry["severity"]:
             errors.append(f"{code}: catalog severity does not match registry")
     return by_code

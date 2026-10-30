@@ -6071,7 +6071,7 @@
       "classification": "tooling-input"
     },
     {
-      "path": "crates/sifr_diagnostics/src/codes/registry_tests.rs",
+      "path": "crates/sifr_diagnostics/tests/unit/registry_tests.rs",
       "symbol": "active_diagnostic_docs_pages_exist_with_exact_casing",
       "operation": "read_dir",
       "site": "let directory_entries = fs::read_dir(&errors_dir)",

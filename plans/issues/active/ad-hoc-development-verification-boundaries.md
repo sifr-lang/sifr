@@ -3962,3 +3962,105 @@ and its runtime tests, or requires weakening the native boundary or target check
 stop adoption and preserve the experiment. Do not accept synthetic runtime results
 as a substitute. This item does not accept an ordinary/expanded gate split, omit
 independent builds or sanitizers, or waive the complete final 90s/480s qualification.
+
+#### D30 qualification discovery — hold the candidate for an owned prerequisite
+
+Candidate `7e2d52b3c92591dc9ead4c3628f851dfb3fdd3da` is preserved on
+`codex/dev-verify-d30-sql-build-tools`, unmerged. Pinned focused checks pass:
+seven executable controls, 21 profile controls, 18 preparation tests, integrated
+and native-boundary controls, profile validation and unchanged emitted plans for
+all seven selections. This does not qualify the implementation for adoption.
+
+The complete SQL baseline at `3779c5950bbcf20c4b34ec9e33503b2e1cf47fbd`
+executes all 72 cases: 68 pass and four fail component-source provenance. Initial
+canonical preparation reconstruction takes 858.080s; the next preparation takes
+28.317s and area execution 740.797s. The independent native-build protocol passes
+in 476.542s. Nested PostgreSQL matrix execution still rebuilds a versioned graph,
+so this first area execution is not a wholly retained ordinary timing baseline.
+The guard exits one without reserve stops, source mutation or surviving processes.
+All 162 archived payloads are independently hash/size verified; archive SHA-256
+`39b779ddcb72560aaa36d326208ac5acab9682db2399a226b202f988152a6fb5`.
+Preserve the raw incomplete/failed status; do not rerun the unchanged failure.
+
+The exact drift is four diagnostic registry source files changed in D24/PR #4537:
+`calls_flow_and_protocols.rs`, `parsing_names_and_types.rs`, `python_interop.rs`
+and `rust_interop.rs`. Their representative test paths moved with the lowering
+tests, but those paths are embedded in production diagnostic metadata consumed
+by all three SQL component families. Words inputs are unchanged. This is an
+owned phase integration omission and a production/verification boundary problem,
+not an external dependency failure or a regression introduced by D30.
+
+### D31 — give diagnostic fixture references their verification owner (prospective)
+
+Hold D30 unchanged while repairing this prerequisite. The existing diagnostics
+verification catalog contains exactly the same 224 code-to-fixture references as
+the production registry. Make that catalog the fixture authority; remove fixture
+paths from production registry entries. Keep the production authority for code
+identity, severity, message, arguments, owner, tooling and documentation links.
+Do not introduce a second fixture list, feature fallback or source-hash exclusion.
+
+Update documentation generation and affected verification/test consumers to read
+the catalog explicitly. Preserve every fixture mapping and generated document
+byte, exact active-code coverage, duplicate/missing/unknown identity rejection,
+fixture file and Rust symbol validation, markdown safety, and the five existing
+receiver/place runtime assertions. Keep the current scope of runtime assertions;
+this does not silently claim execution of every catalog fixture. Add meaningful
+negative controls for catalog drift rather than comparing a catalog to itself.
+Keep the registry fixture assertions and new documentation-reader controls under
+the crate's test owner, outside production `src` roots, with their existing module
+context and exact assertions. Update affected source-policy ownership references;
+test-only edits must not introduce the same provenance coupling through a new file.
+
+Prove that a verification-only fixture reference edit no longer changes production
+compiler/component input identities, while a real diagnostic production edit still
+invalidates them. Use isolated owned snapshots for mutation controls and retain
+the complete before/after 224-reference inventory. Run affected Python contracts,
+Rust registry and docs-generator tests/checks, the receiver/place assertions,
+format/file-size checks and unchanged profile-plan comparison.
+
+Regenerate MySQL, PostgreSQL and SQLite component artifacts with the canonical
+pinned producers on frozen inputs, allowing only declared producer outputs.
+Do not repair provenance by editing hashes without production. Preserve old and
+new outputs, verify transferred hashes, run all affected component/provider
+contracts and mutation controls plus the native component consumers, then obtain
+independent review before intermediate merge. Words is rebuilt only if its inputs
+actually change. This repairs the demonstrated ownership problem; it does not
+claim an ordinary-gate speedup or waive final invalidation/timing qualification.
+Afterward resume D30 against the repaired baseline, accounting for reconstruction
+and nested preparation before interpreting complete-category timing.
+
+#### D31 ownership and canonical production evidence
+
+Source candidate `761368dc5bbbaafc73c61cf161970b69edf5a3f0` removes all 224
+fixture arguments from the production registry and loads their unchanged values
+from the existing verification catalog. A byte comparison of all eleven registry
+entry files confirms that removing those exact arguments accounts for every
+change; production diagnostic definitions otherwise remain identical. Registry
+assertions and new reader controls live under `tests/unit`, with affected policy
+references and metadata line anchors reconciled.
+
+The focused run passed in **89.264s**: 22 Python controls, registry coverage and
+baseline audits, method/metadata policies and their controls, direct-filesystem
+inventory, Rust diagnostics and documentation-reader tests, byte-exact generated
+documents, all five receiver/place assertions, formatting, file-size and profile
+checks. All seven emitted plans and all 224 fixture mappings are unchanged.
+The earlier source candidate's 97.272s run remains separate preliminary evidence.
+
+An isolated canonical identity probe passed in **35.699s**. It imports the actual
+production input traversal/encoder and uses the actual SQL provenance traversal.
+The copied closures match the source checkout. Both a catalog reference edit and
+a private registry-test assertion edit preserve the diagnostic package identity
+and all three SQL component provenance identities. A real diagnostic summary edit
+changes all four; restoring it restores every identity. This proves those input
+boundaries, not a measured complete compiler edit cycle or full-gate runtime.
+The earlier 31.199s fixture-only proof is retained separately.
+
+Pinned canonical producers rebuilt all ten components with frozen inputs:
+MySQL **25.805s**, PostgreSQL **231.297s**, SQLite **19.329s**. Every rebuilt Wasm
+binary is byte-for-byte identical to its predecessor. Only the three generated
+provenance manifests differ. All 13 transferred outputs were size/SHA-256 verified;
+no source inputs or another family's artifacts changed during a producer run.
+Capacity/session guards report no reserve stop, unexpected mutation or surviving
+workers. Words inputs are unchanged; its qualification remains required in the
+component contract. Final affected consumers and independent review are still
+pending at this record; no intermediate adoption or full-gate pass is claimed.
