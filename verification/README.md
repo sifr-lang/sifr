@@ -269,6 +269,9 @@ Missing preparation blocks its consumers, and missing or incomplete reports fail
 The existing Python/quality 1+3 allocation and full-profile/release execution are
 unchanged. Group elapsed time includes all children and must not be calculated by
 adding overlapping area durations.
+The group starts at the first selected member. Already-admitted siblings finish
+when one fails; without `--no-fail-fast`, later profile steps then stop. Reports
+retain canonical area order regardless of execution order.
 
 ## Layout
 

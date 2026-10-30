@@ -4456,3 +4456,63 @@ in each arm and compare case/variant outcomes. Adopt only with at least 25% and 
 complete-cycle wall saving, no displaced preparation, no lost coverage and no
 material unexplained CPU/memory regression. Preserve and explain all failed or
 incomplete attempts. Independent review and final phase gates remain required.
+
+
+#### D35 delivered — 2026-10-30
+
+[PR #4543](https://github.com/sifr-lang/sifr/pull/4543) merged as
+`2c8a1727bc05f17cffd60d41c60aee8b6704d401`. Reviewed and measured candidate:
+`5e492dde7817729611e219df041c72bf14b1b8ef`.
+
+Both complete selections pass all **266 variants** (coverage 4, core 5,
+diagnostics 186, distribution 71), with identical inventories, expected/actual
+exits and outcomes. Command arguments match except unique prepared-compiler
+publication paths; their compiler bytes have the same verified digest.
+
+| Cost | Serial | Grouped |
+| --- | ---: | ---: |
+| Complete measured cycle | 362.287s | 155.100s |
+| Fresh required preparation | 3.091s | 3.173s |
+| Inclusive CPU | 350.808s | 396.869s |
+
+The complete-cycle saving is **207.186s / 57.2%**, exceeding the prospective
+25% / 60s criterion. Grouped child durations overlap and must not be summed as
+elapsed time. Preparation remains owned and included. CPU rises **13.1%**; this
+is an explicit scheduling tradeoff, not a CPU-reduction claim.
+
+A separate fixed-work diagnostic runs the same read-only taxonomy check alone,
+four copies together, then alone. Per-copy CPU is 40.57s, 45.36s mean, and 40.69s:
+**11.6% more CPU for identical work under concurrency**, independently of the
+area-group runner. This supports contention/service-rate attribution without
+claiming a specific hardware mechanism. No Rust compilation appears in the
+complete-area logs. No capacity reserve stop, source drift or leftover owned
+process occurs. Whole-run maximum RSS is a single-process maximum, not an
+aggregate memory peak; no aggregate-peak claim is made.
+
+All 64 affected controls, profile validation, file-size guardrails and diff checks
+pass. Seven emitted-plan comparisons confirm only merge correctness adds the new
+group. Create-PR omits distribution and keeps its schedule; full/release profiles
+and Python/quality allocation remain unchanged. The first focused attempt had an
+incorrect create-PR expectation; the first serial attempt failed the taxonomy
+naming guard. Both failures remain preserved. Three old reports copied after that
+initial early stop are explicitly unexecuted, never counted as passing evidence.
+
+Independent read-only review: **SATISFIED**, no blocking findings, exact candidate
+above. Evidence outside the Git tree:
+`dev-verify-d35-review-6yqo50o5/response.md`, keyed by its adjacent candidate record.
+The verified complete-comparison archive contains 80 payloads, SHA-256
+`fa3fa35ac33ef49f6283039659d07cbae97d472b4fe22123a40ca8d448931289`.
+The verified fixed-work archive contains 27 payloads, SHA-256
+`d8fd8ed3fed9a3388382e63e95e617d1dac5b37557f96a421283ed4421affc76`.
+Current report: `v4bg-current-report.html` in the retained evidence directory.
+
+Review follow-ups: coverage also owns its unique
+`target/verification/actual/coverage_matrix` root. The group starts at coverage's
+position in the schedule; already-admitted siblings finish, while fail-fast blocks
+later steps after a group failure. Canonical report order is preserved; use failure
+continuation for complete discovery. Capacity above four remains intentionally
+unused by this group until separately qualified. These are ownership/order notes,
+not missing tests or permission to broaden concurrency.
+
+This closes D35 only. Full-phase correctness, invalidation, repeated 90s/480s
+qualification and the major native compilation/integration costs remain open.
