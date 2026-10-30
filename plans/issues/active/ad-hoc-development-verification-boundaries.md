@@ -4199,3 +4199,34 @@ without shifting cost into preparation or other consumers. These are adoption
 thresholds, not permission to stop short of final phase budgets. Preserve existing
 input/invalidation guarantees and require focused regressions, complete affected
 selection and independent review before intermediate adoption.
+
+#### D32 current baseline and diagnostic correction
+
+At `beb42df91e761e1aec097cd4c5dae1173e36bf77`, all four installed-product
+suites pass. Retained preparation takes **15.243s**, the area **402.677s**, and
+their measured cycle **417.920s**. Boundary equivalence takes 131.379s, installed
+smoke 24.556s, metadata/corpus 223.179s and metadata structural 23.155s. Initial
+reconstruction is separately 211.480s. All 732 public emissions, both independent
+corpus profiles, four native runs and existing installation/integrity/LSP controls
+execute. The baseline archive contains 1,545 verified payloads, SHA-256
+`ab021193a3ac60e2603877d7369376e45d0c7f6e04378dc41a9259daf30cbb25`.
+
+Canonical attached-API initial/edit assertions pass for installed and source
+compilers. Targeted tracing places 7–11 seconds inside the enclosing generation
+stage; edited native compilation/link takes about one second. A subsequent
+retained process trace **rules out repeated probe compilation for that command**:
+the probe Cargo process takes about 0.07s and launches no Rust compilation unit.
+Only the final generated executable recompiles. There are 58 formatter process
+invocations (each appears twice through rustup/toolchain exec). Do not infer
+cache fragmentation, hashing cost or pure codegen cost from the coarse stage.
+File-open tracing confirms substantial intervals without source-file reads;
+full attribution still requires finer observation. Existing formatting depends
+on rendered line counts, so simply dropping intermediate layout is not justified.
+
+Next bounded diagnostic: add temporary stage timing in an explicitly preserved
+diagnostic branch, rebuild the source compiler, and execute the existing attached
+API assertions. Separate stdlib materialization, raw code generation, interop
+validation, project canonicalization, formatting and const-closure work. Keep
+these instrumented results separate from ordinary acceptance. No implementation
+is selected yet; D32's complete-category macro thresholds and all preservation
+requirements remain unchanged.
