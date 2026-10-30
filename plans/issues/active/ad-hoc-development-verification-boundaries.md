@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25 diagnosis complete; D26 native C compilation experiment
+- Latest delivery: D24 lowering test ownership; D25/D26 experiments closed; D27 common materialization cost investigation
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3585,3 +3585,78 @@ separate incompatible artifacts, supported-host scope, invalidation controls,
 complete affected correctness and independent exact-candidate review. Retain the
 current default if the complete experience does not improve. Final phase gates,
 ordinary invalidation and repeated 480s qualification remain required.
+
+#### D26 measured decision — retain the existing C compiler selection
+
+Frozen candidate `4f10fd7e77c225cac495bb8f09bb3e5e9e880869` passes the raw
+native fixture comparison. With two Cargo jobs, GCC's independent release builds
+take 42.856s and 42.269s; Clang's take 34.013s and 33.522s. All five original
+evidence files and expected values are present, with byte equality within each
+compiler's two builds. The summed build commands fall 85.125s to 67.535s (20.66%).
+This is raw evidence generation, not the complete native category or runtime
+qualification. Tool paths, versions, executable hashes and source hashes are saved.
+
+The larger native SQL comparison reverses that result. Both runs use the canonical
+four-job allocation, original dev profile, three linked tools, locked/offline
+Cargo, constant two-root path maps, clean A, unchanged A, deletion of A and
+independent clean B. All three executable hashes match across the three builds
+within each compiler; equality across different compilers is not required.
+
+| Compiler | Clean A | Unchanged A | Independent B | Complete protocol | Guard |
+|---|---:|---:|---:|---:|---:|
+| GCC 15.2.0 | 229.703s | 0.675s | 234.679s | 466.603s | 467.511s |
+| Clang 21.1.8 | 251.697s | 0.792s | 251.805s | 505.673s | 506.544s |
+
+Clang is 8.37% slower for the complete SQL protocol. An independent Cargo artifact
+inventory comparison finds the same 298 artifacts, profiles, features and targets
+in both clean-A builds, with none fresh. GCC's clean builds use 842.681/873.924 CPU
+seconds; Clang uses 940.242/943.158. These are one paired diagnostic observation,
+not repeated host-performance acceptance. Unchanged reuse works; mandatory
+independent reconstruction remains expensive.
+
+Driver dry-runs at both optimization levels also expose unequal platform defaults:
+GCC supplies fortification, strong stack protection, stack-clash and control-flow
+protection that the tested Clang invocation does not request. Equal Cargo profiles
+therefore do not establish equivalent hardening. Preserve this qualification limit;
+do not present the small-fixture speedup as an equivalent-settings improvement.
+
+Reject the tested compiler switch. No product, profile, dependency, toolchain,
+cache identity, selection or runtime assertion changes are adopted. Do not spend
+another complete native-category run qualifying a rejected configuration. All
+three guarded experiments finish with empty sessions, no capacity cancellation
+and unchanged source. All 86 diagnostic payloads are independently hash/size
+verified in `dev-verify-d26-diagnostic.tar.gz`, SHA-256
+`8c1ac88e59b7adbb14be8e14400e31737819e682c59a62cf2318b51af89caa57`.
+The native full runtime category and final phase gate are not claimed by D26.
+
+### D27 — common materialization startup and normalization (prospective)
+
+Return to work shared across generated preparation, native fixtures and emitted
+source verification. D15's historical full 93-project attribution recorded repeated
+metadata loading and generated-Rust normalization; its batching and early-pruning
+experiments failed to improve the complete workload. Do not repeat those changes
+or assume the historical attribution is a current saving. D17 extracted syntax
+ownership to improve rebuild propagation; it did not remove these runtime passes.
+
+First use the canonical prepared CLI and existing bounded trace reports on current
+representative materializations, recording preparation separately. Attribute any
+remaining dominant stage before selecting an implementation. If built-in reports
+are insufficient, use a temporary diagnostic candidate and narrow stage timers;
+instrumented elapsed time is not acceptance timing. Preserve original sources,
+source sysroot and declared compiler identity, and record every incomplete attempt.
+
+Potential duplication must be evaluated against its actual contract. Development
+metadata performs complete validation before opening a separate consumer; any
+reuse must preserve full validation, immutable snapshot ownership, corruption and
+changed-input detection, lazy consumer decode accounting and isolation. Generated
+Rust normalization uses nested fixed points and reparsing, including source spans
+used by API cleanup. Do not drop passes, replace convergence with a fixed count,
+reuse stale spans or introduce persistent correctness-result caching.
+
+Adopt only a demonstrated root-cause improvement. Require focused ownership and
+negative controls, exact generated-output parity for all 93 materializations and
+the affected native corpus, existing canonicalization/metadata regressions as
+applicable, complete affected category timing and independent candidate review.
+Keep the 90s preparation and 480s complete-gate goals; all final gates and ordinary
+invalidation scenarios remain open. Budget pressure is not permission to remove
+required independent SQL builds or other coverage.
