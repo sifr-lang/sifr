@@ -258,9 +258,10 @@ checks still run for every fixture. Native examples and shared package-generatio
 mutations remain sequential. Batch elapsed time includes queueing; overlapping
 command durations must not be added to it.
 
-Local correctness `create-pr` and `merge` runs also admit the complete coverage,
-core-language, diagnostics and distribution areas together at four process slots,
-one slot per area. Smaller allocations retain serial execution. Each area keeps
+Local correctness runs that select all four coverage, core-language, diagnostics
+and distribution areas admit them together at four process slots, one slot per
+area. Currently this applies to `merge`; `create-pr` omits distribution and keeps
+its existing schedule. Smaller allocations retain serial execution. Each area keeps
 its canonical suites, internal case ordering and separate fresh result report;
 this does not make arbitrary areas or their cases parallel-safe. Shared Cargo
 storage retains Cargo's locks, and the prepared compiler remains immutable.

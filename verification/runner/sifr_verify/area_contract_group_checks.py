@@ -10,7 +10,9 @@ from .profiles import load_profile
 
 class ContractPolicyTests(unittest.TestCase):
     def test_selection_is_complete_explicit_and_correctness_only(self):
-        for name in ("create-pr", "merge"):
+        self.assertEqual([g["id"] for g in execution_groups(load_profile("create-pr"), True)],
+                         ["python-quality"], "create-pr does not select distribution")
+        for name in ("merge",):
             profile = load_profile(name)
             groups = execution_groups(profile, True)
             group = next(g for g in groups if g["id"] == "local-contracts")
