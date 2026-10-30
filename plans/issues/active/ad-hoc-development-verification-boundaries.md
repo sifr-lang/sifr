@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25–D29 diagnostics recorded; D30 SQL build-tool configuration qualification
+- Status: in progress; D30/D31 delivered; final phase qualification open
+- Latest delivery: D30/D31 delivered; D33 complete correctness discovery passed
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -4114,3 +4114,345 @@ independent-build protocol, with no displaced preparation/integration regression
 Report priming, preparation and complete measured category separately; do not
 claim these retained observations qualify final invalidation scenarios or the
 480s whole gate. Independent candidate review remains required before adoption.
+
+
+#### D30 delivered — 2026-10-30
+
+[PR #4542](https://github.com/sifr-lang/sifr/pull/4542) merged as
+`b2c8c0a965aa85fa1fd07c3a1e976f6ced4bedf9`, tree-identical to reviewed candidate
+`1e2abd773c98c419cce37c7471b038ce09eaad4e`. Independent review is **SATISFIED**,
+with no blockers. The repaired baseline is `47ea5a68d07ad21ff26fb3424f9cce8133ab1eef`.
+Both complete SQL selections execute all **72 cases and seven sandbox/IPC tests**
+successfully, with identical selections, toolchain, lock and four-job admission.
+
+| Matched retained observation | Baseline | Candidate |
+|---|---:|---:|
+| Fresh preparation | 25.022s | 24.350s |
+| Complete SQL area | 575.199s | 441.174s |
+| Preparation plus SQL | 600.220s | 465.524s |
+| Included independent-build protocol | 465.811s | 333.759s |
+
+The protocol saves **132.053s / 28.35%**, meeting both prospective thresholds.
+All three clean/reused/independent executable comparisons pass. The largest
+non-protocol case increase is 0.054s; no displaced preparation/integration
+regression is observed. Cross-configuration byte equivalence is not claimed.
+This is one ordinary observation per configuration, not repeated final timing
+qualification or an eight-minute whole-gate result.
+
+The candidate's initial attempt completed 36 preparation and 71 priming commands,
+then stopped at the next allocation assertion before measurement. Its incomplete
+status and 234-payload archive remain preserved. A fresh process recorded valid
+four-job admission, verified exact candidate/selection/priming environment and
+completed guard state, then executed fresh preparation and all 72 cases. No
+correctness results were reused. First-use preparation/priming are separately
+reported: baseline 652.792s/364.247s, candidate 194.948s/122.999s. Different preceding
+build states prevent using these as a comparable first-use speedup.
+
+Verified archives: baseline 311 payloads (`23e3daad4541ef6a137a5809b8124c22cb78d2036b1af7f83842e901346cb099`),
+measured candidate 99 (`0ad1eb59fd78fed8573871e3ce43dfaa30bc6d53445b643d16d569fa126d649d`),
+focused checks 39 (`fde98712b53db40f49898406cf84d85b76c619c883013f1d0c5c264d1312d745`).
+Focused validation passes in 14.190s, including seven original artifact controls,
+21 profile controls, preparation and native/integrated contracts, size/diff and
+all seven unchanged emitted plans. Guards report no reserve stop, source mutation
+or surviving workers.
+
+[Complete comparison](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d30-comparison-repaired-evidence/dev-verify-d30-comparison-repaired.json) ·
+[Independent review](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d30-review-9ofk_sgo/response.md).
+
+Follow-up owner: SQL verification. Consider direct profile evidence for actual
+preparation, document the explicit optimized host-SHA256 manifest coupling, and
+account for additional retained optimization variants in capacity planning. The
+existing native qualifier and sandbox use different debug/target layouts; this
+item qualifies their shared host policy without claiming their executable bytes
+are identical. Full-phase invalidation, complete gates and 90s/480s timing remain open.
+
+### D32 — installed-product execution and preparation boundaries (prospective)
+
+Move to the next measured multi-minute category without polishing SQL subsecond
+cases. D23's complete installed/sysroot area took 394.558s: boundary equivalence
+128.480s, metadata/corpus 215.326s, installed smoke 31.022s and metadata structural
+19.552s. Its 732 public CLI emissions already used four bounded processes and took
+46.918s. Independent development/release corpus executions overlapped at
+62.459s/65.493s. These are historical attribution, not a current retained baseline.
+
+First execute all currently selected installed-product cases and their declared
+preparation on the integrated source, retaining owned targets and the 1750s
+per-category diagnostic cap. Separate reconstruction from ordinary retained
+preparation. Record each selected case and preserve all incomplete attempts. Use
+ordinary execution for complete elapsed measurements; targeted observation may
+attribute a representative slow command afterward. Check capacity before building.
+
+Audit ownership before proposing reuse: immutable compiler/runtime/dependency
+products may be shared only where identities and profiles match; installation
+paths, mutable projects, source removal, corruption, relocation, live generations,
+LSP sessions and attached-API edit invalidation retain their real boundaries.
+Preserve every current source-versus-installed dependency and emitted-byte
+comparison, every corpus fixture, native runtime assertion, integrity and rejection
+control. Do not substitute snapshots for native execution, combine process state,
+reuse old correctness results, or weaken an explicitly cold-build obligation.
+
+The installed-product design budget remains 60s within the whole 480s gate. If the
+current retained category already meets it, move on. Otherwise require a measured
+root cause and prospective implementation-specific criteria before editing. A
+macro candidate should save at least 25% and 60s of the complete affected category
+without shifting cost into preparation or other consumers. These are adoption
+thresholds, not permission to stop short of final phase budgets. Preserve existing
+input/invalidation guarantees and require focused regressions, complete affected
+selection and independent review before intermediate adoption.
+
+#### D32 current baseline and diagnostic correction
+
+At `beb42df91e761e1aec097cd4c5dae1173e36bf77`, all four installed-product
+suites pass. Retained preparation takes **15.243s**, the area **402.677s**, and
+their measured cycle **417.920s**. Boundary equivalence takes 131.379s, installed
+smoke 24.556s, metadata/corpus 223.179s and metadata structural 23.155s. Initial
+reconstruction is separately 211.480s. All 732 public emissions, both independent
+corpus profiles, four native runs and existing installation/integrity/LSP controls
+execute. The baseline archive contains 1,545 verified payloads, SHA-256
+`ab021193a3ac60e2603877d7369376e45d0c7f6e04378dc41a9259daf30cbb25`.
+
+Canonical attached-API initial/edit assertions pass for installed and source
+compilers. Targeted tracing places 7–11 seconds inside the enclosing generation
+stage; edited native compilation/link takes about one second. A subsequent
+retained process trace **rules out repeated probe compilation for that command**:
+the probe Cargo process takes about 0.07s and launches no Rust compilation unit.
+Only the final generated executable recompiles. There are 58 formatter process
+invocations (each appears twice through rustup/toolchain exec). Do not infer
+cache fragmentation, hashing cost or pure codegen cost from the coarse stage.
+File-open tracing confirms substantial intervals without source-file reads;
+full attribution still requires finer observation. Existing formatting depends
+on rendered line counts, so simply dropping intermediate layout is not justified.
+
+Next bounded diagnostic: add temporary stage timing in an explicitly preserved
+diagnostic branch, rebuild the source compiler, and execute the existing attached
+API assertions. Separate stdlib materialization, raw code generation, interop
+validation, project canonicalization, formatting and const-closure work. Keep
+these instrumented results separate from ordinary acceptance. No implementation
+is selected yet; D32's complete-category macro thresholds and all preservation
+requirements remain unchanged.
+
+#### D32 attribution complete; no optimization adopted
+
+Temporary diagnostic candidate `e90bb9c6aa543104336ad79f904a623b52141257`
+passes the original and edited attached-API native assertions. The edited source
+compiler observation attributes 2.353s to raw codegen, 2.730s to project
+canonicalization and 1.288s to 58 formatter calls. Two complete probe-input
+snapshots total 0.260s. These nested, instrumented intervals are not acceptance
+timing and must not be summed as independent categories.
+
+The first diagnostic paired a release-version compiler with the development
+sysroot and correctly failed its version check. Its incomplete evidence remains
+preserved (`d34e27c8cd2110e38172b9b4da970538d990b462b5152565ecd1003c6c7b941f`,
+46 payloads). The corrected canonical development pair passes; its 53-payload
+archive is `4c3b427b0f82767197316698e1da3b19f04339699e90ee30dee2459a2d6a4191`.
+
+Finer candidate `c64e7bdb2c0f27d4c706b3b07651cfd4658e7e49` also passes
+both native assertions. Most canonicalization work belongs to the 422,999-byte
+generated crate root: 2.356s, including syntax rounds of 1.254s and 0.861s.
+Project support-owner pruning takes 1.213s. Small physical modules mostly take
+milliseconds. The 55-payload archive is
+`474681868ffdf3ed0e5e91b8cce855b6ea6d6fd5cee9ccca6a7fc8437a0bf09a`.
+
+Final diagnostic `297b772803408a267bd89673ecd6fb7fd945ab7d` passes the same
+assertions and separates syntax work further: across the edited project's
+canonicalization, idiom cleanup takes 0.402s, typed-expression cleanup 0.397s,
+API cleanup 0.402s and its final stabilization 0.332s. These are distributed
+passes, not a demonstrated single macro defect. Do not weaken semantic passes,
+change cache identity, or redesign formatting on this evidence alone.
+
+All temporary instrumentation is retained on `codex/dev-verify-d32-stage-diagnostic`
+and removed from the implementation branch. The installed area remains over its
+60s design budget. Follow-up candidates are generated-syntax processing and
+compatible native product ownership across real installed roots; neither is an
+adopted change or a proven complete-category speedup.
+
+### D33 — integrated discovery after D24–D31 (prospective)
+
+The last complete discovery predates the intervening delivered identity, build
+and dependency repairs. Before further fixture-level optimization, run the
+current canonical merge correctness-only selection with failure continuation,
+normal allocation and retained owned products. Preserve the emitted plan and
+candidate identity. Charge initial reconstruction separately; report every
+selected category, failures, skips, unexecuted consumers and its largest costs.
+Keep the 1750s per-category diagnostic cap and capacity reserves. Schedule any
+unexecuted independent categories separately with valid prerequisites.
+
+This is failure discovery and prioritization, not final timing qualification or
+a waiver of final gates. Stop targeting small installed-fixture intervals until
+the complete current evidence identifies a macro improvement. Preserve all D32
+observations and the installed-product budget for later integrated qualification.
+
+
+#### D33 complete current discovery — 2026-10-30
+
+Candidate `9292f77eb06411073af3e3bfd14b4370bf63360f` passes the complete
+canonical `merge --correctness-only --no-fail-fast` selection. All **38 planned
+categories**, **569 area variants**, **6 CLI and 80 generated-driver native
+assertions**, and **732 native E2E fixtures** pass. Every selected area/suite and
+parent step reconciles against the emitted plan. The declared native preparation
+helper executes during preparation; the delegated full emission corpus executes
+in the installed-product owner. No category is blocked, capped or unexecuted.
+There is no reserve stop, unexpected source change or leftover owned session.
+
+The guarded elapsed time is **4873.088s (81m13s)**; the canonical command itself
+is 4867.245s. Preparation is **1314.173s (21m54s)** and includes reconstruction
+after removal of temporary compiler instrumentation. It is not an unchanged-run
+preparation baseline. Total reported CPU is 9221.49s, of which preparation accounts
+for 2956.48s. Approximately 104 CPU-minutes remain outside preparation: concurrency
+alone cannot meet 480s at the observed four-slot allocation. Reducing unnecessary
+compilation and other CPU work remains necessary, alongside qualified scheduling
+and an explicit resource contract.
+
+| Complete category | Wall seconds | Inclusive CPU seconds |
+|---|---:|---:|
+| Crate tests | 1322.604 | 2267.52 |
+| Preparation | 1314.173 | 2956.48 |
+| SQL | 440.385 | 1364.92 |
+| Installed product | 386.886 | 736.46 |
+| Python interoperability | 347.165 | 324.50 |
+| Generated quality | 331.924 | 561.52 |
+| Distribution | 140.998 | 141.76 |
+| Diagnostics | 139.217 | 121.08 |
+| Developer tooling | 115.259 | 156.36 |
+| Native E2E corpus | 99.602 | 138.31 |
+
+Python and quality overlap; do not sum their wall times. The native corpus reports
+186 cache hits in 186 groups and zero rebuilt groups. All 732 fixture assertions
+still execute. The existing report's performance status describes its configured
+checks; it does **not** establish this phase's 90s/480s acceptance.
+
+Crate subcategories include ordinary lowering/CLI 339.537s, ordinary driver
+172.768s, generated CLI 47.017s, and generated driver 680.664s. The generated-driver
+admission reduces the planned two workers to **one**, retaining two inner Cargo/
+Rayon jobs: available memory is 10163MiB against the two-worker requirement of
+10240MiB (two 4096MiB workers plus 2048MiB reserve). This obeys current policy;
+it is not a matched comparison with earlier two-worker timings. Do not weaken the
+reserve or claim a cache regression from that elapsed difference.
+
+The native build-script evidence test takes 93.534s and explicitly requires two
+fresh locked release builds, byte-identical evidence, compiler acceptance and real
+native output. Advanced-data runtime takes 61.156s despite its preparation owner;
+D8 observed a similar cost without establishing its cause. Opaque-resource alias
+rejection runtime takes 87.667s. Their current coarse durations do not distinguish
+compilation, publication or execution. Preserve these as attribution leads.
+
+The evidence archive contains **1984 independently hash/size-verified payloads**,
+SHA-256 `49715a42ab162cbd386f7e132c264245bbe0cf9f12aceede9cd9694eb85429b3`.
+Canonical reports, raw logs, allocation/admission records, actual case outputs,
+preparation, emitted plan and terminal/cleanup receipts are preserved outside the
+Git tree. This is the first complete passing current discovery, not final repeated
+timing or invalidation qualification. The phase remains open.
+
+### D34 — native compilation boundaries and retained cost (prospective)
+
+Prioritize the largest current execution owner: crate/native integration work.
+Separate required fresh independent builds, compatible retained dependencies,
+fixture-specific compilation/linking, frontend/emission, publication and runtime.
+Use normal complete-category measurements and targeted observation of a slow case;
+do not mix trace overhead into adoption timings or treat D33 reconstruction as a
+steady-state baseline. Keep the 1750s category cap and existing capacity reserves.
+
+Audit application-profile ownership before changing it. Many driver helpers use
+`CompilerContext::for_test()`, which explicitly chooses release, while existing
+product development/test profiles already exist. A diagnostic may compare explicit
+profiles for a bounded fixture without changing the global test context. First map
+what each affected assertion proves. Explicit release policy, panic/unwind,
+overflow, optimization-sensitive behavior, native trust, independent clean builds,
+installed/source equivalence and product identity remain required. Do not simply
+relabel release checks, move them to a later gate, or substitute a different profile
+without demonstrating the existing obligation remains owned and exercised.
+
+Also compare the actual producer/consumer identities and Cargo rebuild evidence for
+post-preparation outliers. Preserve environment, interpreter/ABI, features, toolchain,
+application profile and exact dependency inputs in identities. The D8 isolated
+advanced-data probes did not reproduce the full-run behavior; another isolated fast
+run alone must not be declared a repair. Record actual worker admission separately
+from the nominal allocation and avoid unmatched capacity comparisons.
+
+Select an implementation only after attribution. Register its exact preservation
+contract and compare the complete affected category and required preparation on the
+same candidate under matched allocation. A macro candidate must reduce complete
+category wall time by at least 25% and 60s and show a meaningful CPU reduction,
+without shifting build cost into another consumer. Preserve all selected assertions,
+negative controls, process/state isolation and failure/cancellation behavior. Require
+focused regressions and independent review before adoption. The complete phase's
+90s/480s timing, invalidation and final gate requirements remain unchanged.
+
+A separate scheduling lead is retained: coverage, core language, diagnostics and
+distribution take 377.681s serially, mostly using one CPU each. Their source audit
+identifies distinct outputs/temporary owners, shared Cargo locking and an immutable
+prepared compiler. Additional bounded overlap could help, but is unqualified and
+cannot replace the CPU reductions required by this discovery. No scheduling or
+application-profile change is adopted by this record.
+
+#### D34 retained attribution — no optimization adopted
+
+The correctly launched unchanged probe passes both original assertions:
+advanced-data 51.781s / 17.733 CPU-seconds and opaque-resource alias rejection
+10.961s / 11.757 CPU-seconds. Compiler admission is 1.974s. These isolated
+observations do not reproduce D33's integrated ordering or establish a repair.
+An initial direct-interpreter diagnostic omitted the canonical `uv` PATH prefix,
+selected another native family and was cancelled after 128.761s. Its incomplete
+outcome is preserved; it is not evidence of a product cache defect. The corrected
+launch asserts the canonical PATH and interpreter environment.
+
+Targeted process tracing then passes the advanced-data assertion in 17.052s,
+with no Rust compilation or linking. Cargo metadata takes 0.936s, the two retained
+probes 1.709s and 0.384s, and native Cargo build 1.566s. The actual executable runs
+in approximately 0.010s. These nested instrumented lifetimes are attribution only.
+The executable is 894,150,648 bytes. Source inspection confirms fresh content
+identity and exact captured-byte validation remain required even on a cache hit.
+
+A read-only diagnostic linked to the existing compiled dependency artifacts
+measures current identity encoding at 4.240/4.248s and exact byte comparison at
+0.212/0.212s. An alternative existing SHA-256 implementation produces the same
+framed identity in 2.326/2.305s. A two-second micro-optimization on this unusually
+large artifact does not justify a new identity dependency or meet the macro
+criterion. No hash, validation, native profile or cache policy is changed.
+The first byte diagnostic failed while selecting the generated binary filename;
+its failure remains preserved, and the corrected diagnostic reads the actual
+manifest binary name.
+
+Both diagnostic sessions ended empty without source drift or reserve stops.
+Verified retained-launch archive: 25 payloads, SHA-256
+`781c602bf0ce1a8125f39350f05f2eae9732ddff4020ee36d1e707691455aabd`.
+Verified attribution archive: 36 payloads, SHA-256
+`9377b38e35961cd1da23687d337f27c1c083a05338397d55c3671c16e23054e3`.
+The integrated native outliers remain unresolved; neither these observations nor
+D8's isolated results justify dropping preparation or replacing release assertions.
+
+### D35 — bounded independent contract-area overlap (prospective)
+
+Qualify overlap of the complete selected `coverage_matrix`, `core_language`,
+`diagnostics` and `distribution_release` areas. D33 spends 377.681s serially in
+these four areas, mostly on one CPU each. This is a partial wall-time improvement;
+it does not solve the full gate's CPU or eight-minute budget by itself.
+
+Use the existing area-group owner, immutable prepared compiler, per-area fresh
+reports, cancellation and capacity controls. At four admitted slots give each area
+one slot. Below that capacity retain serial execution rather than adding a new
+queued scheduling protocol. Preserve the qualified Python/quality 1+3 allocation,
+all non-correctness/release profiles, exact case/suite selection, internal serial
+case policies and canonical reporting order. A missing preparation blocks only its
+consumers under failure continuation; missing, stale, truncated or incomplete
+results remain failures. Fail-fast must not admit queued consumers after failure.
+
+Ownership audit: coverage reads source inventories and uses temporary roots for
+negative controls. Core uses its own actual-result roots and Cargo validation-suite
+products. Diagnostics uses its own actual roots and temporary examples; schema/docs
+generators read canonical source and compare output without blessing. Distribution
+uses per-case temporary roots plus its exclusive `target/distribution_release`
+installation root and qualification-plan rejection sentinel. No sibling references
+that sentinel. Shared Cargo storage retains Cargo's locks; the prepared compiler
+is an immutable publication, independent of mutable Cargo outputs. Do not mark
+area manifests generally parallel-safe or extend this to arbitrary groups.
+
+Require real-process controls for four-way overlap, reduced capacity, partial
+preparation, independent failures, exact result validation and unchanged compiler
+identity, alongside existing nested cancellation controls. Compare serial and
+grouped execution on the same candidate, matched aggregate allocation and retained
+products, including fresh required preparation. Execute all four complete selections
+in each arm and compare case/variant outcomes. Adopt only with at least 25% and 60s
+complete-cycle wall saving, no displaced preparation, no lost coverage and no
+material unexplained CPU/memory regression. Preserve and explain all failed or
+incomplete attempts. Independent review and final phase gates remain required.

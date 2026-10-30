@@ -1,4 +1,4 @@
-"""The qualified local-correctness pair and its share of one profile allocation."""
+"""Explicit local-correctness groups sharing one profile allocation."""
 from __future__ import annotations
 
 from dataclasses import asdict, replace
@@ -8,30 +8,51 @@ from .build_allocation import E2E_ENV, MIB, positive
 from .native_test_allocation import ALLOCATION_ENV, allocate_native
 
 PAIR = {"python_interop": 1, "generated_code_quality": 3}
+LOCAL_AREAS = ("coverage_matrix", "core_language", "diagnostics", "distribution_release")
+GROUP_AREAS = (*PAIR, *LOCAL_AREAS)
 
 
 def execution_groups(profile, correctness_only):
-    selected = [item["area"] for item in profile["selected_areas"] if item["area"] in PAIR]
-    if not correctness_only or profile["name"] not in {"create-pr", "merge"} or len(selected) != 2 or set(selected) != set(PAIR):
+    if not correctness_only or profile["name"] not in {"create-pr", "merge"}:
         return []
-    return [{
-        "id": "python-quality",
-        "areas": selected,
-        "normal_slots": partition_slots(selected, profile["resource_policy"]["max_parallel"])[0],
-        "ownership": {
+    groups = []
+    owners = (
+        ("python-quality", PAIR, {
             "python_interop": ["target/verification/areas/python_interop", "target/python"],
             "generated_code_quality": ["target/sifr_generated_code_quality"],
             "shared": "prepared immutable compiler; existing native-family leases",
-        },
-    }]
+        }),
+        ("local-contracts", LOCAL_AREAS, {
+            "coverage_matrix": ["source inventories; temporary negative-control roots"],
+            "core_language": ["target/verification/actual/core_language"],
+            "diagnostics": ["target/verification/actual/diagnostics; temporary examples"],
+            "distribution_release": ["target/distribution_release; per-case temporary roots",
+                                     "target/qualification-plan-must-not-exist.json"],
+            "shared": "prepared immutable compiler; Cargo-owned target locks; distinct area reports",
+        }),
+    )
+    for name, areas, ownership in owners:
+        selected = [item["area"] for item in profile["selected_areas"] if item["area"] in areas]
+        if len(selected) == len(areas) and set(selected) == set(areas):
+            groups.append({"id": name, "areas": selected, "ownership": ownership,
+                           "normal_slots": partition_slots(
+                               selected, profile["resource_policy"]["max_parallel"])[0]})
+    return groups
 
 
 def partition_slots(areas, total):
     total = positive(total, "profile process slots")
-    if not areas or len(set(areas)) != len(areas) or not set(areas) <= PAIR.keys():
+    if (not areas or len(set(areas)) != len(areas)
+            or not any(set(areas) <= set(group) for group in (PAIR, LOCAL_AREAS))):
         raise ValueError("unqualified area group selection")
     if len(areas) == 1:
         return {areas[0]: total}, 1
+    if set(areas) <= set(LOCAL_AREAS):
+        # Admit the complete ready group together, or retain serial execution.
+        # This leaves no queued sibling behind a partially failed parallel group.
+        if total < len(LOCAL_AREAS):
+            return {area: total for area in areas}, 1
+        return {area: 1 for area in areas}, len(areas)
     if total == 1:
         return {area: 1 for area in areas}, 1
     # Keep the measured 3+1 split at four slots; the pair never exceeds the owner.
