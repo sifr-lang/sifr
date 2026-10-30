@@ -1,8 +1,8 @@
 # Ad Hoc Development and Verification Boundary Redesign
 
 - Phase ID: `DEV-VERIFY`
-- Status: in progress; D30/D31 delivered; final phase qualification open
-- Latest delivery: D30/D31 delivered; D33 complete correctness discovery passed
+- Status: in progress; D35 delivered; final phase qualification open
+- Latest delivery: D35 bounded area overlap; D36 native attribution complete
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -4516,3 +4516,123 @@ not missing tests or permission to broaden concurrency.
 
 This closes D35 only. Full-phase correctness, invalidation, repeated 90s/480s
 qualification and the major native compilation/integration costs remain open.
+
+### D36 — native test compilation ownership (prospective)
+
+D33's crate category remains the largest execution owner: 1322.604s, including
+680.664s generated-driver assertions and 339.537s ordinary lowering/CLI. D34 did
+not reproduce an integrated cache defect; do not repeat its isolated retained
+probes or adopt a two-second identity optimization as the macro solution.
+
+Start with the original trusted native-build assertion, which explicitly performs
+two fresh locked release builds, compares their generated evidence, checks compiler
+acceptance, then executes the generated program. Attribute its Cargo processes,
+Rust/C compiler work, linking, frontend/identity/publication and runtime separately.
+Compare the related proc-macro and rejection owners only when that attribution
+identifies a shared cost. Distinguish required independent builds from compatible
+retained work. Do not remove fresh targets, substitute fixture stubs, change release
+semantics, weaken trust/sentinel assertions or treat cached outputs as execution.
+
+Use targeted process tracing for attribution only and ordinary runs for timing.
+Keep the canonical uv/interpreter/PATH, actual native allocation, retained targets,
+1750s per-category cap, 20GiB disk reserve and 2GiB memory reserve. Check additional
+work allocation before launching. Freeze source during validation and review.
+
+Only implement after a concrete repeated-work or compilation-boundary cause is
+established. Register the exact affected ownership/coverage contract first. A macro
+candidate must save at least 25% and 60s of the complete affected category including
+required preparation, with meaningful CPU reduction and no displaced cost. All
+existing assertions, failures, independent fresh-build guarantees and process/state
+isolation remain required. Use focused regressions and independent candidate review;
+final complete gates, invalidation and repeated 90s/480s qualification remain open.
+
+#### D36 first attribution — 2026-10-30
+
+Candidate `a499f33f20f4bef279ac8f61807b89ce61bdc740` passes the unchanged trusted
+native-build assertion under targeted process tracing: 104.760s, 179.501 inclusive
+CPU-seconds; compiler admission 2.673s. Guarded cycle 108.748s, exit zero, no reserve
+stop/source drift, owned session empty. Instrumentation overhead excludes these
+numbers from acceptance timing. Required work allocation is 2GiB above the 20GiB
+disk reserve; native allocation retains two Cargo/Rayon jobs and the memory reserve.
+
+The first independent release Cargo build spans 46.977s, the second 46.606s.
+The remainder includes compiler/probe validation, final retained Cargo build and
+runtime assertion. The longest individual C compiler process is approximately
+9.9s; host Rust dependencies already use the unoptimized build profile. D30's
+SQL host-optimization fix therefore does not transfer to this owner. These are
+nested process lifetimes, not disjoint CPU measurements. Do not sum them as wall
+time or remove either fresh build as redundant setup.
+
+All raw traces, original assertion output, capacity/result/cleanup receipts and
+baseline bundle are retained in a verified 12-payload archive, SHA-256
+`116052260e2a7805baf5dfbc7cdb8e33c8bcf20ac06d8005be10000cea0d721d`.
+The native inventory is reconciled with D33's 86 executed cases and original
+command timings; it does not invent per-case CPU values absent from those logs.
+
+A read-only ELF inventory of D34's 894,150,648-byte advanced-data executable finds
+694,971,197 bytes in debug sections. This is an artifact-I/O investigation lead,
+not a measured improvement or evidence that the existing line-table profile is
+incorrect. Any follow-up must retain debug/source-line capability, exact artifact
+validation, release semantics and every runtime assertion; no stripping or profile
+change is adopted. Evaluate whether this cost is material across the complete
+native category before committing to an artifact-format change. Integrated retained
+outliers remain unresolved. D36 and the final phase remain open.
+
+
+#### D36 complete category attribution — no artifact change adopted
+
+The same frozen candidate completes all **80 canonical generated-driver assertions**
+with required preparation. Metadata and advanced-data preparation take 23.250s /
+15.343 CPU-seconds; category execution takes 406.893s / 766.886 CPU-seconds;
+guarded total is 434.953s. Both preparation and execution admit two workers with
+two inner Cargo/Rayon jobs. These exec-traced durations are diagnostic, not an
+acceptance comparison with normal D25 or D33 measurements. The exact-emission
+corpus remains explicitly delegated to its sysroot owner, not claimed executed
+in this category-only run. All outcomes match the canonical 80-case inventory.
+No reserve stop, source drift or leftover process occurs.
+
+The trace observes 37 native-artifact launch attempts across 36 retained executable
+paths, all available for read-only ELF inspection. They total 1,311,272,776 bytes,
+including 1,049,270,664 debug-section bytes. The advanced-data executable accounts
+for 68.2% of total bytes; the next-largest executable is 55,862,920 bytes. This
+inventory concerns observed runtime artifacts, not every preparation product or
+proof of execution by itself. Original assertion outcomes supply execution evidence.
+
+The native fresh-build tracing corroborates D25's existing C-compilation finding;
+it is not a newly discovered root cause. Further repeats of that attribution are
+unnecessary. Artifact compression is not adopted: large debug data is primarily
+one outlier, and no complete-category macro saving has been demonstrated. Retain
+all debug information, release behavior and exact captured-byte validation.
+
+The complete category's verified archive contains 14 payloads, SHA-256
+`85239518a77004e0b17d1b1b84c8c46833f6d8e0c584215f26649a4cd74763d2`.
+The reconciled result is `dev-verify-d36-inventory-summary.json`; all 80 cases also
+map unambiguously to their Rust source declarations. This closes the D36
+attribution item without an implementation change. Full phase qualification is open.
+
+### D37 — native allocation utilization (prospective)
+
+D25's complete normal two-worker run consumed 681.484 CPU-seconds over 336.390s;
+D36's instrumented category similarly averages 1.88 CPUs despite a four-slot
+profile allocation. Most assertions do not continuously use two inner Cargo jobs.
+Evaluate four isolated assertion workers with one Cargo/Rayon job each against the
+existing two-by-two allocation. This is a different candidate from the rejected
+D25 one-by-four experiment, not a repeat of that decision.
+
+First establish memory requirements for this exact prepared configuration. The
+current native worker reservation has a 4096MiB floor; do not silently lower it
+based on average free memory. A one-job worker must earn a smaller reservation
+through complete-category process-tree measurements and affected invalidation
+checks, with the unchanged 2GiB aggregate reserve enforced. Record actual admitted
+workers, per-worker peaks and aggregate capacity. Reject the candidate if safe
+admission cannot be established; do not overcommit to force the timing result.
+
+Preserve all 80 assertions, process isolation, preparation owners, exact Cargo
+selection, release optimization, two independent fresh native builds, trust
+sentinels, cancellation and failure continuation. Shared nested work must stay
+within the same four total slots. Compare normal complete cycles, including fresh
+required preparation, on one frozen implementation candidate; tracing is not
+acceptance evidence. A scheduling adoption requires at least 25% and 60s wall
+saving, no displaced work or unexplained CPU/memory regression, affected controls
+and independent review. This remains a partial scheduling improvement; it does not
+replace the CPU reductions and final 90s/480s qualification still required.
