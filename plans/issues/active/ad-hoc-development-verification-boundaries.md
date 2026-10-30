@@ -4230,3 +4230,54 @@ validation, project canonicalization, formatting and const-closure work. Keep
 these instrumented results separate from ordinary acceptance. No implementation
 is selected yet; D32's complete-category macro thresholds and all preservation
 requirements remain unchanged.
+
+#### D32 attribution complete; no optimization adopted
+
+Temporary diagnostic candidate `e90bb9c6aa543104336ad79f904a623b52141257`
+passes the original and edited attached-API native assertions. The edited source
+compiler observation attributes 2.353s to raw codegen, 2.730s to project
+canonicalization and 1.288s to 58 formatter calls. Two complete probe-input
+snapshots total 0.260s. These nested, instrumented intervals are not acceptance
+timing and must not be summed as independent categories.
+
+The first diagnostic paired a release-version compiler with the development
+sysroot and correctly failed its version check. Its incomplete evidence remains
+preserved (`d34e27c8cd2110e38172b9b4da970538d990b462b5152565ecd1003c6c7b941f`,
+46 payloads). The corrected canonical development pair passes; its 53-payload
+archive is `4c3b427b0f82767197316698e1da3b19f04339699e90ee30dee2459a2d6a4191`.
+
+Finer candidate `c64e7bdb2c0f27d4c706b3b07651cfd4658e7e49` also passes
+both native assertions. Most canonicalization work belongs to the 422,999-byte
+generated crate root: 2.356s, including syntax rounds of 1.254s and 0.861s.
+Project support-owner pruning takes 1.213s. Small physical modules mostly take
+milliseconds. The 55-payload archive is
+`474681868ffdf3ed0e5e91b8cce855b6ea6d6fd5cee9ccca6a7fc8437a0bf09a`.
+
+Final diagnostic `297b772803408a267bd89673ecd6fb7fd945ab7d` passes the same
+assertions and separates syntax work further: across the edited project's
+canonicalization, idiom cleanup takes 0.402s, typed-expression cleanup 0.397s,
+API cleanup 0.402s and its final stabilization 0.332s. These are distributed
+passes, not a demonstrated single macro defect. Do not weaken semantic passes,
+change cache identity, or redesign formatting on this evidence alone.
+
+All temporary instrumentation is retained on `codex/dev-verify-d32-stage-diagnostic`
+and removed from the implementation branch. The installed area remains over its
+60s design budget. Follow-up candidates are generated-syntax processing and
+compatible native product ownership across real installed roots; neither is an
+adopted change or a proven complete-category speedup.
+
+### D33 — integrated discovery after D24–D31 (prospective)
+
+The last complete discovery predates the intervening delivered identity, build
+and dependency repairs. Before further fixture-level optimization, run the
+current canonical merge correctness-only selection with failure continuation,
+normal allocation and retained owned products. Preserve the emitted plan and
+candidate identity. Charge initial reconstruction separately; report every
+selected category, failures, skips, unexecuted consumers and its largest costs.
+Keep the 1750s per-category diagnostic cap and capacity reserves. Schedule any
+unexecuted independent categories separately with valid prerequisites.
+
+This is failure discovery and prioritization, not final timing qualification or
+a waiver of final gates. Stop targeting small installed-fixture intervals until
+the complete current evidence identifies a macro improvement. Preserve all D32
+observations and the installed-product budget for later integrated qualification.
