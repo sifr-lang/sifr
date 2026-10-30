@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25–D27 experiments closed; D28 native SQL build attribution
+- Latest delivery: D24 lowering test ownership; D25–D28 experiments closed; D29 SQL build-tool construction
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3817,3 +3817,69 @@ comparisons and process cleanup evidence. Do not change normal scheduling yet.
 If the complete protocol gains at least 25%/100s without resource pressure, qualify
 a canonical resource-plan change with explicit ownership and profile-plan checks;
 otherwise reject the experiment or investigate a demonstrated dependency cost.
+
+
+#### D28 outcome — preserve four-slot policy; reject the scheduling change
+
+The complete seven-job protocol at `c7eaf680ac47276b449c7b4ae0af0575a389ba96`
+passed in **402.205s**, versus D26's four-job **466.603s**: 64.399s / 13.80%
+lower, below the prospective 25% and 100s macro threshold. Clean A took 197.365s,
+unchanged A 1.350s and independent B 201.985s. Child CPU accounting rose from
+1,717.132s to 2,576.518s. The eight logical CPUs share four physical cores;
+additional logical jobs do not imply proportional physical throughput.
+
+All 298 package identities, targets, features and profiles match the four-job
+inventory. Each clean build produced 298 non-fresh artifacts; unchanged A reused
+all 298. All three executable hashes match within the original clean/reuse/delete/
+independent protocol. The compiler binaries, lockfile and protocol source hashes
+are identical to the baseline; repository changes are phase prose only. Owned
+path-remapping values differ between the experiments, so no cross-experiment
+binary equality is claimed. This is one controlled observation per allocation,
+not repeated timing qualification.
+
+Sampled peak session RSS is 1,957,175,296 bytes; minimum sampled available memory
+is 9,622,708,224 bytes. The outer guard completed in 403.119s, exit zero, with no
+reserve stop, source mutation or surviving process. Preserve both D28 diagnostics
+in `dev-verify-d28-diagnostic.tar.gz`: 36 independently hash/size-verified payloads,
+SHA-256 `7f789e572ede7db7980850b6acd70d0e70fc4605731d1418531534ef51fb52ea`.
+No normal allocation, product profile, implementation or acceptance policy changed.
+The complete 90s/480s and final phase qualification obligations remain open.
+
+### D29 — SQL build-tool construction boundary (prospective)
+
+D28 attribution and the ordinary Cargo artifact inventory distinguish host tools
+from linked target code. Both Syn versions, proc-macro2 and every procedural macro
+in the 298-artifact SQL build are host construction artifacts. The workspace
+optimizes syntax libraries for the development compiler bootstrap; that global
+override also applies to this separate SQL graph. Here Syn 2/3 each spend over
+30s in code generation before executing their build-time parsing work. The
+build-override also optimizes all host tools at level one. Do not infer that
+removing their optimization is a net win: macro execution may become slower.
+
+Run a controlled, unadopted comparison at the normal four-job allocation, same
+pinned tools and source. Compare the original build configuration against host
+construction with build-override opt-level zero and Syn/proc-macro2 opt-level zero.
+Do not change target-package optimization, debug assertions, features, compiler,
+linking, hardening or required tool selection. Use exact Cargo configuration
+arguments in the experiment record; production manifests/runner stay unchanged.
+
+For both configurations execute the complete original clean A / unchanged A /
+delete A / independent B protocol, comparing all three executable hashes. Use the
+same two owned target paths and the same path-remapping flags across configurations;
+preserve each baseline's evidence before removing only its inactive target B.
+Require every final executable byte to match between configurations as well.
+Compare full artifact inventories: package/version, features, target/kind and
+profile; permit optimization changes only in host construction artifacts and
+require target profiles to match exactly. A target-side change or byte mismatch
+rejects this equivalence experiment. Keep all original failures and state limits.
+
+Measure complete construction plus macro execution and retain raw Cargo output,
+CPU, resource samples, checksums and cleanup. No tracing. Retain 1,750s diagnostic
+cap, 20GiB disk and 2GiB memory reserves; four jobs retain 8GiB worker allowance.
+Aim for at least 25% and 100s reduction in the complete original SQL protocol.
+No normal profile change, adoption or relaxation of final qualification is approved
+by a successful diagnostic alone. A winning configuration needs a canonical,
+explicit build-tool policy with drift/boundary checks, the affected SQL guarantees,
+independent review and final integrated qualification. Leave the optimized
+compiler bootstrap configuration intact unless a separate measured change earns
+adoption. If the experiment misses the macro target, preserve and reject it.
