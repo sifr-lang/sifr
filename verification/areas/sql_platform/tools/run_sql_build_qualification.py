@@ -16,6 +16,11 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(REPO_ROOT))
+from verification.areas.sql_platform.tools.native_build_policy import (
+    HOST_BUILD_OPTIONS, NativeProfileError, self_test as profile_self_test,
+    validate_native_profiles,
+)
 QUALIFICATION = REPO_ROOT / "verification/areas/sql_platform/data/integrated_qualification.json"
 TOOLS = {
     "sifr-sql-mysql": "sifr_sql_mysql_tools",
@@ -125,11 +130,13 @@ def native_settings(first: Path, second: Path) -> dict[str, str]:
 
 def build_native(target: str, target_dir: Path, identities: dict[str, str],
                  settings: dict[str, str]) -> dict[str, str]:
-    command = ["cargo", "build", "--locked", "--offline", "--target", target,
+    command = ["cargo", "build", *HOST_BUILD_OPTIONS, "--locked", "--offline", "--target", target,
                "--profile", "dev", "--message-format=json-render-diagnostics"]
     for name, package in TOOLS.items():
         command.extend(("-p", package, "--bin", name))
-    return selected_executables(cargo_run(command, target_dir, settings), target_dir, target, identities)
+    messages = cargo_run(command, target_dir, settings)
+    validate_native_profiles(messages, target_dir, target)
+    return selected_executables(messages, target_dir, target, identities)
 
 
 def check_cross_target(target: str, target_dir: Path) -> int:
@@ -193,7 +200,9 @@ def self_test() -> None:
             [message("sifr-sql-mysql", outside), *messages[1:]], target_dir, target, identities))
         if len(mutations) != 7:
             raise BuildError("SQL build mutation coverage is incomplete")
-    print(f"SQL build qualification self-test ok: mutations={len(mutations)}")
+    profile_mutations = profile_self_test()
+    print(f"SQL build qualification self-test ok: mutations={len(mutations)} "
+          f"profile_mutations={profile_mutations}")
 
 
 def main() -> int:
@@ -221,6 +230,7 @@ def main() -> int:
         first = Path(candidate_dir) / "a"
         second = Path(candidate_dir) / "b"
         if target == context["host"]:
+            profile_mutations = profile_self_test()
             identities = cargo_metadata()
             settings = native_settings(first, second)
             print("SQL native qualification: clean A", file=sys.stderr, flush=True)
@@ -234,6 +244,8 @@ def main() -> int:
             compare_hashes(clean, independent, "independent clean rebuild")
             context.update(claim="linked-native-target-directories", executables=clean,
                            native_settings=settings,
+                           host_build_options=list(HOST_BUILD_OPTIONS),
+                           profile_mutations=profile_mutations,
                            modes=["clean-a", "reused-a", "clean-b", "locked", "offline"])
         else:
             artifacts = check_cross_target(target, first)
@@ -246,6 +258,7 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (BuildError, OSError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
+    except (BuildError, NativeProfileError, OSError, subprocess.CalledProcessError,
+            json.JSONDecodeError) as error:
         print(f"SQL build qualification error: {error}", file=sys.stderr)
         raise SystemExit(1) from error
