@@ -4028,3 +4028,39 @@ actually change. This repairs the demonstrated ownership problem; it does not
 claim an ordinary-gate speedup or waive final invalidation/timing qualification.
 Afterward resume D30 against the repaired baseline, accounting for reconstruction
 and nested preparation before interpreting complete-category timing.
+
+#### D31 ownership and canonical production evidence
+
+Source candidate `761368dc5bbbaafc73c61cf161970b69edf5a3f0` removes all 224
+fixture arguments from the production registry and loads their unchanged values
+from the existing verification catalog. A byte comparison of all eleven registry
+entry files confirms that removing those exact arguments accounts for every
+change; production diagnostic definitions otherwise remain identical. Registry
+assertions and new reader controls live under `tests/unit`, with affected policy
+references and metadata line anchors reconciled.
+
+The focused run passed in **89.264s**: 22 Python controls, registry coverage and
+baseline audits, method/metadata policies and their controls, direct-filesystem
+inventory, Rust diagnostics and documentation-reader tests, byte-exact generated
+documents, all five receiver/place assertions, formatting, file-size and profile
+checks. All seven emitted plans and all 224 fixture mappings are unchanged.
+The earlier source candidate's 97.272s run remains separate preliminary evidence.
+
+An isolated canonical identity probe passed in **35.699s**. It imports the actual
+production input traversal/encoder and uses the actual SQL provenance traversal.
+The copied closures match the source checkout. Both a catalog reference edit and
+a private registry-test assertion edit preserve the diagnostic package identity
+and all three SQL component provenance identities. A real diagnostic summary edit
+changes all four; restoring it restores every identity. This proves those input
+boundaries, not a measured complete compiler edit cycle or full-gate runtime.
+The earlier 31.199s fixture-only proof is retained separately.
+
+Pinned canonical producers rebuilt all ten components with frozen inputs:
+MySQL **25.805s**, PostgreSQL **231.297s**, SQLite **19.329s**. Every rebuilt Wasm
+binary is byte-for-byte identical to its predecessor. Only the three generated
+provenance manifests differ. All 13 transferred outputs were size/SHA-256 verified;
+no source inputs or another family's artifacts changed during a producer run.
+Capacity/session guards report no reserve stop, unexpected mutation or surviving
+workers. Words inputs are unchanged; its qualification remains required in the
+component contract. Final affected consumers and independent review are still
+pending at this record; no intermediate adoption or full-gate pass is claimed.
