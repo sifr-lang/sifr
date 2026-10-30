@@ -4384,3 +4384,75 @@ identifies distinct outputs/temporary owners, shared Cargo locking and an immuta
 prepared compiler. Additional bounded overlap could help, but is unqualified and
 cannot replace the CPU reductions required by this discovery. No scheduling or
 application-profile change is adopted by this record.
+
+#### D34 retained attribution — no optimization adopted
+
+The correctly launched unchanged probe passes both original assertions:
+advanced-data 51.781s / 17.733 CPU-seconds and opaque-resource alias rejection
+10.961s / 11.757 CPU-seconds. Compiler admission is 1.974s. These isolated
+observations do not reproduce D33's integrated ordering or establish a repair.
+An initial direct-interpreter diagnostic omitted the canonical `uv` PATH prefix,
+selected another native family and was cancelled after 128.761s. Its incomplete
+outcome is preserved; it is not evidence of a product cache defect. The corrected
+launch asserts the canonical PATH and interpreter environment.
+
+Targeted process tracing then passes the advanced-data assertion in 17.052s,
+with no Rust compilation or linking. Cargo metadata takes 0.936s, the two retained
+probes 1.709s and 0.384s, and native Cargo build 1.566s. The actual executable runs
+in approximately 0.010s. These nested instrumented lifetimes are attribution only.
+The executable is 894,150,648 bytes. Source inspection confirms fresh content
+identity and exact captured-byte validation remain required even on a cache hit.
+
+A read-only diagnostic linked to the existing compiled dependency artifacts
+measures current identity encoding at 4.240/4.248s and exact byte comparison at
+0.212/0.212s. An alternative existing SHA-256 implementation produces the same
+framed identity in 2.326/2.305s. A two-second micro-optimization on this unusually
+large artifact does not justify a new identity dependency or meet the macro
+criterion. No hash, validation, native profile or cache policy is changed.
+The first byte diagnostic failed while selecting the generated binary filename;
+its failure remains preserved, and the corrected diagnostic reads the actual
+manifest binary name.
+
+Both diagnostic sessions ended empty without source drift or reserve stops.
+Verified retained-launch archive: 25 payloads, SHA-256
+`781c602bf0ce1a8125f39350f05f2eae9732ddff4020ee36d1e707691455aabd`.
+Verified attribution archive: 36 payloads, SHA-256
+`9377b38e35961cd1da23687d337f27c1c083a05338397d55c3671c16e23054e3`.
+The integrated native outliers remain unresolved; neither these observations nor
+D8's isolated results justify dropping preparation or replacing release assertions.
+
+### D35 — bounded independent contract-area overlap (prospective)
+
+Qualify overlap of the complete selected `coverage_matrix`, `core_language`,
+`diagnostics` and `distribution_release` areas. D33 spends 377.681s serially in
+these four areas, mostly on one CPU each. This is a partial wall-time improvement;
+it does not solve the full gate's CPU or eight-minute budget by itself.
+
+Use the existing area-group owner, immutable prepared compiler, per-area fresh
+reports, cancellation and capacity controls. At four admitted slots give each area
+one slot. Below that capacity retain serial execution rather than adding a new
+queued scheduling protocol. Preserve the qualified Python/quality 1+3 allocation,
+all non-correctness/release profiles, exact case/suite selection, internal serial
+case policies and canonical reporting order. A missing preparation blocks only its
+consumers under failure continuation; missing, stale, truncated or incomplete
+results remain failures. Fail-fast must not admit queued consumers after failure.
+
+Ownership audit: coverage reads source inventories and uses temporary roots for
+negative controls. Core uses its own actual-result roots and Cargo validation-suite
+products. Diagnostics uses its own actual roots and temporary examples; schema/docs
+generators read canonical source and compare output without blessing. Distribution
+uses per-case temporary roots plus its exclusive `target/distribution_release`
+installation root and qualification-plan rejection sentinel. No sibling references
+that sentinel. Shared Cargo storage retains Cargo's locks; the prepared compiler
+is an immutable publication, independent of mutable Cargo outputs. Do not mark
+area manifests generally parallel-safe or extend this to arbitrary groups.
+
+Require real-process controls for four-way overlap, reduced capacity, partial
+preparation, independent failures, exact result validation and unchanged compiler
+identity, alongside existing nested cancellation controls. Compare serial and
+grouped execution on the same candidate, matched aggregate allocation and retained
+products, including fresh required preparation. Execute all four complete selections
+in each arm and compare case/variant outcomes. Adopt only with at least 25% and 60s
+complete-cycle wall saving, no displaced preparation, no lost coverage and no
+material unexplained CPU/memory regression. Preserve and explain all failed or
+incomplete attempts. Independent review and final phase gates remain required.
