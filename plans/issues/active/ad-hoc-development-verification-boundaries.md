@@ -3660,3 +3660,45 @@ applicable, complete affected category timing and independent candidate review.
 Keep the 90s preparation and 480s complete-gate goals; all final gates and ordinary
 invalidation scenarios remain open. Budget pressure is not permission to remove
 required independent SQL builds or other coverage.
+
+#### D27 source-ownership repair — prospective acceptance
+
+Selected attribution is preserved in `dev-verify-d27-diagnostic.tar.gz` (150
+payloads independently verified; SHA-256
+`6932fa6445910ff7fde2104f58a4ee8922495d7f5f2d86bc9c58517db064e675`).
+The initial trace setup failed before cases; its evidence remains incomplete.
+Corrected baseline and two temporary timer candidates ran all four selected cases;
+all owned sessions ended empty. Timer candidates are diagnostic only and must not
+be merged. Nested stage totals overlap and cannot be added as wall time.
+
+At diagnostic `d621194a17c21bafe8eba10ff8118ca51173150e`, repeated text materialization
+was 8.892s and file-runtime 10.471s. Runtime-tree hashing accounted for 1.261s/9
+calls and 1.659s/13 calls respectively. The tree contains 21,642,802 bytes of SQLite
+patch sources and 3,396,222 bytes of runtime sources. Neither the runtime nor
+stdlib crate depends on SQLite. External probes select that patch explicitly;
+internal runtime/stdlib probes do not. This is an ownership mismatch, not evidence
+that mutable-source revalidation or Cargo checks can be removed.
+
+Move the unchanged native bundle into `sifr_sql_sqlite_runtime/third_party`, its
+actual dependent owner and an existing packaged crate. Bind source ownership in
+both package manifests, preserve pinned source bytes/receipts and dependency
+versions, and update workspace/generated/fixture patch paths and current docs.
+Pass canonical sysroot paths to probes; use one patch-selection authority for
+manifest emission and pre/post-Cargo snapshots. External probes must still detect
+patch edits, additions, deletions and links, including a mutation while Cargo runs.
+Internal runtime/stdlib probes must remain independent of that unselected patch.
+Keep complete runtime hashing, current profile/features, independent checks and
+failure behavior. Do not add a historical-path fallback or successful-result cache.
+
+Validate source-byte relocation, ownership identities, generated manifests,
+probe grouping and mutation rejection, dependency/SQLite contracts and package
+inclusion. Compare all 93 materializations and affected native-corpus generated
+sources: only the declared patch path and identities derived from changed source
+ownership may differ, each enumerated; Rust program output must be byte-identical.
+Measure complete affected materialization cost without diagnostic timers before
+adoption, plus native execution under the normal allocation. Reject the speed
+claim if the full affected workload does not improve. The estimated selected-case
+ceiling of roughly 1–1.5s is attribution, not an observed saving or a full-gate claim.
+Require focused regression checks and independent review under the approved
+intermediate policy. Complete final correctness, invalidation and 90s/480s timing
+qualification remain open.
