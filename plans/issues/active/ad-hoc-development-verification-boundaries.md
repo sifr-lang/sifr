@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25 diagnosis complete; D26 native C compilation experiment
+- Latest delivery: D24 lowering test ownership; D25–D27 experiments closed; D28 native SQL build attribution
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3585,3 +3585,200 @@ separate incompatible artifacts, supported-host scope, invalidation controls,
 complete affected correctness and independent exact-candidate review. Retain the
 current default if the complete experience does not improve. Final phase gates,
 ordinary invalidation and repeated 480s qualification remain required.
+
+#### D26 measured decision — retain the existing C compiler selection
+
+Frozen candidate `4f10fd7e77c225cac495bb8f09bb3e5e9e880869` passes the raw
+native fixture comparison. With two Cargo jobs, GCC's independent release builds
+take 42.856s and 42.269s; Clang's take 34.013s and 33.522s. All five original
+evidence files and expected values are present, with byte equality within each
+compiler's two builds. The summed build commands fall 85.125s to 67.535s (20.66%).
+This is raw evidence generation, not the complete native category or runtime
+qualification. Tool paths, versions, executable hashes and source hashes are saved.
+
+The larger native SQL comparison reverses that result. Both runs use the canonical
+four-job allocation, original dev profile, three linked tools, locked/offline
+Cargo, constant two-root path maps, clean A, unchanged A, deletion of A and
+independent clean B. All three executable hashes match across the three builds
+within each compiler; equality across different compilers is not required.
+
+| Compiler | Clean A | Unchanged A | Independent B | Complete protocol | Guard |
+|---|---:|---:|---:|---:|---:|
+| GCC 15.2.0 | 229.703s | 0.675s | 234.679s | 466.603s | 467.511s |
+| Clang 21.1.8 | 251.697s | 0.792s | 251.805s | 505.673s | 506.544s |
+
+Clang is 8.37% slower for the complete SQL protocol. An independent Cargo artifact
+inventory comparison finds the same 298 artifacts, profiles, features and targets
+in both clean-A builds, with none fresh. GCC's clean builds use 842.681/873.924 CPU
+seconds; Clang uses 940.242/943.158. These are one paired diagnostic observation,
+not repeated host-performance acceptance. Unchanged reuse works; mandatory
+independent reconstruction remains expensive.
+
+Driver dry-runs at both optimization levels also expose unequal platform defaults:
+GCC supplies fortification, strong stack protection, stack-clash and control-flow
+protection that the tested Clang invocation does not request. Equal Cargo profiles
+therefore do not establish equivalent hardening. Preserve this qualification limit;
+do not present the small-fixture speedup as an equivalent-settings improvement.
+
+Reject the tested compiler switch. No product, profile, dependency, toolchain,
+cache identity, selection or runtime assertion changes are adopted. Do not spend
+another complete native-category run qualifying a rejected configuration. All
+three guarded experiments finish with empty sessions, no capacity cancellation
+and unchanged source. All 86 diagnostic payloads are independently hash/size
+verified in `dev-verify-d26-diagnostic.tar.gz`, SHA-256
+`8c1ac88e59b7adbb14be8e14400e31737819e682c59a62cf2318b51af89caa57`.
+The native full runtime category and final phase gate are not claimed by D26.
+
+### D27 — common materialization startup and normalization (prospective)
+
+Return to work shared across generated preparation, native fixtures and emitted
+source verification. D15's historical full 93-project attribution recorded repeated
+metadata loading and generated-Rust normalization; its batching and early-pruning
+experiments failed to improve the complete workload. Do not repeat those changes
+or assume the historical attribution is a current saving. D17 extracted syntax
+ownership to improve rebuild propagation; it did not remove these runtime passes.
+
+First use the canonical prepared CLI and existing bounded trace reports on current
+representative materializations, recording preparation separately. Attribute any
+remaining dominant stage before selecting an implementation. If built-in reports
+are insufficient, use a temporary diagnostic candidate and narrow stage timers;
+instrumented elapsed time is not acceptance timing. Preserve original sources,
+source sysroot and declared compiler identity, and record every incomplete attempt.
+
+Potential duplication must be evaluated against its actual contract. Development
+metadata performs complete validation before opening a separate consumer; any
+reuse must preserve full validation, immutable snapshot ownership, corruption and
+changed-input detection, lazy consumer decode accounting and isolation. Generated
+Rust normalization uses nested fixed points and reparsing, including source spans
+used by API cleanup. Do not drop passes, replace convergence with a fixed count,
+reuse stale spans or introduce persistent correctness-result caching.
+
+Adopt only a demonstrated root-cause improvement. Require focused ownership and
+negative controls, exact generated-output parity for all 93 materializations and
+the affected native corpus, existing canonicalization/metadata regressions as
+applicable, complete affected category timing and independent candidate review.
+Keep the 90s preparation and 480s complete-gate goals; all final gates and ordinary
+invalidation scenarios remain open. Budget pressure is not permission to remove
+required independent SQL builds or other coverage.
+
+#### D27 source-ownership repair — prospective acceptance
+
+Selected attribution is preserved in `dev-verify-d27-diagnostic.tar.gz` (150
+payloads independently verified; SHA-256
+`6932fa6445910ff7fde2104f58a4ee8922495d7f5f2d86bc9c58517db064e675`).
+The initial trace setup failed before cases; its evidence remains incomplete.
+Corrected baseline and two temporary timer candidates ran all four selected cases;
+all owned sessions ended empty. Timer candidates are diagnostic only and must not
+be merged. Nested stage totals overlap and cannot be added as wall time.
+
+At diagnostic `d621194a17c21bafe8eba10ff8118ca51173150e`, repeated text materialization
+was 8.892s and file-runtime 10.471s. Runtime-tree hashing accounted for 1.261s/9
+calls and 1.659s/13 calls respectively. The tree contains 21,642,802 bytes of SQLite
+patch sources and 3,396,222 bytes of runtime sources. Neither the runtime nor
+stdlib crate depends on SQLite. External probes select that patch explicitly;
+internal runtime/stdlib probes do not. This is an ownership mismatch, not evidence
+that mutable-source revalidation or Cargo checks can be removed.
+
+Move the unchanged native bundle into `sifr_sql_sqlite_runtime/third_party`, its
+actual dependent owner and an existing packaged crate. Bind source ownership in
+both package manifests, preserve pinned source bytes/receipts and dependency
+versions, and update workspace/generated/fixture patch paths and current docs.
+Pass canonical sysroot paths to probes; use one patch-selection authority for
+manifest emission and pre/post-Cargo snapshots. External probes must still detect
+patch edits, additions, deletions and links, including a mutation while Cargo runs.
+Internal runtime/stdlib probes must remain independent of that unselected patch.
+Keep complete runtime hashing, current profile/features, independent checks and
+failure behavior. Do not add a historical-path fallback or successful-result cache.
+
+Validate source-byte relocation, ownership identities, generated manifests,
+probe grouping and mutation rejection, dependency/SQLite contracts and package
+inclusion. Compare all 93 materializations and affected native-corpus generated
+sources: only the declared patch path and identities derived from changed source
+ownership may differ, each enumerated; Rust program output must be byte-identical.
+Measure complete affected materialization cost without diagnostic timers before
+adoption, plus native execution under the normal allocation. Reject the speed
+claim if the full affected workload does not improve. The estimated selected-case
+ceiling of roughly 1–1.5s is attribution, not an observed saving or a full-gate claim.
+Require focused regression checks and independent review under the approved
+intermediate policy. Complete final correctness, invalidation and 90s/480s timing
+qualification remain open.
+
+#### D27 decision — preserve the prototype; do not adopt it as a macro optimization
+
+Prototype `e3710845dd07ea3e73025468907a4a81801edf7d` is retained on
+`codex/dev-verify-d27-sqlite-owner-experiment`; no implementation is merged. The
+26 native vendor files were relocated byte-for-byte. Focused validation passed:
+47 probe, 8 Cargo-input, 13 sysroot-interop, 11 manifest, 23 dependency-contract,
+27 sysroot and 12 SQLite runtime assertions (141 total), plus metadata preparation.
+The new controls reject changes to the selected native patch during Cargo and
+preserve internal-probe independence from an unselected patch. SQL/SQLite static
+contracts and 18 negative controls passed. Synthetic archive/install fixtures
+preserved the relocated source; this is not native cross-platform qualification.
+
+The complete current 93-project selection ran twice with fresh outputs on both
+baseline `5e5a001f174afea6bf0f14396a10764e529ab0b9` and prototype, using the canonical
+four-slot allocation without diagnostic timers:
+
+| Observation | Baseline | Prototype |
+|---|---:|---:|
+| First complete materialization | 119.520s | 151.477s |
+| Second complete materialization | 113.886s | 108.043s |
+| Separate CLI reconstruction/preparation | 136.062s | 74.088s |
+
+Preparation starts from different preceding builds, so its difference is not a
+measured preparation improvement. The second materialization improves by only
+5.844s (5.13%); this single retained pair is not repeated host-sensitive timing
+qualification. The first prototype invocation is slower. A separate first-use
+cost is not evidence of a cache bug without attribution. This is insufficient
+benefit to justify continuing this source-layout change as the next macro item.
+
+All 904 materialized-file comparisons passed: generated Rust is byte-identical;
+portable Cargo files differ only by the exact candidate Git revision. Each side's
+two fresh output rounds also match exactly. Both complete 732-case source/metadata
+corpus assertions passed, and all 1,464 retained source files match byte-for-byte.
+An initial cross-report comparison rejected 179 rows solely because
+`used_stdlib_modules: HashSet<String>` serializes in unspecified order. Retain that
+initial mismatch; the corrected comparison requires equal unique members for
+that declared set and exact equality of every other row field. No test was rerun
+or report rewritten to repair that diagnostic comparison.
+
+All four complete guarded sessions ended empty, with no reserve stop or unexpected
+source change. The outcome archive contains 5,549 independently hash/size-verified
+payloads: `dev-verify-d27-outcome.tar.gz`, SHA-256
+`74c09ce6798b98bd72eae46389e056888b7ac308276a823583900ac0660402b2`.
+The earlier 150-payload attribution archive remains separate and preserved.
+
+Do not spend a full native-runtime or independent-review cycle qualifying a
+rejected optimization. Those prototype obligations remain unexecuted, not passed;
+no locked-fetch, full native-runtime or final phase qualification is claimed.
+Return to the unchanged implementation and target costs measured in minutes.
+The source-ownership cleanup remains an optional architectural follow-up, with
+no claimed gate saving. Final 90s/480s budgets and every original obligation remain
+open.
+
+### D28 — native SQL build critical path (prospective)
+
+The current complete independent SQL build protocol costs 466.603s at four jobs
+(D26 GCC observation), before other SQL assertions. D9 already removed unused
+compiler dependencies; D26's C-compiler switch failed. Do not repeat either change
+or relax independent clean builds, linked executable selection, feature coverage,
+profiles, toolchain hardening, source checks or artifact-byte comparisons.
+
+First recover the actual remaining build dependency graph and attribute one fresh
+native-tool build with Cargo unit timings, separately labelled diagnostic. Keep
+the current compiler, declared flags/profile, four-job allocation and all three
+linked tools. Bind source/toolchain identity, retain ordinary Cargo messages and
+measure actual resource use. Use the existing 1,750s diagnostic cap and reserves;
+keep targets and failure evidence. A single timed clean build is attribution, not
+a complete clean/reuse/delete/independent-build qualification.
+
+Use the resulting critical path to identify an unnecessary dependency/feature or
+responsibility boundary before implementing anything. Account for earlier graph
+pruning and ensure each required native tool still exercises its actual provider.
+Do not trade away an obligation simply because its current implementation is slow.
+Before adopting a repair, require affected semantics, all linked native tools,
+unchanged/rebuilt/independent byte checks, focused boundary regressions and review.
+Aim for at least 25% and 100s reduction in the complete affected SQL protocol to
+justify a macro change; otherwise reassess the next largest cost. Profile changes
+or hardware/scheduling changes require their own explicit equivalence and measured
+capacity case. Full final phase coverage, invalidation and timing remain required.
