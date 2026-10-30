@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25 retained generated-driver cost diagnosis
+- Latest delivery: D24 lowering test ownership; D25 diagnosis complete; D26 native C compilation experiment
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3509,3 +3509,79 @@ ownership controls, the complete 80-case category with unchanged selection, a
 material complete-category improvement and independent exact-candidate review.
 The 120s integration budget and full 480s gate remain acceptance goals, not permission
 to omit cases or move independent-clean qualification out of the ordinary gate.
+
+
+#### D25 diagnostic conclusion — 2026-10-30
+
+Candidate `43e4521a0ddd9160b465ab679bf0667ef03c053b` preserves the merged D24
+implementation. Exact generated-driver preparation passes in 120.836s guarded:
+50.960s test-executable reconstruction, 6.528s metadata and 58.778s advanced-data
+preparation. Subsequent selected normal executions pass: trusted native builds
+97.150s, advanced-data runtime 15.701s and backend/SQLx runtime 8.421s. Their guard
+including discovery is 125.774s. These are current retained observations, not an
+optimization claim against D23's different first-use/interleaved measurements.
+
+Targeted traces preserve every assertion. The trusted test's two independent fresh
+Cargo builds occupy 46.788s and 46.274s; their nested zstd C build-script spans are
+40.753s and 40.269s. These nested times must not be added. The full traced test
+process spans 101.142s. Aggregate traced fdatasync is 2.141s, fsync 0.122s and
+flock 0.003s across processes/threads; overlapping totals are not critical-path
+wall time. C compilation dominates this case, not cache locking or publication.
+The separate advanced-data trace runs no Rust crate compilation; its final Cargo
+build spans 0.813s and test process 10.493s. Instrumented values are diagnostic,
+not acceptance timing. The prior 89s advanced-data and 65s backend observations
+must not be presented as their current standalone retained costs.
+
+Two complete normal category executions retain the exact same 80 assertion names,
+all passing, with the metadata and advanced-data helpers actually prepared. The
+canonical exact-emission corpus remains explicitly delegated to its existing
+sysroot owner; it is not claimed executed in these category-only comparisons.
+Both runs use four total build slots and the unchanged 2 GiB reserve:
+
+| Allocation | Preparation commands | Complete category | Including guards | Descendant CPU |
+|---|---:|---:|---:|---:|
+| Current: two workers, two Cargo jobs each | 10.432s | 336.390s | 348.928s | 681.484s |
+| Diagnostic: one worker, four Cargo jobs | 18.832s | 451.733s | 472.476s | 661.167s |
+
+The single-worker category is 34.29% slower. Although its trusted-native case falls
+from 103.929s to 57.128s, negative native trust from 31.960s to 17.812s and advanced
+data from 48.687s to 12.043s, loss of overlap outweighs these local gains. Reject
+this scheduling change. Do not add scheduling machinery or another cache based
+on individual-case improvements. No product, runner, allocation, selection,
+optimization profile or dependency change is adopted by D25.
+
+All sessions finish empty, with unchanged source and no capacity cancellation.
+All 97 archived payloads are independently hash/size verified in
+`dev-verify-d25-diagnostic.tar.gz`, SHA-256
+`bba14bbc10fdf67a83d5eb0e2705cd04089584e6fc36dcbc2b71fe4646cba1c9`.
+Retain two postprocessing corrections: the initial trace summary included failed
+PATH-search exec attempts, and the initial category summary counted the metadata
+helper's `--nocapture` argument as a case. The corrected summaries select successful
+final execs per PID and the canonical ignored-test command shape, respectively.
+These were diagnostic accounting errors; neither triggers repeated tests nor
+changes their recorded outcomes. Full phase correctness and 480s timing remain open.
+
+### D26 — native C compilation cost (prospective)
+
+D25 identifies bundled zstd C compilation as the dominant part of the repeated
+independent native-build test. Investigate this actual compilation workload before
+changing test boundaries or accepting a larger category budget. Begin with a
+controlled comparison of the available GCC and Clang C/C++ toolchains on identical
+copies of the canonical native-trust fixture, fixed two-job admission, unchanged
+release optimization, dependencies, source and locked/offline/frozen Cargo flags.
+Use two genuinely fresh targets per compiler. Require all five original evidence
+files, exact expected evidence values and byte equality between each compiler's
+independent builds. Record tool paths, versions, executable hashes, input hashes,
+CPU, elapsed time, capacity and every failed/incomplete attempt. No global tool
+installation, default-tool change, compiler cache, dependency substitution, system
+zstd shortcut or removal of fresh-build obligations is authorized by this experiment.
+
+This first diagnostic covers raw native evidence generation only. It cannot qualify
+a project toolchain change or replace runtime/trust assertions. Adopt no compiler
+choice unless a material improvement warrants measuring the affected full native
+category and the larger C-heavy SQL preparation/independent-build protocol. Any
+adopted configuration must have explicit preparation/execution tool identity,
+separate incompatible artifacts, supported-host scope, invalidation controls,
+complete affected correctness and independent exact-candidate review. Retain the
+current default if the complete experience does not improve. Final phase gates,
+ordinary invalidation and repeated 480s qualification remain required.
