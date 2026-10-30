@@ -4006,6 +4006,10 @@ fixture file and Rust symbol validation, markdown safety, and the five existing
 receiver/place runtime assertions. Keep the current scope of runtime assertions;
 this does not silently claim execution of every catalog fixture. Add meaningful
 negative controls for catalog drift rather than comparing a catalog to itself.
+Keep the registry fixture assertions and new documentation-reader controls under
+the crate's test owner, outside production `src` roots, with their existing module
+context and exact assertions. Update affected source-policy ownership references;
+test-only edits must not introduce the same provenance coupling through a new file.
 
 Prove that a verification-only fixture reference edit no longer changes production
 compiler/component input identities, while a real diagnostic production edit still

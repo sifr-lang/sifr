@@ -5,7 +5,7 @@ mod family_docs;
 #[path = "../../../../verification/areas/diagnostics/support/fixture_catalog.rs"]
 mod fixture_catalog;
 #[cfg(test)]
-#[path = "gen_error_docs/fixture_catalog_tests.rs"]
+#[path = "../../tests/unit/fixture_catalog_tests.rs"]
 mod fixture_catalog_tests;
 
 use std::env;

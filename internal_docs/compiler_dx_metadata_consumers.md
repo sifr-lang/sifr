@@ -1310,8 +1310,8 @@ Its source must exist, and its discovered metadata operations remain pinned belo
 | `crates/sifr/tests/e2e_support/dependency_plan_authority_tests.rs:66` `case_with_plan` | read | test setup/parity | 71, 74, 88 |
 | `crates/sifr/tests/e2e_support/dependency_plan_authority_tests.rs:96` `former_module_inference_inventory_is_owned_by_typed_production_metadata` | read, enumerate | test setup/parity | 99, 123 |
 | `crates/sifr/tests/e2e_support/direct_execution.rs:153` `build_and_run_capture_with_deps` | read | test setup/parity | 156, 161 |
-| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:25` `test_codegen_corpus_subset_parity` | read | test setup/parity | 55, 78 |
-| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:497` `test_e2e_runtime_fail` | read | test setup/parity | 511, 527 |
+| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:27` `test_codegen_corpus_subset_parity` | read | test setup/parity | 57, 80 |
+| `crates/sifr/tests/e2e_support/e2e_entrypoints.rs:504` `test_e2e_runtime_fail` | read | test setup/parity | 518, 534 |
 | `crates/sifr/tests/e2e_support/fixture_compilation.rs:58` `compiled_metadata` | read, enumerate | test setup/parity | 64, 68 |
 | `crates/sifr/tests/e2e_support/fixture_compilation.rs:75` `compile_source_with_metadata_and_stats` | read, enumerate | test setup/parity | 81, 88 |
 | `crates/sifr/tests/e2e_support/fixture_compilation.rs:234` `compile_fixture_inner` | read | test setup/parity | 239, 243, 261 |
