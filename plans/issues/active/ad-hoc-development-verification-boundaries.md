@@ -4516,3 +4516,32 @@ not missing tests or permission to broaden concurrency.
 
 This closes D35 only. Full-phase correctness, invalidation, repeated 90s/480s
 qualification and the major native compilation/integration costs remain open.
+
+### D36 — native test compilation ownership (prospective)
+
+D33's crate category remains the largest execution owner: 1322.604s, including
+680.664s generated-driver assertions and 339.537s ordinary lowering/CLI. D34 did
+not reproduce an integrated cache defect; do not repeat its isolated retained
+probes or adopt a two-second identity optimization as the macro solution.
+
+Start with the original trusted native-build assertion, which explicitly performs
+two fresh locked release builds, compares their generated evidence, checks compiler
+acceptance, then executes the generated program. Attribute its Cargo processes,
+Rust/C compiler work, linking, frontend/identity/publication and runtime separately.
+Compare the related proc-macro and rejection owners only when that attribution
+identifies a shared cost. Distinguish required independent builds from compatible
+retained work. Do not remove fresh targets, substitute fixture stubs, change release
+semantics, weaken trust/sentinel assertions or treat cached outputs as execution.
+
+Use targeted process tracing for attribution only and ordinary runs for timing.
+Keep the canonical uv/interpreter/PATH, actual native allocation, retained targets,
+1750s per-category cap, 20GiB disk reserve and 2GiB memory reserve. Check additional
+work allocation before launching. Freeze source during validation and review.
+
+Only implement after a concrete repeated-work or compilation-boundary cause is
+established. Register the exact affected ownership/coverage contract first. A macro
+candidate must save at least 25% and 60s of the complete affected category including
+required preparation, with meaningful CPU reduction and no displaced cost. All
+existing assertions, failures, independent fresh-build guarantees and process/state
+isolation remain required. Use focused regressions and independent candidate review;
+final complete gates, invalidation and repeated 90s/480s qualification remain open.
