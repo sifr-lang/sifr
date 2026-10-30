@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25–D28 experiments closed; D29 SQL build-tool construction
+- Latest delivery: D24 lowering test ownership; D25–D29 diagnostics recorded; D30 SQL build-tool configuration qualification
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3883,3 +3883,82 @@ explicit build-tool policy with drift/boundary checks, the affected SQL guarante
 independent review and final integrated qualification. Leave the optimized
 compiler bootstrap configuration intact unless a separate measured change earns
 adoption. If the experiment misses the macro target, preserve and reject it.
+
+#### D29 diagnostic outcome — faster construction, failed cross-configuration bytes
+
+At `456bf1efc8689990a5b2fa5ea80e09f31246f368`, the original complete protocol
+passed in **473.759s** and host-unoptimized construction passed its own complete
+protocol in **349.723s**: 124.036s / 26.18% lower. Baseline clean/reuse/independent
+commands took 233.798s / 1.190s / 237.306s; the experimental commands took
+173.079s / 0.503s / 174.927s. Each clean build compiled all 298 artifacts, and each
+unchanged build reused all 298. All three executable hashes match within each
+configuration's clean/reuse/delete/independent protocol.
+
+The artifact inventory comparison passes: identical package identities, features,
+targets and roles; 102 host artifacts change only optimization level to zero, the
+host SHA-256 dependency retains level one, and all 195 target artifacts retain
+exactly the original profiles. Nevertheless, **all three executable hashes differ
+between configurations**. The strict equivalence experiment therefore failed:
+outer guard exit one, raw result status `incomplete` with its explicit BuildError.
+Do not reclassify it as passing. Total diagnostic duration is 823.934s / guarded
+825.263s, with no capacity stop, source mutation or surviving process. Sampled
+peak session RSS is 1,412,702,208 bytes; minimum available memory is 9,939,009,536
+bytes. The 26-payload diagnostic archive is independently verified, SHA-256
+`8c1c779c49dae9e50c1b8980453fff36eeb6486e479e2ea1e3a6502bfecf5af0`.
+
+A separate 1.685s guarded two-crate control reproduces a limitation of the proposed
+cross-configuration criterion. Identical macro source emits exactly `42u32` under
+host optimization one and zero; target optimization and every reported target
+profile field match, both executables assert and print 42, but Cargo's target
+`-C metadata` and `-C extra-filename` values differ and the binary hashes differ.
+This demonstrates identity propagation even for unchanged generated tokens. It
+is **not proof that the SQL binaries differ only in metadata**, or semantic SQL
+qualification. Its 27-payload archive, including both tiny executables, is verified:
+`dev-verify-d29-identity-control.tar.gz`, SHA-256
+`103c0892c0420585ca7a1f010aa8496a30cbe711e26925b6b602daf8adc4aaa1`.
+
+No production policy changed. Cross-configuration byte identity cannot be used as
+a general substitute for qualifying a changed build configuration. The measured
+macro saving warrants the separately specified configuration qualification below;
+it does not by itself authorize adoption or close any phase acceptance obligation.
+
+### D30 — explicit SQL native build-tool configuration (prospective)
+
+Qualify the host-construction policy as an explicit verification configuration
+change, rather than claiming D29's failed byte-equivalence condition passed.
+The original independent-build guarantee compares outputs within one selected
+configuration; retain it exactly. The extra D29 cross-configuration condition was
+an experimental equivalence test, not evidence of a product regression or a
+replacement for actual runtime qualification.
+
+Use one small SQL-owned authority for the build-tool optimization options, shared
+by actual native-tool preparation and native independent-build qualification.
+Leave the normal compiler bootstrap, target optimization, debug/overflow checks,
+features, lockfile, native C toolchain/hardening and four-slot allocation unchanged.
+Keep optimized SHA-256 construction where the workspace already selects it.
+Record the effective construction options in qualification evidence. Avoid a
+whole-runner abstraction, build wrapper, persistent result cache or fallback path.
+
+The selected native graph currently uses Syn/proc-macro2 only as host construction
+dependencies. Enforce that boundary using actual Cargo artifacts: reject those
+packages entering the target graph or target artifacts whose optimization or
+safety checks differ from the selected dev contract. Retain exact selected package
+identity, linked-tool ownership and complete artifact checks. Add focused negative
+controls for boundary drift, invalid profiles and missing/duplicate artifacts.
+
+Before adoption, execute the unchanged complete SQL correctness selection and its
+original native sandbox/IPC assertions against the actually prepared configured
+tools. Preserve native parser/version, migration, runtime, provisioning, diagnostics,
+negative, source qualification and compiler-boundary coverage; no live integration
+is newly claimed or substituted. Verify emitted profile selections are unchanged.
+The configured tools must pass clean A / unchanged A / delete A / independent B
+with all three binary comparisons, on the implementation candidate. Compare the
+complete affected category and preparation, and require the measured macro saving
+(at least 25% and 100s in the independent-build protocol) without a displaced
+compiler/bootstrap or integration regression. Then obtain independent review.
+
+If the configuration cannot be consumed explicitly by the real tool preparation
+and its runtime tests, or requires weakening the native boundary or target checks,
+stop adoption and preserve the experiment. Do not accept synthetic runtime results
+as a substitute. This item does not accept an ordinary/expanded gate split, omit
+independent builds or sanitizers, or waive the complete final 90s/480s qualification.
