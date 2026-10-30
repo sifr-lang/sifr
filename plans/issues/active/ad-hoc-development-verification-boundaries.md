@@ -4064,3 +4064,53 @@ Capacity/session guards report no reserve stop, unexpected mutation or surviving
 workers. Words inputs are unchanged; its qualification remains required in the
 component contract. Final affected consumers and independent review are still
 pending at this record; no intermediate adoption or full-gate pass is claimed.
+
+#### D31 delivered
+
+[PR #4541](https://github.com/sifr-lang/sifr/pull/4541) merged as
+`1b6dbde20f04dc688d518a49beb0b8281c6674dc`; reviewed implementation candidate
+`f0d23aa63ed95ff4ecbd551d5bea5006526b1703` has the same tree. Final affected
+validation passed in **146.925s**: eight component/provider contract and mutation
+commands, 33 native consumers with zero ignored tests, and the receiver/place
+test's five existing assertions. Words qualification passed without rebuilding
+unchanged inputs. No source drift, reserve stop or surviving process was reported.
+
+The complete scoped evidence archive has **238 verified payloads**, SHA-256
+`b4dd1ae548d85ad82315791b1b7dea6c956d65c472d9187089e411a24aa516f5`.
+[Archive verification](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d31-qualified-verification.json).
+Independent read-only review of the exact candidate returned **SATISFIED**, with
+no blocking findings; [review](/Users/yaseralnajjar/work/sifr/continuation-evidence/local-gate-implementation-20261020/dev-verify-d31-review-62eu0sra/response.md).
+
+Carry two verification-only edit controls into the final phase invalidation
+qualification: the shared Rust fixture reader and its documentation-reader test
+file. They are outside production roots, but D31's executed mutation proof covered
+the catalog and private registry assertions specifically. Also improve labels and
+summary status in future diagnostic receipts; the archived final receipt is
+preserved and its pass is established by all twelve exit codes and raw test
+summaries. The diagnostics owner retains the pre-existing broader-than-five-code
+runtime-coverage migration. None of these follow-ups changes D31's scoped result
+or closes full-phase correctness, invalidation or 90s/480s timing acceptance.
+
+#### D30 resumed qualification protocol
+
+Resume the held native-build policy against the repaired D31 baseline. Preserve
+the original failed 72-case baseline and held `7e2d52b3` candidate as historical
+evidence. Establish new observations on the repaired source instead of reusing
+those failed results.
+
+For each configuration, record ordinary declared preparation and a separate
+first-use priming pass over all selected SQL commands except the independent-clean
+protocol. The earlier observation showed that nested parser/test variants can
+rebuild during the area even after declared preparation. Priming runs those exact
+canonical commands with retained owned targets; it does not count as acceptance
+or hide their first-use cost. Then create a fresh prepared session, measure its
+preparation and the unchanged complete canonical 72-case SQL area. The mandatory
+clean A / unchanged A / delete A / independent B protocol runs inside each measured
+area, with every existing binary/profile and sandbox assertion intact. Use the
+same allocation, safety caps and capacity reserves for both configurations.
+
+The adoption threshold remains at least 25% and 100s improvement in the mandatory
+independent-build protocol, with no displaced preparation/integration regression.
+Report priming, preparation and complete measured category separately; do not
+claim these retained observations qualify final invalidation scenarios or the
+480s whole gate. Independent candidate review remains required before adoption.
