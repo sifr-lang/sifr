@@ -2,7 +2,7 @@
 
 - Phase ID: `DEV-VERIFY`
 - Status: in progress; intermediate deliveries through D24; final phase qualification open
-- Latest delivery: D24 lowering test ownership; D25/D26 experiments closed; D27 common materialization cost investigation
+- Latest delivery: D24 lowering test ownership; D25–D27 experiments closed; D28 native SQL build attribution
 - Recorded: 2026-10-28
 - Related execution contract: [LOCAL-GATE](ad-hoc-local-correctness-gate-under-ten-minutes.md)
 
@@ -3702,3 +3702,83 @@ ceiling of roughly 1–1.5s is attribution, not an observed saving or a full-gat
 Require focused regression checks and independent review under the approved
 intermediate policy. Complete final correctness, invalidation and 90s/480s timing
 qualification remain open.
+
+#### D27 decision — preserve the prototype; do not adopt it as a macro optimization
+
+Prototype `e3710845dd07ea3e73025468907a4a81801edf7d` is retained on
+`codex/dev-verify-d27-sqlite-owner-experiment`; no implementation is merged. The
+26 native vendor files were relocated byte-for-byte. Focused validation passed:
+47 probe, 8 Cargo-input, 13 sysroot-interop, 11 manifest, 23 dependency-contract,
+27 sysroot and 12 SQLite runtime assertions (141 total), plus metadata preparation.
+The new controls reject changes to the selected native patch during Cargo and
+preserve internal-probe independence from an unselected patch. SQL/SQLite static
+contracts and 18 negative controls passed. Synthetic archive/install fixtures
+preserved the relocated source; this is not native cross-platform qualification.
+
+The complete current 93-project selection ran twice with fresh outputs on both
+baseline `5e5a001f174afea6bf0f14396a10764e529ab0b9` and prototype, using the canonical
+four-slot allocation without diagnostic timers:
+
+| Observation | Baseline | Prototype |
+|---|---:|---:|
+| First complete materialization | 119.520s | 151.477s |
+| Second complete materialization | 113.886s | 108.043s |
+| Separate CLI reconstruction/preparation | 136.062s | 74.088s |
+
+Preparation starts from different preceding builds, so its difference is not a
+measured preparation improvement. The second materialization improves by only
+5.844s (5.13%); this single retained pair is not repeated host-sensitive timing
+qualification. The first prototype invocation is slower. A separate first-use
+cost is not evidence of a cache bug without attribution. This is insufficient
+benefit to justify continuing this source-layout change as the next macro item.
+
+All 904 materialized-file comparisons passed: generated Rust is byte-identical;
+portable Cargo files differ only by the exact candidate Git revision. Each side's
+two fresh output rounds also match exactly. Both complete 732-case source/metadata
+corpus assertions passed, and all 1,464 retained source files match byte-for-byte.
+An initial cross-report comparison rejected 179 rows solely because
+`used_stdlib_modules: HashSet<String>` serializes in unspecified order. Retain that
+initial mismatch; the corrected comparison requires equal unique members for
+that declared set and exact equality of every other row field. No test was rerun
+or report rewritten to repair that diagnostic comparison.
+
+All four complete guarded sessions ended empty, with no reserve stop or unexpected
+source change. The outcome archive contains 5,549 independently hash/size-verified
+payloads: `dev-verify-d27-outcome.tar.gz`, SHA-256
+`74c09ce6798b98bd72eae46389e056888b7ac308276a823583900ac0660402b2`.
+The earlier 150-payload attribution archive remains separate and preserved.
+
+Do not spend a full native-runtime or independent-review cycle qualifying a
+rejected optimization. Those prototype obligations remain unexecuted, not passed;
+no locked-fetch, full native-runtime or final phase qualification is claimed.
+Return to the unchanged implementation and target costs measured in minutes.
+The source-ownership cleanup remains an optional architectural follow-up, with
+no claimed gate saving. Final 90s/480s budgets and every original obligation remain
+open.
+
+### D28 — native SQL build critical path (prospective)
+
+The current complete independent SQL build protocol costs 466.603s at four jobs
+(D26 GCC observation), before other SQL assertions. D9 already removed unused
+compiler dependencies; D26's C-compiler switch failed. Do not repeat either change
+or relax independent clean builds, linked executable selection, feature coverage,
+profiles, toolchain hardening, source checks or artifact-byte comparisons.
+
+First recover the actual remaining build dependency graph and attribute one fresh
+native-tool build with Cargo unit timings, separately labelled diagnostic. Keep
+the current compiler, declared flags/profile, four-job allocation and all three
+linked tools. Bind source/toolchain identity, retain ordinary Cargo messages and
+measure actual resource use. Use the existing 1,750s diagnostic cap and reserves;
+keep targets and failure evidence. A single timed clean build is attribution, not
+a complete clean/reuse/delete/independent-build qualification.
+
+Use the resulting critical path to identify an unnecessary dependency/feature or
+responsibility boundary before implementing anything. Account for earlier graph
+pruning and ensure each required native tool still exercises its actual provider.
+Do not trade away an obligation simply because its current implementation is slow.
+Before adopting a repair, require affected semantics, all linked native tools,
+unchanged/rebuilt/independent byte checks, focused boundary regressions and review.
+Aim for at least 25% and 100s reduction in the complete affected SQL protocol to
+justify a macro change; otherwise reassess the next largest cost. Profile changes
+or hardware/scheduling changes require their own explicit equivalence and measured
+capacity case. Full final phase coverage, invalidation and timing remain required.
