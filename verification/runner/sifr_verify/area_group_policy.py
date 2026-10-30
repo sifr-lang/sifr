@@ -8,8 +8,8 @@ from .build_allocation import E2E_ENV, MIB, positive
 from .native_test_allocation import ALLOCATION_ENV, allocate_native
 
 PAIR = {"python_interop": 1, "generated_code_quality": 3}
-CONTRACT_AREAS = ("coverage_matrix", "core_language", "diagnostics", "distribution_release")
-GROUP_AREAS = (*PAIR, *CONTRACT_AREAS)
+LOCAL_AREAS = ("coverage_matrix", "core_language", "diagnostics", "distribution_release")
+GROUP_AREAS = (*PAIR, *LOCAL_AREAS)
 
 
 def execution_groups(profile, correctness_only):
@@ -22,7 +22,7 @@ def execution_groups(profile, correctness_only):
             "generated_code_quality": ["target/sifr_generated_code_quality"],
             "shared": "prepared immutable compiler; existing native-family leases",
         }),
-        ("local-contracts", CONTRACT_AREAS, {
+        ("local-contracts", LOCAL_AREAS, {
             "coverage_matrix": ["source inventories; temporary negative-control roots"],
             "core_language": ["target/verification/actual/core_language"],
             "diagnostics": ["target/verification/actual/diagnostics; temporary examples"],
@@ -43,14 +43,14 @@ def execution_groups(profile, correctness_only):
 def partition_slots(areas, total):
     total = positive(total, "profile process slots")
     if (not areas or len(set(areas)) != len(areas)
-            or not any(set(areas) <= set(group) for group in (PAIR, CONTRACT_AREAS))):
+            or not any(set(areas) <= set(group) for group in (PAIR, LOCAL_AREAS))):
         raise ValueError("unqualified area group selection")
     if len(areas) == 1:
         return {areas[0]: total}, 1
-    if set(areas) <= set(CONTRACT_AREAS):
+    if set(areas) <= set(LOCAL_AREAS):
         # Admit the complete ready group together, or retain serial execution.
         # This leaves no queued sibling behind a partially failed parallel group.
-        if total < len(CONTRACT_AREAS):
+        if total < len(LOCAL_AREAS):
             return {area: total for area in areas}, 1
         return {area: 1 for area in areas}, len(areas)
     if total == 1:
