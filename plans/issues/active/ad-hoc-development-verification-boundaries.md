@@ -4545,3 +4545,35 @@ required preparation, with meaningful CPU reduction and no displaced cost. All
 existing assertions, failures, independent fresh-build guarantees and process/state
 isolation remain required. Use focused regressions and independent candidate review;
 final complete gates, invalidation and repeated 90s/480s qualification remain open.
+
+#### D36 first attribution — 2026-10-30
+
+Candidate `a499f33f20f4bef279ac8f61807b89ce61bdc740` passes the unchanged trusted
+native-build assertion under targeted process tracing: 104.760s, 179.501 inclusive
+CPU-seconds; compiler admission 2.673s. Guarded cycle 108.748s, exit zero, no reserve
+stop/source drift, owned session empty. Instrumentation overhead excludes these
+numbers from acceptance timing. Required work allocation is 2GiB above the 20GiB
+disk reserve; native allocation retains two Cargo/Rayon jobs and the memory reserve.
+
+The first independent release Cargo build spans 46.977s, the second 46.606s.
+The remainder includes compiler/probe validation, final retained Cargo build and
+runtime assertion. The longest individual C compiler process is approximately
+9.9s; host Rust dependencies already use the unoptimized build profile. D30's
+SQL host-optimization fix therefore does not transfer to this owner. These are
+nested process lifetimes, not disjoint CPU measurements. Do not sum them as wall
+time or remove either fresh build as redundant setup.
+
+All raw traces, original assertion output, capacity/result/cleanup receipts and
+baseline bundle are retained in a verified 12-payload archive, SHA-256
+`116052260e2a7805baf5dfbc7cdb8e33c8bcf20ac06d8005be10000cea0d721d`.
+The native inventory is reconciled with D33's 86 executed cases and original
+command timings; it does not invent per-case CPU values absent from those logs.
+
+A read-only ELF inventory of D34's 894,150,648-byte advanced-data executable finds
+694,971,197 bytes in debug sections. This is an artifact-I/O investigation lead,
+not a measured improvement or evidence that the existing line-table profile is
+incorrect. Any follow-up must retain debug/source-line capability, exact artifact
+validation, release semantics and every runtime assertion; no stripping or profile
+change is adopted. Evaluate whether this cost is material across the complete
+native category before committing to an artifact-format change. Integrated retained
+outliers remain unresolved. D36 and the final phase remain open.
