@@ -367,7 +367,6 @@ pub struct DiagnosticRegistryEntry {
     pub summary: &'static str,
     pub state: DiagnosticState,
     pub docs_path: &'static str,
-    pub representative_fixture_path: Option<&'static str>,
     pub message_template: Option<&'static str>,
     pub owner_module: Option<&'static str>,
     pub declared_args: &'static [DiagnosticArgDeclaration],
@@ -638,14 +637,13 @@ macro_rules! json_arg {
 }
 
 macro_rules! active_entry {
-    ($id:literal, $family:literal, $summary:literal, $severity:expr, $fixture:literal, $template:literal, $owner:literal, [$($arg:expr),* $(,)?], [$($dedupe:literal),* $(,)?]) => {
+    ($id:literal, $family:literal, $summary:literal, $severity:expr, $template:literal, $owner:literal, [$($arg:expr),* $(,)?], [$($dedupe:literal),* $(,)?]) => {
         $crate::codes::DiagnosticRegistryEntry {
             id: $id,
             family: $family,
             summary: $summary,
             state: $crate::codes::DiagnosticState::Active,
             docs_path: concat!("docs/errors/", $id, ".mdx"),
-            representative_fixture_path: Some($fixture),
             message_template: Some($template),
             owner_module: Some($owner),
             declared_args: &[$($arg),*],

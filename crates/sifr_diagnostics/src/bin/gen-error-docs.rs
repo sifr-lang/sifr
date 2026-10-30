@@ -2,6 +2,11 @@
 
 #[path = "gen_error_docs/family_docs.rs"]
 mod family_docs;
+#[path = "../../../../verification/areas/diagnostics/support/fixture_catalog.rs"]
+mod fixture_catalog;
+#[cfg(test)]
+#[path = "gen_error_docs/fixture_catalog_tests.rs"]
+mod fixture_catalog_tests;
 
 use std::env;
 use std::fs;
@@ -9,6 +14,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use family_docs::family_docs;
+use fixture_catalog::FixtureCatalog;
 use serde_json::{Map, Value};
 use sifr_diagnostics::codes::{
     DIAGNOSTIC_FAMILIES, DIAGNOSTIC_REGISTRY, DiagnosticRegistryEntry, DiagnosticState,
@@ -23,7 +29,7 @@ struct GeneratedDocument {
 fn main() -> io::Result<()> {
     let check = env::args().skip(1).any(|arg| arg == "--check");
     let repo_root = repo_root()?;
-    let documents = generated_documents(&repo_root);
+    let documents = generated_documents(&repo_root)?;
 
     if check {
         check_documents(&repo_root, &documents)?;
@@ -50,7 +56,9 @@ fn repo_root() -> io::Result<PathBuf> {
         })
 }
 
-fn generated_documents(repo_root: &Path) -> Vec<GeneratedDocument> {
+fn generated_documents(repo_root: &Path) -> io::Result<Vec<GeneratedDocument>> {
+    let fixtures =
+        FixtureCatalog::load(repo_root, active_registry_entries().map(|entry| entry.id))?;
     let mut documents = vec![
         GeneratedDocument {
             path: "docs/errors/diagnostic-codes.md".to_owned(),
@@ -62,7 +70,7 @@ fn generated_documents(repo_root: &Path) -> Vec<GeneratedDocument> {
         },
         GeneratedDocument {
             path: "internal_docs/diagnostic_codes.md".to_owned(),
-            contents: internal_reference(),
+            contents: internal_reference(&fixtures),
         },
     ];
 
@@ -70,11 +78,11 @@ fn generated_documents(repo_root: &Path) -> Vec<GeneratedDocument> {
         let example = read_example_fragment(repo_root, entry.id);
         documents.push(GeneratedDocument {
             path: entry.docs_path.to_owned(),
-            contents: active_code_page(entry, example.as_deref()),
+            contents: active_code_page(entry, example.as_deref(), fixtures.get(entry.id)),
         });
     }
 
-    documents
+    Ok(documents)
 }
 
 fn read_example_fragment(repo_root: &Path, code: &str) -> Option<String> {
@@ -337,7 +345,7 @@ fn is_linked_diagnostic_reference(before: &str, after: &str) -> bool {
     false
 }
 
-fn internal_reference() -> String {
+fn internal_reference(fixtures: &FixtureCatalog) -> String {
     let mut out = generated_header("Diagnostic Code Registry");
     out.push_str("This file is generated from `crates/sifr_diagnostics/src/codes.rs`.\n\n");
     out.push_str("Codes use per-family local numbering. `SIFR-<FAMILY>-0000` is reserved as the family base and must never be emitted. Family names may be hyphenated for scoped interop domains such as `RUST-CONFIG`.\n\n");
@@ -370,7 +378,7 @@ fn internal_reference() -> String {
             entry.state.as_str(),
             severity(entry),
             entry.docs_path,
-            optional_code(entry.representative_fixture_path),
+            optional_code(fixtures.get(entry.id)),
             optional_code(entry.owner_module),
             optional_code(entry.message_template),
             declared_args(entry),
@@ -383,7 +391,11 @@ fn internal_reference() -> String {
     out
 }
 
-fn active_code_page(entry: &DiagnosticRegistryEntry, example: Option<&str>) -> String {
+fn active_code_page(
+    entry: &DiagnosticRegistryEntry,
+    example: Option<&str>,
+    fixture: Option<&str>,
+) -> String {
     let docs = family_docs(entry.family);
     let summary = entry.summary.trim();
     let means = lowercase_sentence_start(summary);
@@ -428,7 +440,7 @@ fn active_code_page(entry: &DiagnosticRegistryEntry, example: Option<&str>) -> S
     ));
     out.push_str(&format!(
         "| Representative fixture | {} |\n",
-        optional_code_mdx(entry.representative_fixture_path)
+        optional_code_mdx(fixture)
     ));
     out.push_str(
         "\nSee the [Error Codes index](/diagnostics/error-codes) for the complete catalog.\n",

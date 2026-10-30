@@ -33,7 +33,6 @@ pub(super) const fn reserved_code(
         summary,
         state: DiagnosticState::Reserved,
         docs_path: "docs/errors/diagnostic-codes.md",
-        representative_fixture_path: None,
         message_template: None,
         owner_module: None,
         declared_args: &[],

@@ -2,6 +2,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 
+#[path = "../../../../verification/areas/diagnostics/support/fixture_catalog.rs"]
+mod fixture_catalog;
+
 use super::{
     ACTIVE_DIAGNOSTIC_CODES, DIAGNOSTIC_FAMILIES, DIAGNOSTIC_REGISTRY, DiagnosticCode,
     DiagnosticState, active_registry_entries,
@@ -19,6 +22,12 @@ fn docs_url_is_derived_from_code() {
 fn registry_skeleton_is_internally_consistent() {
     let families_by_name = families_by_name();
     let mut ids = BTreeSet::new();
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let fixtures = fixture_catalog::FixtureCatalog::load(
+        &root,
+        active_registry_entries().map(|entry| entry.id),
+    )
+    .expect("verification catalog must cover exactly the active diagnostics");
 
     for entry in DIAGNOSTIC_REGISTRY.iter() {
         assert!(ids.insert(entry.id), "duplicate diagnostic id {}", entry.id);
@@ -52,7 +61,7 @@ fn registry_skeleton_is_internally_consistent() {
                     entry.id
                 );
                 assert!(
-                    entry.representative_fixture_path.is_some(),
+                    fixtures.get(entry.id).is_some(),
                     "active diagnostic {} must declare representative fixture path",
                     entry.id
                 );
@@ -64,7 +73,7 @@ fn registry_skeleton_is_internally_consistent() {
             }
             DiagnosticState::Reserved => {
                 assert!(
-                    entry.representative_fixture_path.is_none(),
+                    fixtures.get(entry.id).is_none(),
                     "reserved diagnostic {} must not claim a fixture",
                     entry.id
                 );
@@ -232,7 +241,6 @@ fn assert_registry_strings_are_markdown_safe(entry: &super::DiagnosticRegistryEn
         entry.summary,
         entry.owner_module.unwrap_or_default(),
         entry.message_template.unwrap_or_default(),
-        entry.representative_fixture_path.unwrap_or_default(),
     ] {
         assert!(
             !value.contains('`'),

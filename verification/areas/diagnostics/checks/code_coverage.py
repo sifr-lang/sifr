@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import json
 import pathlib
 import re
 import subprocess
@@ -12,6 +13,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[4]
 CODES_RS = ROOT / "crates" / "sifr_diagnostics" / "src" / "codes.rs"
+CATALOG_PATH = ROOT / "verification/areas/diagnostics/data/code_catalog.json"
 CODE_RE = r"SIFR-(?:[A-Z]+|RUST-[A-Z]+)-\d{4}"
 CONSTANT_REFERENCE_RE = re.compile(
     r"(?<!\w)(?:r#)?DiagnosticCode\s*::\s*(?:r#)?([A-Z_]\w*)\b"
@@ -131,6 +133,29 @@ def non_test_compiler_sources() -> list[pathlib.Path]:
     return sources
 
 
+def load_fixture_catalog() -> dict[str, str]:
+    """The verification catalog owns fixtures; production owns diagnostic identities."""
+    payload = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict) or type(payload.get("schema_version")) is not int or payload["schema_version"] != 1:
+        raise ValueError("diagnostic fixture catalog schema must be one")
+    rows = payload.get("codes")
+    if not isinstance(rows, list):
+        raise ValueError("diagnostic fixture catalog must contain codes")
+    fixtures = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("diagnostic fixture catalog entries must be objects")
+        code, fixture = row.get("code"), row.get("representative_fixture")
+        if not isinstance(code, str) or not re.fullmatch(CODE_RE, code):
+            raise ValueError("diagnostic fixture code is invalid")
+        if not isinstance(fixture, str) or not fixture or any(ch in fixture for ch in "`\n\r"):
+            raise ValueError("diagnostic fixture reference is empty or not markdown-safe")
+        if code in fixtures:
+            raise ValueError(f"duplicate diagnostic fixture code: {code}")
+        fixtures[code] = fixture
+    return fixtures
+
+
 def parse_registry() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     text = read_rust_with_local_sources(CODES_RS)
     constants = dict(
@@ -153,20 +178,14 @@ def parse_registry() -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
     active_code_to_constant = {
         code: name for name, code in constants.items() if name in active_constants
     }
-    active_fixtures = {
-        code: fixture
-        for code, fixture in re.findall(
-            rf'active_entry!\(\s*"({CODE_RE})".*?Severity::[A-Za-z]+\s*,\s*"([^"]+)"',
-            text,
-            re.S,
-        )
-    }
-    return code_to_constant, active_code_to_constant, active_fixtures
+    return code_to_constant, active_code_to_constant, load_fixture_catalog()
 
 
 
-def registry_integrity_errors(text: str) -> list[str]:
-    """Keep active identities, owner modules, and fixture declarations in lockstep."""
+def registry_integrity_errors(text: str, fixtures: dict[str, str] | None = None) -> list[str]:
+    """Reconcile production identities with their verification-owned fixtures."""
+    if fixtures is None:
+        fixtures = load_fixture_catalog()
     errors: list[str] = []
     declarations = re.findall(
         rf"pub const ([A-Z0-9_]+): Self\s*=\s*Self::new\(\"({CODE_RE})\",\s*Severity::([A-Za-z]+)\)",
@@ -182,7 +201,7 @@ def registry_integrity_errors(text: str) -> list[str]:
     active_names = diagnostic_constant_references(active_block.group("body"))
     entries = re.findall(
         rf'active_entry!\(\s*"({CODE_RE})"\s*,\s*"[^"]+"\s*,\s*"(?:\\.|[^"\\])*"'
-        rf'\s*,\s*Severity::([A-Za-z]+)\s*,\s*"([^"]+)"\s*,\s*"(?:\\.|[^"\\])*"\s*,\s*"([^"]+)"',
+        rf'\s*,\s*Severity::([A-Za-z]+)\s*,\s*"(?:\\.|[^"\\])*"\s*,\s*"([^"]+)"',
         text,
         re.S,
     )
@@ -190,7 +209,7 @@ def registry_integrity_errors(text: str) -> list[str]:
         ("constant", [name for name, _, _ in declarations]),
         ("code identity", [code for _, code, _ in declarations]),
         ("active constant", active_names),
-        ("active registry entry", [code for code, _, _, _ in entries]),
+        ("active registry entry", [code for code, _, _ in entries]),
     ):
         for value, count in Counter(values).items():
             if count > 1:
@@ -199,15 +218,20 @@ def registry_integrity_errors(text: str) -> list[str]:
     active_codes = {constants[name][0] for name in active_names if name in constants}
     for name in sorted(set(active_names) - set(constants)):
         errors.append(f"unknown active constant: {name}")
-    entry_codes = {code for code, _, _, _ in entries}
+    entry_codes = {code for code, _, _ in entries}
     for code in sorted(active_codes - entry_codes):
         errors.append(f"active code missing registry entry: {code}")
     for code in sorted(entry_codes - active_codes):
         errors.append(f"registry entry is not active: {code}")
+    for code in sorted(active_codes - fixtures.keys()):
+        errors.append(f"{code}: active diagnostic missing from fixture catalog")
+    for code in sorted(fixtures.keys() - active_codes):
+        errors.append(f"{code}: fixture catalog entry is not active")
     severity_by_code = {code: severity for _, code, severity in declarations}
-    for code, severity, fixture, owners in entries:
+    for code, severity, owners in entries:
         if code in severity_by_code and severity != severity_by_code[code]:
             errors.append(f"{code}: registry severity differs from constant")
+        fixture = fixtures.get(code, "")
         if not fixture_file_exists(fixture):
             errors.append(f"{code}: representative fixture does not exist: {fixture}")
         for owner in owners.split(" / "):
@@ -231,8 +255,14 @@ PATH_MOD_RE = re.compile(
 
 
 def fixture_file_exists(fixture: str) -> bool:
+    if not fixture or any(ch in fixture for ch in "`\n\r"):
+        return False
     path_part, separator, symbol = fixture.partition("::")
+    if any(part in ("", ".", "..") for part in path_part.split("/")) or "\\" in path_part:
+        return False
     path = ROOT / path_part
+    if not path.resolve().is_relative_to(ROOT.resolve()):
+        return False
     if not separator:
         return path.exists()
     if not path.is_file() or not re.fullmatch(r"[A-Za-z_]\w*", symbol):
