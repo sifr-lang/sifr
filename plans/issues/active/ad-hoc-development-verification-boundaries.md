@@ -3962,3 +3962,65 @@ and its runtime tests, or requires weakening the native boundary or target check
 stop adoption and preserve the experiment. Do not accept synthetic runtime results
 as a substitute. This item does not accept an ordinary/expanded gate split, omit
 independent builds or sanitizers, or waive the complete final 90s/480s qualification.
+
+#### D30 qualification discovery — hold the candidate for an owned prerequisite
+
+Candidate `7e2d52b3c92591dc9ead4c3628f851dfb3fdd3da` is preserved on
+`codex/dev-verify-d30-sql-build-tools`, unmerged. Pinned focused checks pass:
+seven executable controls, 21 profile controls, 18 preparation tests, integrated
+and native-boundary controls, profile validation and unchanged emitted plans for
+all seven selections. This does not qualify the implementation for adoption.
+
+The complete SQL baseline at `3779c5950bbcf20c4b34ec9e33503b2e1cf47fbd`
+executes all 72 cases: 68 pass and four fail component-source provenance. Initial
+canonical preparation reconstruction takes 858.080s; the next preparation takes
+28.317s and area execution 740.797s. The independent native-build protocol passes
+in 476.542s. Nested PostgreSQL matrix execution still rebuilds a versioned graph,
+so this first area execution is not a wholly retained ordinary timing baseline.
+The guard exits one without reserve stops, source mutation or surviving processes.
+All 162 archived payloads are independently hash/size verified; archive SHA-256
+`39b779ddcb72560aaa36d326208ac5acab9682db2399a226b202f988152a6fb5`.
+Preserve the raw incomplete/failed status; do not rerun the unchanged failure.
+
+The exact drift is four diagnostic registry source files changed in D24/PR #4537:
+`calls_flow_and_protocols.rs`, `parsing_names_and_types.rs`, `python_interop.rs`
+and `rust_interop.rs`. Their representative test paths moved with the lowering
+tests, but those paths are embedded in production diagnostic metadata consumed
+by all three SQL component families. Words inputs are unchanged. This is an
+owned phase integration omission and a production/verification boundary problem,
+not an external dependency failure or a regression introduced by D30.
+
+### D31 — give diagnostic fixture references their verification owner (prospective)
+
+Hold D30 unchanged while repairing this prerequisite. The existing diagnostics
+verification catalog contains exactly the same 224 code-to-fixture references as
+the production registry. Make that catalog the fixture authority; remove fixture
+paths from production registry entries. Keep the production authority for code
+identity, severity, message, arguments, owner, tooling and documentation links.
+Do not introduce a second fixture list, feature fallback or source-hash exclusion.
+
+Update documentation generation and affected verification/test consumers to read
+the catalog explicitly. Preserve every fixture mapping and generated document
+byte, exact active-code coverage, duplicate/missing/unknown identity rejection,
+fixture file and Rust symbol validation, markdown safety, and the five existing
+receiver/place runtime assertions. Keep the current scope of runtime assertions;
+this does not silently claim execution of every catalog fixture. Add meaningful
+negative controls for catalog drift rather than comparing a catalog to itself.
+
+Prove that a verification-only fixture reference edit no longer changes production
+compiler/component input identities, while a real diagnostic production edit still
+invalidates them. Use isolated owned snapshots for mutation controls and retain
+the complete before/after 224-reference inventory. Run affected Python contracts,
+Rust registry and docs-generator tests/checks, the receiver/place assertions,
+format/file-size checks and unchanged profile-plan comparison.
+
+Regenerate MySQL, PostgreSQL and SQLite component artifacts with the canonical
+pinned producers on frozen inputs, allowing only declared producer outputs.
+Do not repair provenance by editing hashes without production. Preserve old and
+new outputs, verify transferred hashes, run all affected component/provider
+contracts and mutation controls plus the native component consumers, then obtain
+independent review before intermediate merge. Words is rebuilt only if its inputs
+actually change. This repairs the demonstrated ownership problem; it does not
+claim an ordinary-gate speedup or waive final invalidation/timing qualification.
+Afterward resume D30 against the repaired baseline, accounting for reconstruction
+and nested preparation before interpreting complete-category timing.
