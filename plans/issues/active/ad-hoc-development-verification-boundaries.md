@@ -3782,3 +3782,38 @@ Aim for at least 25% and 100s reduction in the complete affected SQL protocol to
 justify a macro change; otherwise reassess the next largest cost. Profile changes
 or hardware/scheduling changes require their own explicit equivalence and measured
 capacity case. Full final phase coverage, invalidation and timing remain required.
+
+#### D28 first attribution and prospective allocation experiment
+
+PR #4539 merged the D26/D27 records and D28 investigation contract at
+`5a5ab1b53a266afe44b768b8503b493d24d58b11`. Its production tree is unchanged.
+One fresh SQL build at observed candidate
+`21caebaff9cf01a3e18856ff33ea647bc5fa4e33` completed in 228.239s, using 847.403
+child CPU seconds (about 3.71 CPUs on average), with all 298 Cargo artifacts fresh
+and all three expected executable identities present. This Cargo-timed build is
+attribution, not a new complete independent-build qualification.
+
+The 345 timed units include AWS-LC native construction at 80.04s, PostgreSQL native
+construction at 39.54s, Syn 3/Syn 2 at 35.93s/35.02s, SQL contract at 29.60s, MySQL
+async at 26.06s and SQLite native construction at 24.51s. These overlap: do not sum
+them or treat them as removable critical-path costs. The selected Rustls feature
+graph includes `prefer-post-quantum`; swapping crypto providers without preserving
+that capability is not an acceptable compile-time shortcut.
+
+The one-second sampler observed peak aggregate RSS of 1,371,189,248 bytes for the
+owned session and at least 9,964,015,616 available bytes. These are sampled values,
+not a universal peak-memory bound. Effective CPU capacity is eight, while the
+current four-job build is CPU-saturated. This makes allocation a more plausible
+macro lever than source hashing or an unqualified dependency substitution.
+
+Next run the complete original clean A / unchanged A / delete A / independent B
+protocol in one exclusive diagnostic session with seven Cargo/Rayon jobs, reserving
+one effective CPU. Retain the conservative 8GiB worker allowance, 2GiB available
+memory reserve, 20GiB disk reserve, all flags/features/profiles and the C compiler.
+Record the experimental allocation separately from the unchanged four-slot profile;
+this is not permission for normal profile work to exceed its declared allocation.
+Keep sampled memory, CPU, fresh-artifact inventories, all three executable hash
+comparisons and process cleanup evidence. Do not change normal scheduling yet.
+If the complete protocol gains at least 25%/100s without resource pressure, qualify
+a canonical resource-plan change with explicit ownership and profile-plan checks;
+otherwise reject the experiment or investigate a demonstrated dependency cost.
