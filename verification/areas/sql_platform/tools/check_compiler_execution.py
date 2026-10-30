@@ -5,10 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import subprocess
+import sys
 
 ROOT = Path(__file__).resolve().parents[4]
+sys.path.insert(0, str(ROOT))
+from verification.areas.sql_platform.tools.native_build_policy import HOST_BUILD_OPTIONS
+
 NATIVE_BUILD = [
-    "cargo", "build", "--locked", "--offline",
+    "cargo", "build", *HOST_BUILD_OPTIONS, "--locked", "--offline",
     "-p", "sifr_sql_sqlite_tools", "--bin", "sifr-sql-sqlite",
     "-p", "sifr_sql_mysql_tools", "--bin", "sifr-sql-mysql",
     "-p", "sifr_sql_postgresql_tools", "--bin", "sifr-sql-postgresql",

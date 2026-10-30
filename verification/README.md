@@ -189,6 +189,25 @@ verification/areas/python_interop/runner/prepare_environment.py`. The builtins-o
 fixtures reuse that interpreter while keeping fresh source projects and runtime
 processes; they do not modify the pinned environment or reuse old test results.
 
+### Native SQL tool construction
+
+Native SQL tool preparation and the independent-build qualifier share the
+[SQL construction policy](areas/sql_platform/tools/native_build_policy.py).
+Its host build scripts, procedural macros and syntax libraries use optimization
+level zero; the workspace's optimized SHA-256 build dependency remains at level
+one. The selected SQL graph uses the syntax libraries only during construction.
+The normal compiler bootstrap retains its existing optimization settings.
+
+The native qualifier checks actual Cargo artifacts for host/target separation,
+target optimization level one, debug assertions and overflow checks. It rejects
+syntax libraries entering the target graph, profile drift, duplicate units and
+incomplete profile evidence. Distinct feature selections remain distinct units.
+Qualification keeps its existing zero target debug-info setting and requires
+identical executable bytes across clean, unchanged and independent builds of the
+selected configuration. A construction configuration change has its own artifact
+identities and requires runtime qualification. The real native SQL sandbox/IPC
+tests consume tools prepared with this same construction policy.
+
 ### Build allocations
 
 The profile runner keeps compiler Cargo jobs separate from native E2E jobs.
