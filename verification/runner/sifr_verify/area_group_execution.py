@@ -1,4 +1,4 @@
-"""Execute only the qualified correctness pair, retaining each canonical result."""
+"""Execute explicit correctness groups, retaining each canonical result."""
 from __future__ import annotations
 
 from dataclasses import asdict

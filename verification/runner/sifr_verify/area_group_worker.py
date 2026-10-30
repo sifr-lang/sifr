@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 
-from .area_group_policy import PAIR
+from .area_group_policy import GROUP_AREAS
 from .resource_scopes import cpu_scope
 from .build_allocation import E2E_ENV, positive
 from .profile_runner import ProfileRunner
@@ -14,7 +14,7 @@ from .process_ownership import session_environment
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=("create-pr", "merge"), required=True)
-    parser.add_argument("--area", choices=tuple(PAIR), required=True)
+    parser.add_argument("--area", choices=GROUP_AREAS, required=True)
     parser.add_argument("--no-fail-fast", action="store_true")
     args = parser.parse_args(argv)
     environment = session_environment(os.environ)

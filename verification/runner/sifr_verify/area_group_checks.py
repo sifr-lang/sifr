@@ -48,7 +48,7 @@ class PolicyTests(unittest.TestCase):
             self.assertEqual(execution_groups(profile, False), [])
             profile["selected_areas"] = [a for a in profile["selected_areas"]
                                          if a["area"] != "python_interop"]
-            self.assertEqual(execution_groups(profile, True), [])
+            self.assertNotIn("python-quality", [g["id"] for g in execution_groups(profile, True)])
         self.assertEqual(execution_groups(load_profile("release"), False), [])
 
     def test_capacity_and_inner_requests_are_bounded_without_mutating_parent(self):
@@ -127,7 +127,7 @@ class ExecutionTests(unittest.TestCase):
         text += f"raise SystemExit({code})\n"
         return [sys.executable, "-c", text]
 
-    def invoke(self):
+    def invoke(self, areas=AREAS):
         self.log = io.StringIO()
         def run(commands, **kwargs):
             self.commands.extend(commands)
@@ -140,7 +140,7 @@ class ExecutionTests(unittest.TestCase):
              patch.object(execution, "execute_batch", side_effect=run), \
              patch.object(execution, "discover_capacity", return_value=Capacity(8, 16 * 1024**3)), \
              contextlib.redirect_stdout(self.log):
-            return execution.run_area_group(self.runner, AREAS)
+            return execution.run_area_group(self.runner, areas)
 
     def test_real_children_overlap_receive_partition_and_emit_complete_results(self):
         self.programs = {area: self.program(area, barrier=True) for area in AREAS}
@@ -398,7 +398,9 @@ class ExecutionTests(unittest.TestCase):
 
 
 def policy_checks():
+    from . import area_contract_group_checks
     suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromModule(area_contract_group_checks))
     result = unittest.TestResult()
     suite.run(result)
     if not result.wasSuccessful():

@@ -258,6 +258,17 @@ checks still run for every fixture. Native examples and shared package-generatio
 mutations remain sequential. Batch elapsed time includes queueing; overlapping
 command durations must not be added to it.
 
+Local correctness `create-pr` and `merge` runs also admit the complete coverage,
+core-language, diagnostics and distribution areas together at four process slots,
+one slot per area. Smaller allocations retain serial execution. Each area keeps
+its canonical suites, internal case ordering and separate fresh result report;
+this does not make arbitrary areas or their cases parallel-safe. Shared Cargo
+storage retains Cargo's locks, and the prepared compiler remains immutable.
+Missing preparation blocks its consumers, and missing or incomplete reports fail.
+The existing Python/quality 1+3 allocation and full-profile/release execution are
+unchanged. Group elapsed time includes all children and must not be calculated by
+adding overlapping area durations.
+
 ## Layout
 
 - `runner/sifr_verify/` contains runner code and self-tests.

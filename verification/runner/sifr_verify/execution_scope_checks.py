@@ -93,7 +93,10 @@ class ExecutionScopeTests(unittest.TestCase):
              patch.object(runner, "run_guardrail"), patch.object(runner, "run_area") as areas, \
              patch.object(runner, "run_toolchain_step"), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(runner.run(), 0)
-        groups.assert_called_once_with(runner, ["python_interop", "generated_code_quality"])
+        self.assertEqual([call.args for call in groups.call_args_list], [
+            (runner, ["coverage_matrix", "core_language", "diagnostics", "distribution_release"]),
+            (runner, ["python_interop", "generated_code_quality"]),
+        ])
         self.assertEqual(len(areas.call_args_list), len(runner.profile["selected_areas"]))
         admission.assert_not_called()
         setup.assert_called_once_with()
